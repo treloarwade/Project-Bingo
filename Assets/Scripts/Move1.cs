@@ -2,35 +2,40 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using PokemonMoves; // Assuming you've defined PokemonMoves namespace
 
 public class Move1 : MonoBehaviour
 {
     public HealthBar healthBar;
     public int maxHealth = 100;
     public int currentHealth = 99;
-    public int damage = 3;
-    public Text Textfield;
+    public Text textField;
+    public GameObject firstMove;
 
-    public GameObject FirstMove;
-    // Start is called before the first frame update
+    // Declare damageamount at the class level
+    private PokemonMove damageamount;
+
     void Start()
     {
         currentHealth = maxHealth;
         healthBar.SetMaxHealth(maxHealth);
+        // Accessing a move from the MoveDatabase
+        damageamount = MoveDatabase.Moves[0]; // Accessing the first move (index 0)
     }
 
+    // Method to set the damage from a PokemonMove object
+    public void SetMoveDamage(int damage)
+    {
+        // Using the Damage of the move
+        damage = damageamount.Damage;
+    }
 
-    // Update is called once per frame
     public void OnMouseDown()
     {
-        currentHealth -= damage;
-
+        // Decrease health by the damage value
+        currentHealth -= damageamount.Damage;
+        // Update health bar
         healthBar.SetHealth(currentHealth);
     }
-
-    public void SetText(string text)
-    {
-        Textfield.text = text;
-    }
 }
+
