@@ -38,10 +38,10 @@ namespace DingoIDs
         }
     }
 
-    public class Charizard : DingoID
+    public class Bean : DingoID
     {
         // Constructor for Charizard
-        public Charizard() : base("Charizard", "Fire/Flying", "Charizard flies around the sky in search of powerful opponents. It breathes fire of such great heat that it melts anything. However, it never turns its fiery breath on any opponent weaker than itself.", 78, 84, 78, 100, "charizard_sprite.png")
+        public Bean() : base("Bean", "Nature", "Bean has a grudge against certain people.", 78, 84, 78, 100, "bean")
         {
             // Additional properties or methods specific to Charizard can be added here if needed.
         }

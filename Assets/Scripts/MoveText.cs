@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using PokemonMoves; // Assuming you've defined PokemonMoves namespace
+using DingoMoves; // Assuming you've defined DingoMoves namespace
 
 public class MoveNameDisplay : MonoBehaviour
 {
@@ -11,7 +11,7 @@ public class MoveNameDisplay : MonoBehaviour
     void Start()
     {
         // Accessing a move from the MoveDatabase
-        PokemonMove move = MoveDatabase.Moves[1]; // Accessing the first move (index 0)
+        DingoMove move = MoveDatabase.Moves[1]; // Accessing the first move (index 0)
 
         // Using the Name of the move
         string moveName = move.Name;

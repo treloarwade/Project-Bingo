@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using PokemonMoves; // Assuming you've defined PokemonMoves namespace
+using DingoMoves; // Assuming you've defined DingoMoves namespace
 
 public class Move1 : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class Move1 : MonoBehaviour
     public GameObject firstMove;
 
     // Declare damageamount at the class level
-    private PokemonMove damageamount;
+    private DingoMove damageamount;
 
     void Start()
     {
@@ -23,7 +23,7 @@ public class Move1 : MonoBehaviour
         damageamount = MoveDatabase.Moves[0]; // Accessing the first move (index 0)
     }
 
-    // Method to set the damage from a PokemonMove object
+    // Method to set the damage from a DingoMove object
     public void SetMoveDamage(int damage)
     {
         // Using the Damage of the move
