@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace DingoIDs
+namespace DingoSystem
 {
     public class DingoID
     {
@@ -26,6 +26,24 @@ namespace DingoIDs
             Defense = defense;
             Speed = speed;
             Sprite = sprite;
+        }
+    }
+
+    public class PlayerDingo : DingoID
+    {
+        // Additional properties for player-owned Dingos
+        public string Nickname { get; set; }
+        public int Level { get; set; }
+        public List<DingoMoves.DingoMove> Moves { get; set; }
+
+        // Constructor
+        public PlayerDingo(string name, string type, string description, int hp, int attack, int defense, int speed, string sprite,
+                           string nickname, int level, List<DingoMoves.DingoMove> moves)
+                           : base(name, type, description, hp, attack, defense, speed, sprite)
+        {
+            Nickname = nickname;
+            Level = level;
+            Moves = moves;
         }
     }
 
