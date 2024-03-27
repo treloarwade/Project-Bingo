@@ -322,7 +322,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ca6020f36ec14d4ebc38fe2cc78a3a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryText: {fileID: 0}
+  inventoryText: {fileID: 838892345}
 --- !u!1 &447450727
 GameObject:
   m_ObjectHideFlags: 0
@@ -1316,7 +1316,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1850536206}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 425005004}
+        m_TargetAssemblyTypeName: InventoryButton, Assembly-CSharp
+        m_MethodName: OnButtonClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1850536206
 MonoBehaviour:
   m_ObjectHideFlags: 0

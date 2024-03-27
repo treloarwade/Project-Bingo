@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using DingoSystem;
 using DingoMoves; // Assuming you have a namespace for Dingo moves
+using Inventory;
 
 public class GameManager : MonoBehaviour
 {
