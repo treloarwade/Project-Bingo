@@ -7,7 +7,6 @@ using DingoSystem;
 public class PlayerDingoImage : MonoBehaviour
 {
     public Image dingoImage; // Reference to the Image component where the Dingo sprite will be displayed
-    public Sprite defaultSprite; // Default sprite to use if Dingo sprite is not available
 
     void Start()
     {
@@ -24,9 +23,7 @@ public class PlayerDingoImage : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Sprite for BingoStar not found!");
-            // Use default sprite if sprite for BingoStar is not found
-            dingoImage.sprite = defaultSprite;
+            return;
         }
     }
 }

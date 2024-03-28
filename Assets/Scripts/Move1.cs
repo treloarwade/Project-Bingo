@@ -36,6 +36,11 @@ public class Move1 : MonoBehaviour
         currentHealth -= damageamount.Damage;
         // Update health bar
         healthBar.SetHealth(currentHealth);
+        if (currentHealth <= 0)
+        {
+            Loader.Load(Loader.Scene.SampleScene);
+        }
+        else { return; }
     }
 }
 

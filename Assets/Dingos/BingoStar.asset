@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4557d66c18c7ef34887466fbd04b8430, type: 3}
+  m_Name: BingoStar
+  m_EditorClassIdentifier: 
+  Name: BingoStar
+  Type: Light
+  Description: Field
+  HP: 1000
+  Attack: 20
+  Defense: 20
+  Speed: 20
+  Icon: {fileID: 21300000, guid: a2ac384a969854f41a7af05898c3dbe6, type: 3}
+  Level: 2
+  XP: 22
