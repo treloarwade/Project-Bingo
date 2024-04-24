@@ -37,7 +37,7 @@ public static class DingoDatabase
     public static DingoID Plant { get; } = new DingoID(28, "Plant", "Nature", "Plant is a nature type Dingo.", 200, 75, 80, 90, "plant", 200, 0, 50, 1);
 
 
-    public static EnvironmentEffect Rain { get; } = new EnvironmentEffect(0, 1, "Rain");
+    public static EnvironmentEffect Rain { get; } = new EnvironmentEffect(0, 3, "Rain");
 
 
     // Add more base Dingos as needed

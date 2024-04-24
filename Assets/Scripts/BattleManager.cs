@@ -1079,6 +1079,8 @@ public class BattleManager : MonoBehaviour
         }
         else if (movename == "Cloud Burst")
         {
+            environmentEffects.Add(DingoDatabase.Rain);
+            EvaluateEnvironmentEffects(environmentEffects);
             Vector3 originalPosition = playerImage.rectTransform.localPosition;
             float startTime = Time.time;
             Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/cloud");
@@ -1298,24 +1300,33 @@ public class BattleManager : MonoBehaviour
         {
             EnvironmentEffect effect = EnvironmentEffects[i];
 
-            // Check if the current status effect is ShellShield
+            // Check if the current effect is Rain
             if (effect.ID == 0)
             {
-
+                // Handle the Rain effect here
+                // For example, you can apply its effect on the game environment
+                ApplyRainEffect();
             }
-            // Add cases for other status effects as needed
+            // Add cases for other environment effects as needed
 
-            // Decrease the duration of the status effect
+            // Decrease the duration of the effect
             effect.Duration--;
 
-            // If the duration reaches 0, remove the status effect
+            // If the duration reaches 0, remove the effect
             if (effect.Duration <= 0)
             {
                 EnvironmentEffects.RemoveAt(i);
-                Debug.Log(effect.Name + " status effect has worn off.");
+                Debug.Log(effect.Name + " effect has worn off.");
             }
         }
     }
+    public GameObject Rain;
+    private void ApplyRainEffect()
+    {
+        Debug.Log("bingo");
+        Rain.SetActive(true);
+    }
+
     public void SavePlayerDingo()
     {
         // Check if slotIndex2 is defined
