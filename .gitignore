@@ -361,3 +361,25 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Library
+/ProjectSettings
+/.vsconfig
+/Temp
+/UserSettings
+/Assembly-CSharp-firstpass.csproj
+/Assembly-CSharp.csproj
+/Meryel.CodeAssist.Editor.csproj
+/Project Bingo.sln
+/Assets/art/background
+/Assets/art/Characters
+/Assets/art/Dingos
+/Assets/art
+/Assets/Audios
+/Assets/Audios/Creed- Higher.mp3
+/Assets/Dingos
+/Assets/Dingos/Bean.asset
+/Assets/Plugins/CodeAssist
+/Assets/Prefabs
+/Assets/Resources
+/Assets/Scenes
+/Assets/TextMesh Pro
