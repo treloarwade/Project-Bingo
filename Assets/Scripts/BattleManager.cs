@@ -37,10 +37,14 @@ public class BattleManager : MonoBehaviour
     public UnityEngine.UI.Image attackImage2;
     public UnityEngine.UI.Image attackImage3;
     public UnityEngine.UI.Image attackImage4;
+    public UnityEngine.UI.Image attackImage5;
+    public UnityEngine.UI.Image attackImage6;
+    public UnityEngine.UI.Image attackImage7;
     public UnityEngine.UI.Image attackImage101;
     public UnityEngine.UI.Image attackImage102;
     public UnityEngine.UI.Image attackImage103;
     public UnityEngine.UI.Image attackImage104;
+    public UnityEngine.UI.Image attackImage107;
     public Text playerName;
     public Text playerATK;
     public Text playerDEF;
@@ -555,7 +559,7 @@ public class BattleManager : MonoBehaviour
         {
             return; // Exit the method if input is blocked
         }
-        UseMove(1, move1power, move1accuracy, move1name);
+        UseMove(move1id, move1power, move1accuracy, move1name);
     }
     public void Move2()
     {
@@ -564,7 +568,7 @@ public class BattleManager : MonoBehaviour
         {
             return; // Exit the method if input is blocked
         }
-        UseMove(2, move2power, move2accuracy, move2name);
+        UseMove(move2id, move2power, move2accuracy, move2name);
     }
     public void Move3()
     {
@@ -573,7 +577,7 @@ public class BattleManager : MonoBehaviour
         {
             return; // Exit the method if input is blocked
         }
-        UseMove(3, move3power, move3accuracy, move3name);
+        UseMove(move3id, move3power, move3accuracy, move3name);
     }
     public void Move4()
     {
@@ -582,7 +586,7 @@ public class BattleManager : MonoBehaviour
         {
             return; // Exit the method if input is blocked
         }
-        UseMove(4, move4power, move4accuracy, move4name);
+        UseMove(move4id, move4power, move4accuracy, move4name);
     }
     public void UseMove(int moveNumber, int movePower, float moveAccuracy, string moveName)
     {
@@ -627,7 +631,8 @@ public class BattleManager : MonoBehaviour
                     break;
             }
         }
-
+        yield return StartCoroutine(DecideHighPriorityAnimationCoroutine(moveName));
+        yield return StartCoroutine(DecideHighPriorityOpponentAnimationCoroutine(opponentMove.Name));
         bool playerGoesFirst = playerstatSPD > dingostatSPD;
         if (playerGoesFirst)
         {
@@ -637,6 +642,7 @@ public class BattleManager : MonoBehaviour
         {
             yield return StartCoroutine(PlayerAttackSecond(moveNumber, movePower, moveAccuracy, moveName, opponentMoveNumber, opponentMove.Type, playerMove.Type, dingo.Type));
         }
+        attackImage7.enabled = false;
 
         if (playerpreviousmoveID == moveNumber)
         {
@@ -1036,6 +1042,7 @@ public class BattleManager : MonoBehaviour
         }
         else if (movename == "Air Strike")
         {
+            Vector3 Bingo = new Vector3(-575, -75.7193909f, 2.05347633f);
             Vector3 originalPosition = playerImage.rectTransform.localPosition;
             Vector3 targetPosition = dingoImage.rectTransform.localPosition;
 
@@ -1073,7 +1080,14 @@ public class BattleManager : MonoBehaviour
             while (Time.time - startTime < moveSpeed)
             {
                 float fracJourney = (Time.time - startTime) / (moveSpeed * 22);
-                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, originalPosition, fracJourney);
+                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, Bingo, fracJourney);
+                yield return null;
+            }
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, Bingo, fracJourney);
                 yield return null;
             }
         }
@@ -1093,7 +1107,65 @@ public class BattleManager : MonoBehaviour
                 yield return null;
             }
         }
+        else if (movename == "Luminous Burst")
+        {
+            Vector3 originalPosition = playerImage.rectTransform.localPosition;
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/light");
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/illumination");
+            attackImage6.sprite = punchLoad2;
+            attackImage6.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage6.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+            attackImage5.sprite = punchLoad;
+            attackImage5.enabled = true;
+            yield return new WaitForSeconds(0.7f);
+            attackImage5.enabled = false;
+            attackImage6.enabled = false;
+        }
+
         yield return new WaitForSeconds(1f); // Adjust the time as needed
+    }
+    IEnumerator DecideHighPriorityAnimationCoroutine(string movename)
+    {
+        if (movename == "Cosmic Shield")
+        {
+            float startTime = Time.time;
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/cosmicshield");
+            attackImage7.sprite = punchLoad2;
+            attackImage7.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage7.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+        }
+        yield return new WaitForSeconds(1f);
+    }
+    IEnumerator DecideHighPriorityOpponentAnimationCoroutine(string movename)
+    {
+        if (movename == "Cosmic Shield")
+        {
+            float startTime = Time.time;
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/cosmicshield");
+            attackImage107.sprite = punchLoad2;
+            attackImage107.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage107.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+        }
+        yield return new WaitForSeconds(1f);
     }
     private Vector3 BezierCurve(Vector3 p0, Vector3 p1, Vector3 p2, float t)
     {
@@ -1566,5 +1638,11 @@ public class BattleManager : MonoBehaviour
         healthBar2.SetHealth(playerHealth);
         // Update player's health bar or perform appropriate actions
         playerHP.text = "HP: " + playerHealth + "/" + maxplayerHealth;
+    }
+    public List<DingoID> loaddingos = new List<DingoID>();
+    public void ReloadBattle()
+    {
+        loaddingos = new List<DingoID>(DingoDatabase.newDingos);
+        Loader.Load(Loader.Scene.Battle, loaddingos);
     }
 }

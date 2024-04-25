@@ -400,7 +400,8 @@ public static class DingoDatabase
         {
         Icemunchkin,
         Marshmellow,
-        Bird
+        Bird,
+        BingoStar
         // Add more Dingos as needed
         };
 
