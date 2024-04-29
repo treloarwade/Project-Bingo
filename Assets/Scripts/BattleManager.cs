@@ -5,10 +5,9 @@ using UnityEngine.UI;
 using DingoSystem;
 using System.IO;
 using SimpleJSON;
-using System.Runtime.CompilerServices;
 using System.Net.NetworkInformation;
-using System.Linq.Expressions;
 using TMPro;
+using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 
 public class BattleManager : MonoBehaviour
@@ -18,6 +17,7 @@ public class BattleManager : MonoBehaviour
     public int maxRandomStat = 5;  // Maximum value for randomizing stats
     public int dingoID;
     public GameObject DingoMenu;
+    public Text CatchText;
     public Text Status;
     public Text Status2;
     public Text Status3;
@@ -32,6 +32,7 @@ public class BattleManager : MonoBehaviour
     public Text dingoHP;
     public int playerID;
     public Text playerType;
+    public UnityEngine.UI.Image bingoImage;
     public UnityEngine.UI.Image playerImage;
     public UnityEngine.UI.Image attackImage1;
     public UnityEngine.UI.Image attackImage2;
@@ -40,11 +41,17 @@ public class BattleManager : MonoBehaviour
     public UnityEngine.UI.Image attackImage5;
     public UnityEngine.UI.Image attackImage6;
     public UnityEngine.UI.Image attackImage7;
+    public UnityEngine.UI.Image attackImage8;
+    public UnityEngine.UI.Image attackImage9;
+    public UnityEngine.UI.Image attackImage10;
     public UnityEngine.UI.Image attackImage101;
     public UnityEngine.UI.Image attackImage102;
     public UnityEngine.UI.Image attackImage103;
     public UnityEngine.UI.Image attackImage104;
+    public UnityEngine.UI.Image attackImage105;
+    public UnityEngine.UI.Image attackImage106;
     public UnityEngine.UI.Image attackImage107;
+    public UnityEngine.UI.Image attackImage108;
     public Text playerName;
     public Text playerATK;
     public Text playerDEF;
@@ -156,7 +163,13 @@ public class BattleManager : MonoBehaviour
     private List<EnvironmentEffect> environmentEffects;
     public Transform PlayerDingoContent;
     public GameObject DingoItem;
+    public ParticleSystem MarshmellowEffect;
+    public ParticleSystem MarshmellowEffect2;
     private int slotIndex2;
+    private int moveDistance = 800;
+    public float moveSpeed = 0.5f;
+    public float jumpSpeed = 0.2f;
+    public float animationTime = 0.2f;
     // Constructor
     public BattleManager()
     {
@@ -593,6 +606,15 @@ public class BattleManager : MonoBehaviour
         canPlayerInput = false;
         StartCoroutine(PerformMoveRoutine(moveNumber, movePower, moveAccuracy, moveName));
     }
+    public void CatchDingo()
+    {
+        if (!canPlayerInput)
+        {
+            return; // Exit the method if input is blocked
+        }
+        canPlayerInput = false;
+        StartCoroutine(CatchAnimation());
+    }
     private IEnumerator PerformMoveRoutine(int moveNumber, int movePower, float moveAccuracy, string moveName)
     {
 
@@ -600,9 +622,7 @@ public class BattleManager : MonoBehaviour
         DingoID dingo = DingoDatabase.GetDingoByID(dingostatID);
         DingoMove opponentMove = DingoDatabase.GetMoveByID(opponentMoveNumber, dingo);
         DingoID playerdingo = DingoDatabase.GetDingoByID(playerstatID);
-        moveNumber--;
         DingoMove playerMove = DingoDatabase.GetMoveByID(moveNumber, playerdingo);
-
         if (playerpreviousmoveID == moveNumber)
         {
             Debug.Log("Player tried to spam: " + moveName);
@@ -613,6 +633,7 @@ public class BattleManager : MonoBehaviour
             {
                 case "Sneaky Shell":
                 case "Cosmic Shield":
+                case "Sweet Shield":
                     playerstatDEF += 1000;
                     break;
             }
@@ -627,6 +648,7 @@ public class BattleManager : MonoBehaviour
             {
                 case "Sneaky Shell":
                 case "Cosmic Shield":
+                case "Sweet Shield":
                     dingostatDEF += 1000;
                     break;
             }
@@ -642,8 +664,7 @@ public class BattleManager : MonoBehaviour
         {
             yield return StartCoroutine(PlayerAttackSecond(moveNumber, movePower, moveAccuracy, moveName, opponentMoveNumber, opponentMove.Type, playerMove.Type, dingo.Type));
         }
-        attackImage7.enabled = false;
-
+        StartCoroutine(StopEffects());
         if (playerpreviousmoveID == moveNumber)
         {
         }
@@ -653,6 +674,7 @@ public class BattleManager : MonoBehaviour
             {
                 case "Sneaky Shell":
                 case "Cosmic Shield":
+                case "Sweet Shield":
                     playerstatDEF -= 1000;
                     break;
             }
@@ -666,6 +688,7 @@ public class BattleManager : MonoBehaviour
             {
                 case "Sneaky Shell":
                 case "Cosmic Shield":
+                case "Sweet Shield":
                     dingostatDEF -= 1000;
                     break;
             }
@@ -722,13 +745,34 @@ public class BattleManager : MonoBehaviour
         float accuracy = moveAccuracy / 100f; // Convert accuracy from percentage to decimal
 
         bool moveHits = Random.Range(0f, 1f) <= accuracy;
+        bool isRainActive = false;
+        foreach (var environmentEffect in environmentEffects)
+        {
+            if (environmentEffect.Name == "Rain")
+            {
+                isRainActive = true;
+                break;
+            }
+        }
+
+        // Apply attacker's attack and defender's defense along with any bonuses
+        int attackerAttackWithBonus = attackerattack + CalculateAttackBonus(attackerEffects);
+
+        // Boost attacker's attack if "Rain" effect is active and moveType is "water"
+        if (isRainActive && moveType == "water")
+        {
+            attackerAttackWithBonus = Mathf.RoundToInt(attackerAttackWithBonus * 1.5f);
+        }
+
+        int defenderDefenseWithBonus = defenderdefense + CalculateDefenseBonus(defenderEffects);
+
         if (movePower > 0)
         {
             if (moveHits)
             {
                 // Apply attacker's attack and defender's defense along with any bonuses
-                int attackerAttackWithBonus = attackerattack + CalculateAttackBonus(attackerEffects);
-                int defenderDefenseWithBonus = defenderdefense + CalculateDefenseBonus(defenderEffects);
+                attackerAttackWithBonus = attackerattack + CalculateAttackBonus(attackerEffects);
+                defenderDefenseWithBonus = defenderdefense + CalculateDefenseBonus(defenderEffects);
 
                 // Calculate damage
                 float modifier = (((attackerAttackWithBonus - defenderDefenseWithBonus) / 100f) + 1);
@@ -929,369 +973,7 @@ public class BattleManager : MonoBehaviour
         }
         isAttackBackRunning = false;
     }
-    private int moveDistance = 800;
-    public float moveSpeed = 0.5f;
-    public float jumpSpeed = 0.2f;
-    public float animationTime = 0.2f;
 
-    IEnumerator DecideAnimationCoroutine(string movename)
-    {
-        dingoImage.transform.SetAsFirstSibling();
-        if (movename == "Ice Punch")
-        {
-            // Store original position
-            Vector3 originalPosition = playerImage.rectTransform.localPosition;
-            // Calculate target position to the right
-            Vector3 targetPosition = originalPosition + Vector3.right * moveDistance;
-
-            // Move playerImage smoothly to the right
-            float startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
-                playerImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
-                yield return null;
-            }
-            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/punch_1");
-            attackImage2.sprite = punchLoad;
-            attackImage2.enabled = true;
-            yield return new WaitForSeconds(0.2f);
-            punchLoad = Resources.Load<Sprite>("BattleMoves/punch_2");
-            attackImage2.sprite = punchLoad;
-            yield return new WaitForSeconds(0.2f);
-            attackImage2.enabled = false;
-            Sprite snowflakeLoad = Resources.Load<Sprite>("BattleMoves/snowflake");
-            attackImage1.sprite = snowflakeLoad;
-            attackImage1.enabled = true;
-            yield return new WaitForSeconds(0.4f);
-            attackImage1.enabled = false;
-            // Move playerImage smoothly back to original position
-            startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                playerImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, originalPosition, fracJourney);
-                yield return null;
-            }
-        }
-        else if (movename == "Sugar Slam")
-        {
-
-            // Store original position
-            Vector3 originalPosition = playerImage.rectTransform.localPosition;
-
-            // Phase 1: Move to the right
-            Vector3 targetPosition = originalPosition + Vector3.right * moveDistance;
-            float startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                playerImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
-                yield return null;
-            }
-
-            // Phase 2: Jump
-            Vector3 jumpTargetPosition = targetPosition + Vector3.up * moveDistance;
-            startTime = Time.time;
-            while (Time.time - startTime < jumpSpeed)
-            {
-                float jumpFracJourney = (Time.time - startTime) / jumpSpeed;
-                playerImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, jumpTargetPosition, jumpFracJourney);
-                yield return null;
-            }
-
-            // Phase 3: Landing
-            Vector3 landPosition = dingoImage.rectTransform.localPosition;
-            Quaternion targetRotation = Quaternion.Euler(0f, 0f, -90f);
-            startTime = Time.time;
-            while (Time.time - startTime < moveSpeed / 2f)
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
-                playerImage.rectTransform.localPosition = Vector3.Lerp(jumpTargetPosition, landPosition, fracJourney);
-
-                // Smoothly rotate playerImage
-                playerImage.rectTransform.localRotation = Quaternion.Slerp(Quaternion.identity, targetRotation, fracJourney);
-
-                yield return null;
-            }
-
-            // Phase 4: Return to original position
-            startTime = Time.time;
-            Quaternion targetRotation2 = Quaternion.Euler(0f, 0f, 0f);
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                playerImage.rectTransform.localPosition = Vector3.Lerp(landPosition, originalPosition, fracJourney);
-                playerImage.rectTransform.localRotation = Quaternion.Slerp(targetRotation, targetRotation2, fracJourney);
-                yield return null;
-            }
-        }
-        else if (movename == "Aero Slicer")
-        {
-            Vector3 originalPosition = playerImage.rectTransform.localPosition;
-            float startTime = Time.time;
-            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/aeroslicer1");
-            attackImage3.sprite = punchLoad;
-            attackImage3.enabled = true;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                attackImage3.rectTransform.localPosition = Vector3.Lerp(originalPosition, dingoImage.rectTransform.localPosition, fracJourney);
-                yield return null;
-            }
-        }
-        else if (movename == "Air Strike")
-        {
-            Vector3 Bingo = new Vector3(-575, -75.7193909f, 2.05347633f);
-            Vector3 originalPosition = playerImage.rectTransform.localPosition;
-            Vector3 targetPosition = dingoImage.rectTransform.localPosition;
-
-            // Define the height the player's image should rise before moving horizontally
-            float heightOffset = 500f; // Adjust this value as needed
-
-            // Calculate the midpoint for the vertical movement
-            Vector3 verticalMidpoint = originalPosition + Vector3.up * heightOffset;
-
-            float startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed * 22);
-                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, verticalMidpoint, fracJourney);
-                yield return null;
-            }
-
-            startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float normalizedTime = (Time.time - startTime) / moveSpeed;
-                // Apply an ease-in function for the horizontal movement
-                float horizontalEaseValue = Mathf.Pow(normalizedTime, 3);
-
-                // Interpolate between vertical midpoint and target position
-                Vector3 horizontalPosition = Vector3.Lerp(verticalMidpoint, targetPosition, horizontalEaseValue);
-
-                // Set the position of the player's image
-                playerImage.rectTransform.localPosition = horizontalPosition;
-
-                yield return null;
-            }
-
-            startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed * 22);
-                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, Bingo, fracJourney);
-                yield return null;
-            }
-            startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, Bingo, fracJourney);
-                yield return null;
-            }
-        }
-        else if (movename == "Cloud Burst")
-        {
-            environmentEffects.Add(DingoDatabase.Rain);
-            EvaluateEnvironmentEffects(environmentEffects);
-            Vector3 originalPosition = playerImage.rectTransform.localPosition;
-            float startTime = Time.time;
-            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/cloud");
-            attackImage4.sprite = punchLoad;
-            attackImage4.enabled = true;
-            while (Time.time - startTime < (moveSpeed * 5))
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
-                attackImage4.rectTransform.localPosition = Vector3.Lerp(originalPosition, dingoImage.rectTransform.localPosition, fracJourney);
-                yield return null;
-            }
-        }
-        else if (movename == "Luminous Burst")
-        {
-            Vector3 originalPosition = playerImage.rectTransform.localPosition;
-            float startTime = Time.time;
-            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/light");
-            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/illumination");
-            attackImage6.sprite = punchLoad2;
-            attackImage6.enabled = true;
-            Vector3 finalscale = new Vector3(60, 60, 1);
-            while (Time.time - startTime < (moveSpeed * 5))
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
-                attackImage6.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
-                yield return null;
-            }
-            attackImage5.sprite = punchLoad;
-            attackImage5.enabled = true;
-            yield return new WaitForSeconds(0.7f);
-            attackImage5.enabled = false;
-            attackImage6.enabled = false;
-        }
-
-        yield return new WaitForSeconds(1f); // Adjust the time as needed
-    }
-    IEnumerator DecideHighPriorityAnimationCoroutine(string movename)
-    {
-        if (movename == "Cosmic Shield")
-        {
-            float startTime = Time.time;
-            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/cosmicshield");
-            attackImage7.sprite = punchLoad2;
-            attackImage7.enabled = true;
-            Vector3 finalscale = new Vector3(60, 60, 1);
-            while (Time.time - startTime < (moveSpeed * 5))
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
-                attackImage7.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
-                yield return null;
-            }
-        }
-        yield return new WaitForSeconds(1f);
-    }
-    IEnumerator DecideHighPriorityOpponentAnimationCoroutine(string movename)
-    {
-        if (movename == "Cosmic Shield")
-        {
-            float startTime = Time.time;
-            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/cosmicshield");
-            attackImage107.sprite = punchLoad2;
-            attackImage107.enabled = true;
-            Vector3 finalscale = new Vector3(60, 60, 1);
-            while (Time.time - startTime < (moveSpeed * 5))
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
-                attackImage107.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
-                yield return null;
-            }
-        }
-        yield return new WaitForSeconds(1f);
-    }
-    private Vector3 BezierCurve(Vector3 p0, Vector3 p1, Vector3 p2, float t)
-    {
-        // B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
-
-        float oneMinusT = 1f - t;
-        float tSquared = t * t;
-        float oneMinusTSquared = oneMinusT * oneMinusT;
-
-        Vector3 result =
-            oneMinusTSquared * p0 +
-            2f * oneMinusT * t * p1 +
-            tSquared * p2;
-
-        return result;
-    }
-
-    IEnumerator DecideOpponentAnimationCoroutine(string movename)
-    {
-        playerImage.transform.SetAsFirstSibling();
-        if (movename == "Ice Punch")
-        {
-            // Store original position
-            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
-            // Calculate target position to the right
-            Vector3 targetPosition = originalPosition + Vector3.left * moveDistance;
-
-            // Move dingoImage smoothly to the right
-            float startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
-                dingoImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
-                yield return null;
-            }
-            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/punch_1");
-            attackImage102.sprite = punchLoad;
-            attackImage102.enabled = true;
-            yield return new WaitForSeconds(0.2f);
-            punchLoad = Resources.Load<Sprite>("BattleMoves/punch_2");
-            attackImage102.sprite = punchLoad;
-            yield return new WaitForSeconds(0.2f);
-            attackImage102.enabled = false;
-            Sprite snowflakeLoad = Resources.Load<Sprite>("BattleMoves/snowflake");
-            attackImage101.sprite = snowflakeLoad;
-            attackImage101.enabled = true;
-            yield return new WaitForSeconds(0.4f);
-            attackImage101.enabled = false;
-            // Move dingoImage smoothly back to original position
-            startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                dingoImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, originalPosition, fracJourney);
-                yield return null;
-            }
-        }
-        else if (movename == "Sugar Slam")
-        {
-
-            // Store original position
-            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
-
-            // Phase 1: Move to the left
-            Vector3 targetPosition = originalPosition + Vector3.left * moveDistance;
-            float startTime = Time.time;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                dingoImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
-                yield return null;
-            }
-
-            // Phase 2: Jump
-            Vector3 jumpTargetPosition = targetPosition + Vector3.up * moveDistance;
-            startTime = Time.time;
-            while (Time.time - startTime < jumpSpeed)
-            {
-                float jumpFracJourney = (Time.time - startTime) / jumpSpeed;
-                dingoImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, jumpTargetPosition, jumpFracJourney);
-                yield return null;
-            }
-
-            // Phase 3: Landing
-            Vector3 landPosition = playerImage.rectTransform.localPosition;
-            Quaternion targetRotation = Quaternion.Euler(0f, 0f, 90f);
-            startTime = Time.time;
-            while (Time.time - startTime < moveSpeed / 2f)
-            {
-                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
-                dingoImage.rectTransform.localPosition = Vector3.Lerp(jumpTargetPosition, landPosition, fracJourney);
-
-                // Smoothly rotate playerImage
-                dingoImage.rectTransform.localRotation = Quaternion.Slerp(Quaternion.identity, targetRotation, fracJourney);
-
-                yield return null;
-            }
-
-            // Phase 4: Return to original position
-            startTime = Time.time;
-            Quaternion targetRotation2 = Quaternion.Euler(0f, 0f, 0f);
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                dingoImage.rectTransform.localPosition = Vector3.Lerp(landPosition, originalPosition, fracJourney);
-                dingoImage.rectTransform.localRotation = Quaternion.Slerp(targetRotation, targetRotation2, fracJourney);
-                yield return null;
-            }
-
-        }
-        else if (movename == "Aero Slicer")
-        {
-            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
-            float startTime = Time.time;
-            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/aeroslicer1");
-            attackImage103.sprite = punchLoad;
-            attackImage103.enabled = true;
-            while (Time.time - startTime < moveSpeed)
-            {
-                float fracJourney = (Time.time - startTime) / moveSpeed;
-                attackImage103.rectTransform.localPosition = Vector3.Lerp(originalPosition, playerImage.rectTransform.localPosition, fracJourney);
-                yield return null;
-            }
-        }
-        yield return new WaitForSeconds(1f); // Adjust the time as needed
-    }
     private int DetermineOpponentMove()
     {
         // Generate a random number between 0 and 3
@@ -1351,7 +1033,7 @@ public class BattleManager : MonoBehaviour
             // Check if the current status effect is ShellShield
             if (effect.ID == 0)
             {
- 
+                Debug.Log("goo");
             }
             // Add cases for other status effects as needed
 
@@ -1397,6 +1079,10 @@ public class BattleManager : MonoBehaviour
     {
         Debug.Log("bingo");
         Rain.SetActive(true);
+    }
+    private void ApplyCampfireEffect()
+    {
+        //Campfire.SetActive(true);
     }
 
     public void SavePlayerDingo()
@@ -1540,10 +1226,6 @@ public class BattleManager : MonoBehaviour
     }
     public void SaveDingo()
     {
-        if (!canPlayerInput)
-        {
-            return; // Exit the method
-        }
         int slotIndex = 1; // Initialize slotIndex to 1
 
         // Load existing Dingos data if it exists
@@ -1645,4 +1327,648 @@ public class BattleManager : MonoBehaviour
         loaddingos = new List<DingoID>(DingoDatabase.newDingos);
         Loader.Load(Loader.Scene.Battle, loaddingos);
     }
+    private Vector3 BezierCurve(Vector3 p0, Vector3 p1, Vector3 p2, float t)
+    {
+        // B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+
+        float oneMinusT = 1f - t;
+        float tSquared = t * t;
+        float oneMinusTSquared = oneMinusT * oneMinusT;
+
+        Vector3 result =
+            oneMinusTSquared * p0 +
+            2f * oneMinusT * t * p1 +
+            tSquared * p2;
+
+        return result;
+    }
+    IEnumerator DecideAnimationCoroutine(string movename)
+    {
+        dingoImage.transform.SetAsFirstSibling();
+        if (movename == "Ice Punch")
+        {
+            // Store original position
+            Vector3 originalPosition = playerImage.rectTransform.localPosition;
+            // Calculate target position to the right
+            Vector3 targetPosition = originalPosition + Vector3.right * moveDistance;
+
+            // Move playerImage smoothly to the right
+            float startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
+                playerImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
+                yield return null;
+            }
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/punch_1");
+            attackImage2.sprite = punchLoad;
+            attackImage2.enabled = true;
+            yield return new WaitForSeconds(0.2f);
+            punchLoad = Resources.Load<Sprite>("BattleMoves/punch_2");
+            attackImage2.sprite = punchLoad;
+            yield return new WaitForSeconds(0.2f);
+            attackImage2.enabled = false;
+            Sprite snowflakeLoad = Resources.Load<Sprite>("BattleMoves/snowflake");
+            attackImage1.sprite = snowflakeLoad;
+            attackImage1.enabled = true;
+            yield return new WaitForSeconds(0.4f);
+            attackImage1.enabled = false;
+            // Move playerImage smoothly back to original position
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                playerImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, originalPosition, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Sugar Slam")
+        {
+            // Store original position
+            Vector3 originalPosition = playerImage.rectTransform.localPosition;
+
+            // Phase 1: Move to the right
+            Vector3 targetPosition = originalPosition + Vector3.right * moveDistance;
+            float startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                playerImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
+                yield return null;
+            }
+
+            // Phase 2: Jump
+            Vector3 jumpTargetPosition = targetPosition + Vector3.up * moveDistance;
+            startTime = Time.time;
+            while (Time.time - startTime < jumpSpeed)
+            {
+                float jumpFracJourney = (Time.time - startTime) / jumpSpeed;
+                playerImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, jumpTargetPosition, jumpFracJourney);
+                yield return null;
+            }
+
+            // Phase 3: Landing
+            Vector3 landPosition = dingoImage.rectTransform.localPosition;
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, -90f);
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed / 2f)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
+                playerImage.rectTransform.localPosition = Vector3.Lerp(jumpTargetPosition, landPosition, fracJourney);
+
+                // Smoothly rotate playerImage
+                playerImage.rectTransform.localRotation = Quaternion.Slerp(Quaternion.identity, targetRotation, fracJourney);
+
+                yield return null;
+            }
+            MarshmellowEffect.Play();
+
+            // Phase 4: Return to original position
+            startTime = Time.time;
+            Quaternion targetRotation2 = Quaternion.Euler(0f, 0f, 0f);
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                playerImage.rectTransform.localPosition = Vector3.Lerp(landPosition, originalPosition, fracJourney);
+                playerImage.rectTransform.localRotation = Quaternion.Slerp(targetRotation, targetRotation2, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Aero Slicer")
+        {
+            Vector3 originalPosition = playerImage.rectTransform.localPosition;
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/aeroslicer1");
+            attackImage3.sprite = punchLoad;
+            attackImage3.enabled = true;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                attackImage3.rectTransform.localPosition = Vector3.Lerp(originalPosition, dingoImage.rectTransform.localPosition, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Air Strike")
+        {
+            Vector3 Bingo = new Vector3(-575, -75.7193909f, 2.05347633f);
+            Vector3 originalPosition = playerImage.rectTransform.localPosition;
+            Vector3 targetPosition = dingoImage.rectTransform.localPosition;
+
+            // Define the height the player's image should rise before moving horizontally
+            float heightOffset = 500f; // Adjust this value as needed
+
+            // Calculate the midpoint for the vertical movement
+            Vector3 verticalMidpoint = originalPosition + Vector3.up * heightOffset;
+
+            float startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 22);
+                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, verticalMidpoint, fracJourney);
+                yield return null;
+            }
+
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float normalizedTime = (Time.time - startTime) / moveSpeed;
+                // Apply an ease-in function for the horizontal movement
+                float horizontalEaseValue = Mathf.Pow(normalizedTime, 3);
+
+                // Interpolate between vertical midpoint and target position
+                Vector3 horizontalPosition = Vector3.Lerp(verticalMidpoint, targetPosition, horizontalEaseValue);
+
+                // Set the position of the player's image
+                playerImage.rectTransform.localPosition = horizontalPosition;
+
+                yield return null;
+            }
+
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 22);
+                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, Bingo, fracJourney);
+                yield return null;
+            }
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, Bingo, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Cloud Burst")
+        {
+            environmentEffects.Add(DingoDatabase.Rain);
+            EvaluateEnvironmentEffects(environmentEffects);
+            Vector3 originalPosition = playerImage.rectTransform.localPosition;
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/cloud");
+            attackImage4.sprite = punchLoad;
+            attackImage4.enabled = true;
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage4.rectTransform.localPosition = Vector3.Lerp(originalPosition, dingoImage.rectTransform.localPosition, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Luminous Burst")
+        {
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/light");
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/illumination");
+            attackImage6.sprite = punchLoad2;
+            attackImage6.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage6.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+            attackImage5.sprite = punchLoad;
+            attackImage5.enabled = true;
+            yield return new WaitForSeconds(0.4f);
+            attackImage5.enabled = false;
+            attackImage6.enabled = false;
+        }
+        else if (movename == "Gooey Glare")
+        {
+            //unfinished
+            opponentEffects.Add(DingoDatabase.Goo);
+            EvaluateStatusEffects(opponentEffects);
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/light");
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/illumination");
+            Sprite glare = Resources.Load<Sprite>("BattleMoves/gooeyglare");
+            playerImage.sprite = glare;
+            attackImage6.sprite = punchLoad2;
+            attackImage6.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage6.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+            attackImage5.sprite = punchLoad;
+            attackImage5.enabled = true;
+            yield return new WaitForSeconds(0.4f);
+            playerImage.sprite = Resources.Load<Sprite>("marshmellow");
+            attackImage5.enabled = false;
+            attackImage6.enabled = false;
+        }
+        else if (movename == "Sugar Spin")
+        {
+            // Store original position
+            Vector3 originalPosition = playerImage.rectTransform.localPosition;
+            Vector3 Bingo = new Vector3(0, 250, 2.05347633f);
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, 0f);
+            // Phase 1: Move to the right
+            float startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                playerImage.rectTransform.localPosition = BezierCurve(originalPosition, Bingo, dingoImage.rectTransform.localPosition, fracJourney);
+                playerImage.rectTransform.Rotate(Vector3.forward, 10);
+                yield return null;
+            }
+            MarshmellowEffect.Play();
+            // Phase 3: Landing
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed);
+                playerImage.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, originalPosition, fracJourney);
+
+                // Smoothly rotate playerImage
+                playerImage.rectTransform.localRotation = Quaternion.Slerp(playerImage.rectTransform.localRotation, targetRotation, fracJourney);
+
+                yield return null;
+            }
+
+        }
+        else if (movename == "Toasty Tumble")
+        {
+            Vector3 bingoPosition = new Vector3(-100, 300, 2.05347633f);
+            Vector3 targetPosition = new Vector3(275, 0, 2.05347633f);
+            Vector3 currentVelocity = Vector3.zero;
+            float smoothTime = 0.2f; // Adjust this value as needed
+            float startTime = Time.time;
+            attackImage8.enabled = true;
+            while (Time.time - startTime < (1.2f * moveSpeed))
+            {
+
+                float fracJourney = (Time.time - startTime) / (1.2f * moveSpeed);
+                attackImage8.rectTransform.localPosition = Vector3.Lerp(playerImage.rectTransform.localPosition, targetPosition, fracJourney);
+                attackImage8.rectTransform.Rotate(Vector3.forward, -2f);
+                yield return null;
+
+            }
+            while (Time.time - startTime < (2f * moveSpeed))
+            {
+                attackImage8.rectTransform.localPosition = Vector3.SmoothDamp(
+                    attackImage8.rectTransform.localPosition,
+                    bingoPosition,
+                    ref currentVelocity,
+                    smoothTime
+                );
+                attackImage8.rectTransform.Rotate(Vector3.forward, 0.3f);
+                yield return null;
+            }
+            attackImage8.enabled = false;
+        }
+        else if (movename == "Mallow Munch")
+        {
+            yield return MallowMunchAnimation();
+        }
+
+    }
+    IEnumerator CatchAnimation()
+    {
+        Vector3 originalPosition = bingoImage.rectTransform.localPosition;
+        Vector3 Bingo = new Vector3(0, 250, 2.05347633f);
+        Vector3 Bingo2 = new Vector3(-40, 200, 2.05347633f);
+        int randomIndex = Random.Range(0, 3);
+        float[] possibleValues = { 0.5f, 1f, 1.5f };
+        float randomFloatValue = possibleValues[randomIndex];
+        Vector3 newPosition = dingoImage.rectTransform.localPosition;
+        int randomNumber = Random.Range(1, 3);
+        int randomNumber2 = Random.Range(1, 4);
+        newPosition.y -= 100f;
+        Quaternion targetRotation = Quaternion.Euler(0f, 0f, 0f);
+        // Phase 1: Move to the right
+        float startTime = Time.time;
+        while (Time.time - startTime < (randomNumber2 * moveSpeed))
+        {
+            float fracJourney = (Time.time - startTime) / (randomNumber2 * moveSpeed);
+            bingoImage.rectTransform.localPosition = BezierCurve(originalPosition, Bingo, newPosition, fracJourney);
+            bingoImage.rectTransform.Rotate(Vector3.forward, randomFloatValue);
+            yield return null;
+        }
+        yield return new WaitForSeconds(0.2f);
+
+
+        float randomValue = Random.value;
+        if (randomValue < 0.7f)
+        {
+            //Miss
+            startTime = Time.time;
+            while (Time.time - startTime < (randomNumber * moveSpeed))
+            {
+                float fracJourney = (Time.time - startTime) / (randomNumber * moveSpeed);
+                bingoImage.rectTransform.localPosition = BezierCurve(newPosition, Bingo2, originalPosition, fracJourney);
+                bingoImage.rectTransform.Rotate(Vector3.forward, -randomFloatValue);
+                yield return null;
+            }
+        }
+        else
+        {
+            CatchText.gameObject.SetActive(true);
+            yield return new WaitForSeconds(1f);
+            SaveDingo();
+        }
+        yield return new WaitForSeconds(1f);
+        canPlayerInput = true;
+    }
+    IEnumerator MallowMunchAnimation()
+    {
+        Sprite munch = Resources.Load<Sprite>("BattleMoves/marshmelloweat");
+        Sprite munch2 = Resources.Load<Sprite>("marshmellow");
+        attackImage9.enabled = true;
+        yield return new WaitForSeconds(0.4f);
+        string[] munchSpriteNames = { "mellow4", "mellow5", "mellow6", "mellow7", "mellow8" };
+        foreach (string spriteName in munchSpriteNames)
+        {
+            attackImage9.sprite = Resources.Load<Sprite>("BattleMoves/" + spriteName);
+            playerImage.sprite = munch;
+            yield return new WaitForSeconds(0.2f);
+            playerHealth += 20;
+            UpdateUI();
+            playerImage.sprite = munch2;
+            yield return new WaitForSeconds(0.2f);
+        }
+        attackImage9.enabled = false;
+        playerImage.sprite = munch;
+        yield return new WaitForSeconds(0.2f);
+        playerHealth += 20;
+        UpdateUI();
+        playerImage.sprite = munch2;
+        yield return new WaitForSeconds(0.2f);
+        attackImage9.sprite = Resources.Load<Sprite>("BattleMoves/mellow3");
+    }
+    IEnumerator DecideHighPriorityAnimationCoroutine(string movename)
+    {
+        if (movename == "Cosmic Shield")
+        {
+            float startTime = Time.time;
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/cosmicshield");
+            attackImage7.sprite = punchLoad2;
+            attackImage7.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage7.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+        }
+        if (movename == "Sweet Shield")
+        {
+            float startTime = Time.time;
+            attackImage10.enabled = true;
+            Vector3 finalscale = new Vector3(110, 110, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage10.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+            StartCoroutine(ContinuousRotation());
+        }
+        yield return new WaitForSeconds(1f);
+    }
+    IEnumerator ContinuousRotation()
+    {
+        while (true)  // Loop continuously
+        {
+            attackImage10.rectTransform.Rotate(Vector3.forward, -0.1f);
+            yield return null;  // Wait for the next frame
+        }
+    }
+    IEnumerator StopEffects()
+    {
+        float startTime = Time.time;
+        StopCoroutine(ContinuousRotation());
+        while (Time.time - startTime < (moveSpeed * 5))
+        {
+            float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+            attackImage7.rectTransform.localScale = Vector3.Lerp(attackImage7.rectTransform.localScale, Vector3.zero, fracJourney);
+            attackImage10.rectTransform.localScale = Vector3.Lerp(attackImage10.rectTransform.localScale, Vector3.zero, fracJourney);
+            attackImage107.rectTransform.localScale = Vector3.Lerp(attackImage107.rectTransform.localScale, Vector3.zero, fracJourney);
+            yield return null;
+        }
+        attackImage7.enabled = false;
+        attackImage107.enabled = false;
+        attackImage10.enabled = false;
+        yield return null;
+    }
+    IEnumerator DecideHighPriorityOpponentAnimationCoroutine(string movename)
+    {
+        if (movename == "Cosmic Shield")
+        {
+            float startTime = Time.time;
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/cosmicshield");
+            attackImage107.sprite = punchLoad2;
+            attackImage107.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage107.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+        }
+        yield return new WaitForSeconds(1f);
+    }
+    IEnumerator DecideOpponentAnimationCoroutine(string movename)
+    {
+        playerImage.transform.SetAsFirstSibling();
+        if (movename == "Ice Punch")
+        {
+            // Store original position
+            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
+            // Calculate target position to the right
+            Vector3 targetPosition = originalPosition + Vector3.left * moveDistance;
+
+            // Move dingoImage smoothly to the right
+            float startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
+                yield return null;
+            }
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/punch_1");
+            attackImage102.sprite = punchLoad;
+            attackImage102.enabled = true;
+            yield return new WaitForSeconds(0.2f);
+            punchLoad = Resources.Load<Sprite>("BattleMoves/punch_2");
+            attackImage102.sprite = punchLoad;
+            yield return new WaitForSeconds(0.2f);
+            attackImage102.enabled = false;
+            Sprite snowflakeLoad = Resources.Load<Sprite>("BattleMoves/snowflake");
+            attackImage101.sprite = snowflakeLoad;
+            attackImage101.enabled = true;
+            yield return new WaitForSeconds(0.4f);
+            attackImage101.enabled = false;
+            // Move dingoImage smoothly back to original position
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, originalPosition, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Sugar Slam")
+        {
+
+            // Store original position
+            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
+
+            // Phase 1: Move to the left
+            Vector3 targetPosition = originalPosition + Vector3.left * moveDistance;
+            float startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, targetPosition, fracJourney);
+                yield return null;
+            }
+
+            // Phase 2: Jump
+            Vector3 jumpTargetPosition = targetPosition + Vector3.up * moveDistance;
+            startTime = Time.time;
+            while (Time.time - startTime < jumpSpeed)
+            {
+                float jumpFracJourney = (Time.time - startTime) / jumpSpeed;
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(targetPosition, jumpTargetPosition, jumpFracJourney);
+                yield return null;
+            }
+
+            // Phase 3: Landing
+            Vector3 landPosition = playerImage.rectTransform.localPosition;
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, 90f);
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed / 2f)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed / 2f);
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(jumpTargetPosition, landPosition, fracJourney);
+
+                // Smoothly rotate playerImage
+                dingoImage.rectTransform.localRotation = Quaternion.Slerp(Quaternion.identity, targetRotation, fracJourney);
+
+                yield return null;
+            }
+            MarshmellowEffect2.Play();
+            // Phase 4: Return to original position
+            startTime = Time.time;
+            Quaternion targetRotation2 = Quaternion.Euler(0f, 0f, 0f);
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(landPosition, originalPosition, fracJourney);
+                dingoImage.rectTransform.localRotation = Quaternion.Slerp(targetRotation, targetRotation2, fracJourney);
+                yield return null;
+            }
+
+        }
+        else if (movename == "Aero Slicer")
+        {
+            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/aeroslicer1");
+            attackImage103.sprite = punchLoad;
+            attackImage103.enabled = true;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                attackImage103.rectTransform.localPosition = Vector3.Lerp(originalPosition, playerImage.rectTransform.localPosition, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Air Strike")
+        {
+            Vector3 Bingo = new Vector3(575, -75.7193909f, 2.05347633f);
+            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
+            Vector3 targetPosition = playerImage.rectTransform.localPosition;
+
+            // Define the height the player's image should rise before moving horizontally
+            float heightOffset = 500f; // Adjust this value as needed
+
+            // Calculate the midpoint for the vertical movement
+            Vector3 verticalMidpoint = originalPosition + Vector3.up * heightOffset;
+
+            float startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 22);
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(dingoImage.rectTransform.localPosition, verticalMidpoint, fracJourney);
+                yield return null;
+            }
+
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float normalizedTime = (Time.time - startTime) / moveSpeed;
+                // Apply an ease-in function for the horizontal movement
+                float horizontalEaseValue = Mathf.Pow(normalizedTime, 3);
+
+                // Interpolate between vertical midpoint and target position
+                Vector3 horizontalPosition = Vector3.Lerp(verticalMidpoint, targetPosition, horizontalEaseValue);
+
+                // Set the position of the player's image
+                dingoImage.rectTransform.localPosition = horizontalPosition;
+
+                yield return null;
+            }
+
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 22);
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(dingoImage.rectTransform.localPosition, Bingo, fracJourney);
+                yield return null;
+            }
+            startTime = Time.time;
+            while (Time.time - startTime < moveSpeed)
+            {
+                float fracJourney = (Time.time - startTime) / moveSpeed;
+                dingoImage.rectTransform.localPosition = Vector3.Lerp(dingoImage.rectTransform.localPosition, Bingo, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Cloud Burst")
+        {
+            environmentEffects.Add(DingoDatabase.Rain);
+            EvaluateEnvironmentEffects(environmentEffects);
+            Vector3 originalPosition = dingoImage.rectTransform.localPosition;
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/cloud");
+            attackImage4.sprite = punchLoad;
+            attackImage4.enabled = true;
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage4.rectTransform.localPosition = Vector3.Lerp(originalPosition, playerImage.rectTransform.localPosition, fracJourney);
+                yield return null;
+            }
+        }
+        else if (movename == "Luminous Burst")
+        {
+            float startTime = Time.time;
+            Sprite punchLoad = Resources.Load<Sprite>("BattleMoves/light");
+            Sprite punchLoad2 = Resources.Load<Sprite>("BattleMoves/illumination");
+            attackImage106.sprite = punchLoad2;
+            attackImage106.enabled = true;
+            Vector3 finalscale = new Vector3(60, 60, 1);
+            while (Time.time - startTime < (moveSpeed * 5))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 5);
+                attackImage6.rectTransform.localScale = Vector3.Lerp(Vector3.zero, finalscale, fracJourney);
+                yield return null;
+            }
+            attackImage105.sprite = punchLoad;
+            attackImage105.enabled = true;
+            yield return new WaitForSeconds(0.4f);
+            attackImage105.enabled = false;
+            attackImage106.enabled = false;
+        }
+        yield return new WaitForSeconds(1f); // Adjust the time as needed
+    }
+
 }

@@ -31,14 +31,12 @@ namespace DingoSystem
         public int ID { get; set; }
         public int Duration { get; set; } // Duration of the status effect in turns
         public string Name { get; set; }
-        public int Value { get; set; }
 
-        public StatusEffect(int id, int duration, string name, int value)
+        public StatusEffect(int id, int duration, string name)
         {
             ID = id;
             Duration = duration;
             Name = name;
-            Value = value;
         }
     }
     public class EnvironmentEffect

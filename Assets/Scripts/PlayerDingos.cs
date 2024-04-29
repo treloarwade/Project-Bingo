@@ -14,6 +14,7 @@ public class PlayerDingos : MonoBehaviour
     public List<DingoID> DingoList = new List<DingoID>(); // Assuming DingoID is defined elsewhere.
     public GameObject DingoItem;
     public GameObject StatScreenPrefab; // Reference to the stat screen prefab
+    public SpriteRenderer Dingo;
     public string InventoryID;
     public Text Success;
     private JSONArray jsonDingos;
@@ -102,6 +103,7 @@ public class PlayerDingos : MonoBehaviour
     public Text MoveAccuracy10;
     public Text MoveDescription10;
     public Text MoveType10;
+
 
     private void Awake()
     {

@@ -38,6 +38,7 @@ public static class DingoDatabase
 
 
     public static EnvironmentEffect Rain { get; } = new EnvironmentEffect(0, 3, "Rain");
+    public static StatusEffect Goo { get; } = new StatusEffect(0, 3, "Goo");
 
 
     // Add more base Dingos as needed
@@ -98,16 +99,16 @@ public static class DingoDatabase
         Waterdino.AddMove(new DingoMove(8, "Umbral Strike", "Dark", 90, 95, "The user strikes the opponent with a dark, shadowy force, dealing damage"));
         Waterdino.AddMove(new DingoMove(9, "Hydro Vortex", "Water", 100, 90, "The user creates a swirling vortex of water that engulfs the opponent, dealing damage"));
 
-        Weirdtongue.AddMove(new DingoMove(0, "Flamethrower", "Fire", 90, 100, "The target is scorched with an intense blast of fire."));
-        Weirdtongue.AddMove(new DingoMove(1, "Dragon Breath", "Dragon", 60, 100, "The user exhales a mighty gust that inflicts damage and may also leave the target with paralysis."));
-        Weirdtongue.AddMove(new DingoMove(2, "Fire Spin", "Fire", 35, 85, "The target becomes trapped within a fierce vortex of fire that rages for four to five turns."));
-        Weirdtongue.AddMove(new DingoMove(3, "Weird Lick", "Abnormal", 35, 85, "Target got licked."));
-        Weirdtongue.AddMove(new DingoMove(4, "Inferno Blast", "Fire", 90, 100, "Engulfs the opponent in flames with a powerful burst of fire."));
-        Weirdtongue.AddMove(new DingoMove(5, "Blazing Trail", "Fire", 80, 95, "Leaves a trail of fire in its wake as it charges towards the opponent."));
-        Weirdtongue.AddMove(new DingoMove(6, "Magma Surge", "Fire", 70, 100, "Causes a surge of molten magma to erupt from beneath the opponent."));
-        Weirdtongue.AddMove(new DingoMove(7, "Eruption", "Fire", 150, 100, "The user attacks the opposing Pokémon with explosive fury. The lower the user's HP, the lower the move's power."));
-        Weirdtongue.AddMove(new DingoMove(8, "Dragon Rage", "Fire", 40, 100, "This attack hits the target with a shock wave of pure rage. This attack always inflicts 40 HP damage."));
-        Weirdtongue.AddMove(new DingoMove(9, "Infernal Rage", "Fire", 120, 90, "Unleashes a torrent of fiery rage upon the opponent."));
+        Weirdtongue.AddMove(new DingoMove(0, "Scorching Fire", "Fire", 30, 100, "The target is scorched with an intense blast of fire."));
+        Weirdtongue.AddMove(new DingoMove(1, "Sinister Drain", "Dark", 35, 100, "The user drains the opponent's energy through dark means, dealing damage."));
+        Weirdtongue.AddMove(new DingoMove(2, "Dusk Shroud", "Dark", 0, 100, "The user cloaks itself in a shroud of darkness, sharply raising its defense."));
+        Weirdtongue.AddMove(new DingoMove(3, "Weird Lick", "Abnormal", 30, 90, "Target got licked."));
+        Weirdtongue.AddMove(new DingoMove(4, "Blazing Rampart", "Fire", 0, 100, "The user creates a wall of intense flames that shields it from all attacks for two turns."));
+        Weirdtongue.AddMove(new DingoMove(5, "Cursed Fangs", "Dark", 55, 100, "The user bites down with fangs imbued with dark energy, dealing damage"));
+        Weirdtongue.AddMove(new DingoMove(6, "Incendiary Impact", "Fire", 70, 100, "The user charges at the opponent with explosive force, dealing damage."));
+        Weirdtongue.AddMove(new DingoMove(7, "Magma Surge", "Fire", 85, 95, "Causes a surge of molten magma to erupt from beneath the opponent, dealing damage."));
+        Weirdtongue.AddMove(new DingoMove(8, "Umbral Strike", "Dark", 90, 95, "The user strikes the opponent with a dark, shadowy force, dealing damage."));
+        Weirdtongue.AddMove(new DingoMove(9, "Blazing Meteor", "Fire", 120, 80, "The user summons a meteor made of pure fire from the sky to crash into the opponent, dealing damage."));
 
         Magicpeni.AddMove(new DingoMove(0, "Mystic Massage", "Spirit", 65, 100, "The user sends out waves of psychic energy to gently soothe the opponent."));
         Magicpeni.AddMove(new DingoMove(1, "Hypno Kiss", "Spirit", 50, 100, "The user sends the opponent into a deep sleep with a hypnotic kiss."));
@@ -120,16 +121,16 @@ public static class DingoDatabase
         Magicpeni.AddMove(new DingoMove(8, "Psychic Phantasm", "Spirit", 100, 80, "The user creates a terrifying psychic illusion that damages the opponent."));
         Magicpeni.AddMove(new DingoMove(9, "Ethereal Embrace", "Spirit", 0, 100, "The user envelops the opponent in an ethereal embrace, causing damage over time."));
 
-        Marshmellow.AddMove(new DingoMove(0, "Sugar Slam", "Abnormal", 20, 100, "The user slams into the opponent with sweet force, causing damage."));
-        Marshmellow.AddMove(new DingoMove(1, "Cotton Candy Cloud", "Abnormal", 0, 100, "The user summons a fluffy cloud of cotton candy to restore health."));
-        Marshmellow.AddMove(new DingoMove(2, "Fluffy Fury", "Abnormal", 90, 95, "The user unleashes a flurry of fluffy attacks on the opponent, causing damage."));
-        Marshmellow.AddMove(new DingoMove(3, "Gooey Glare", "Abnormal", 0, 100, "The user gives the opponent a gooey glare, lowering their accuracy."));
-        Marshmellow.AddMove(new DingoMove(4, "Sticky Strike", "Abnormal", 70, 100, "The user strikes the opponent with a sticky appendage, causing damage."));
-        Marshmellow.AddMove(new DingoMove(5, "Sweet Shield", "Abnormal", 0, 100, "The user erects a shield of sweetness, reducing incoming damage."));
-        Marshmellow.AddMove(new DingoMove(6, "Mallow Munch", "Abnormal", 85, 90, "The user munches on a marshmallow, restoring health."));
-        Marshmellow.AddMove(new DingoMove(7, "Sugar Spin", "Abnormal", 60, 100, "The user spins around in a sweet whirlwind, striking the opponent."));
-        Marshmellow.AddMove(new DingoMove(8, "Fluffy Frenzy", "Abnormal", 100, 80, "The user goes into a fluffy frenzy, causing massive damage to the opponent."));
-        Marshmellow.AddMove(new DingoMove(9, "Marshmallow Mimic", "Abnormal", 0, 100, "The user mimics the opponent's last move, surprising them with sweetness."));
+        Marshmellow.AddMove(new DingoMove(0, "Sugar Slam", "Abnormal", 35, 100, "The user slams into the opponent with sweet force, causing damage."));
+        Marshmellow.AddMove(new DingoMove(1, "Sweet Shield", "Abnormal", 0, 100, "The user forms a shield of sweetness, raising defense sharply."));
+        Marshmellow.AddMove(new DingoMove(2, "Toasted Toss", "Fire", 20, 100, "The user throws a toasted marshmallow at the opponent, dealing damage."));
+        Marshmellow.AddMove(new DingoMove(3, "Gooey Glare", "Abnormal", 0, 100, "The user gives the opponent a gooey glare, lowering their attack and defense."));
+        Marshmellow.AddMove(new DingoMove(4, "Mallow Munch", "Abnormal", 0, 100, "The user munches on a marshmallow, restoring health."));
+        Marshmellow.AddMove(new DingoMove(5, "Toasty Tumble", "Fire", 50, 100, "The user rolls a flaming marshmallow at the opponent, dealing damage."));
+        Marshmellow.AddMove(new DingoMove(6, "Marshmallow Melt", "Fire", 65, 95, "The user heats up its body and charges forth at the opponent, dealing damage."));
+        Marshmellow.AddMove(new DingoMove(7, "Sugar Spin", "Abnormal", 85, 100, "The user spins around in a sweet whirlwind, striking the opponent."));
+        Marshmellow.AddMove(new DingoMove(8, "Roasty Beam", "Fire", 95, 95, "The user fires a beam of searing marshmallow heat at the opponent, dealing damage."));
+        Marshmellow.AddMove(new DingoMove(9, "Squishy Frenzy", "Abnormal", 110, 85, "The user goes into a squishy frenzy, causing massive damage to the opponent."));
 
         Robbersnail.AddMove(new DingoMove(0, "Sneaky Shell", "Dark", 0, 100, "The user retreats into its shell, becoming invisible and avoiding attacks."));
         Robbersnail.AddMove(new DingoMove(1, "Venomous Trail", "Abnormal", 70, 95, "The user leaves a trail of toxic slime that poisons the opponent upon contact."));
