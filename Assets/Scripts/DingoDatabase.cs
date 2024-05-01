@@ -46,12 +46,12 @@ public static class DingoDatabase
     {
         BingoStar.AddMove(new DingoMove(0, "Shooting Star", "Fire", 35, 90, "Summons the power of the stars to strike the opponent."));
         BingoStar.AddMove(new DingoMove(1, "Luminous Burst", "Light", 40, 100, "A burst of radiant light that dazzles the opponent."));
-        BingoStar.AddMove(new DingoMove(2, "Eclipse Eclipse", "Light", 0, 100, "Conjures a temporary eclipse that shrouds the battlefield."));
+        BingoStar.AddMove(new DingoMove(2, "Eclipse", "Light", 0, 100, "Conjures a temporary eclipse that shrouds the battlefield, increases light attack moves."));
         BingoStar.AddMove(new DingoMove(3, "Cosmic Shield", "Light", 0, 100, "Creates a protective shield using cosmic energy, raising defense sharply."));
         BingoStar.AddMove(new DingoMove(4, "Starfall", "Light", 55, 95, "Calls upon the stars to rain down upon the opponent."));
-        BingoStar.AddMove(new DingoMove(5, "Galactic Blast", "Light", 70, 100, "Unleashes a powerful blast of energy from distant galaxies."));
-        BingoStar.AddMove(new DingoMove(6, "Celestial Flare", "Fire", 85, 100, "The user summons a burst of stellar energy from the heavens, showering down on opponents with intense light."));
-        BingoStar.AddMove(new DingoMove(7, "Stellar Dance", "Light", 90, 100, "Dances gracefully among the stars, raising evasion and speed."));
+        BingoStar.AddMove(new DingoMove(5, "Stellar Dance", "Light", 0, 100, "Dances gracefully among the stars, increasing attack."));
+        BingoStar.AddMove(new DingoMove(6, "Galactic Blast", "Light", 70, 100, "Unleashes a powerful blast of energy from distant galaxies."));
+        BingoStar.AddMove(new DingoMove(7, "Celestial Flare", "Fire", 85, 100, "The user summons a burst of stellar energy from the heavens, showering down on opponents with intense light, dealing damage."));
         BingoStar.AddMove(new DingoMove(8, "Nebula Nova", "Light", 100, 90, "Creates a swirling nebula of energy around the opponent, dealing damage."));
         BingoStar.AddMove(new DingoMove(9, "Supernova Surge", "Light", 120, 80, "Releases a massive surge of energy reminiscent of a dying star."));
 

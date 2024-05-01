@@ -34,29 +34,32 @@ public class GrassCollision : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        // Check if the collider is the player
-        if (collider.CompareTag("Player"))
+        if (!isWiggling)
         {
-            Debug.Log("Player collided with grass.");
-            // Start wiggling the grass
-
-            // Generate a random number between 0 and 9
-            int randomNumber = Random.Range(0, 10);
-
-            // Check if the random number is less than 1 (which happens 1/10 times)
-            if (randomNumber < 1)
+            // Check if the collider is the player
+            if (collider.CompareTag("Player"))
             {
-                if (Time.time - lastActivationTime >= 3f)
+                Debug.Log("Player collided with grass.");
+                // Start wiggling the grass
+
+                // Generate a random number between 0 and 9
+                int randomNumber = Random.Range(0, 10);
+
+                // Check if the random number is less than 1 (which happens 1/10 times)
+                if (randomNumber < 1)
                 {
-                    SaveCoordinates();
-                    // Trigger the collision event
-                    Loader.Load(Loader.Scene.Battle, dingos);
-                }
+                    if (Time.time - lastActivationTime >= 3f)
+                    {
+                        SaveCoordinates();
+                        // Trigger the collision event
+                        Loader.Load(Loader.Scene.Battle, dingos);
+                    }
 
-            }
-            else
-            {
-                StartCoroutine(WiggleGrass());
+                }
+                else
+                {
+                    StartCoroutine(WiggleGrass());
+                }
             }
         }
     }
