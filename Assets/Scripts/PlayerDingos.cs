@@ -14,6 +14,7 @@ public class PlayerDingos : MonoBehaviour
     public List<DingoID> DingoList = new List<DingoID>(); // Assuming DingoID is defined elsewhere.
     public GameObject DingoItem;
     public GameObject StatScreenPrefab; // Reference to the stat screen prefab
+    public GameObject Bingo;
     public SpriteRenderer Dingo;
     public string InventoryID;
     public Text Success;
@@ -741,8 +742,20 @@ public class PlayerDingos : MonoBehaviour
     }
     public void ExitGame()
     {
+        SaveCoordinates();
         // Exit the application
         Application.Quit();
+    }
+    public void SaveCoordinates()
+    {
+        // Save the position and rotation of the object
+        PlayerPrefs.SetFloat("PosX", Bingo.transform.localPosition.x);
+        PlayerPrefs.SetFloat("PosY", Bingo.transform.localPosition.y + 5);
+        PlayerPrefs.SetFloat("PosZ", Bingo.transform.localPosition.z);
+        // Save PlayerPrefs to disk
+        PlayerPrefs.Save();
+
+        Debug.Log("Coordinates saved.");
     }
 
 }

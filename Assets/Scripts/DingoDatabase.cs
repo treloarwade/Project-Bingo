@@ -366,49 +366,68 @@ public static class DingoDatabase
     };
 
 
-    public static List<DingoID> allDingos = new List<DingoID> {
-    BingoStar,
-    Bean,
-    Bird,
-    Pinkthing,
-    Waterdino,
-    Weirdtongue,
-    Magicpeni,
-    Marshmellow,
-    Robbersnail,
-    Rock,
-    Seed,
-    Buggy,
-    DancingPlant,
-    Shingy,
-    SadCloud,
-    Worm,
-    Pebble,
-    Ghost,
-    Bulb,
-    Crick,
-    Firefly,
-    Freddy,
-    Fried,
-    Icemunchkin,
-    Octi,
-    Tanktop,
-    TrustFundBaby,
-    Plant
-    // Add more Dingos as needed
-};
+    public static List<DingoID> allDingos = new List<DingoID> 
+    {
+        BingoStar,
+        Bean,
+        Bird,
+        Pinkthing,
+        Waterdino,
+        Weirdtongue,
+        Magicpeni,
+        Marshmellow,
+        Robbersnail,
+        Rock,
+        Seed,
+        Buggy,
+        DancingPlant,
+        Shingy,
+        SadCloud,
+        Worm,
+        Pebble,
+        Ghost,
+        Bulb,
+        Crick,
+        Firefly,
+        Freddy,
+        Fried,
+        Icemunchkin,
+        Octi,
+        Tanktop,
+        TrustFundBaby,
+        Plant
+        // Add more Dingos as needed
+    };
     public static List<DingoID> newDingos = new List<DingoID>
-        {
+    {
         Icemunchkin,
         Marshmellow,
         Bird,
         BingoStar
         // Add more Dingos as needed
-        };
+    };
 
     public static List<DingoID> financeDingos = new List<DingoID>
     {
         TrustFundBaby,
+        Freddy
+    };
+    public static List<DingoID> secretDingos = new List<DingoID>
+    {
+        Magicpeni,
+        Tanktop
+    };
+    public static List<DingoID> fireDingos = new List<DingoID>
+    {
+        Marshmellow,
+        Weirdtongue,
+        Firefly
+    };
+    public static List<DingoID> waterDingos = new List<DingoID>
+    {
+        Waterdino,
+        Weirdtongue,
+        Octi
     };
     public static int GetTotalDingos()
     {

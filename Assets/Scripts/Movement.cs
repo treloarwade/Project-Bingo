@@ -39,7 +39,19 @@ public class Movement : MonoBehaviour
         );
         transform.position = savedPosition;
     }
-        void Start()
+    public void SaveCoordinates()
+    {
+        // Save the position and rotation of the object
+        PlayerPrefs.SetFloat("PosX", transform.position.x);
+        PlayerPrefs.SetFloat("PosY", transform.position.y);
+        PlayerPrefs.SetFloat("PosZ", transform.position.z);
+
+        // Save PlayerPrefs to disk
+        PlayerPrefs.Save();
+
+        Debug.Log("Coordinates saved.");
+    }
+    void Start()
     {
         body = GetComponent<Rigidbody2D>();
         LoadCoordinates();

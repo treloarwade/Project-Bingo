@@ -12,6 +12,22 @@ public class CameraFollow : MonoBehaviour
     public Camera mainCamera; // Reference to the main camera
     public float[] zoomLevels = { 1f, 2f, 5f, 10f, 15f }; // Orthographic sizes for each zoom level
     private int zoomLevelIndex = 0;
+    private Vector3 savedPosition;
+
+    private void Start()
+    {
+        LoadCoordinates();
+    }
+    public void LoadCoordinates()
+    {
+        // Load the position from PlayerPrefs
+        Vector3 savedPosition = new Vector3(
+            PlayerPrefs.GetFloat("PosX", 0),
+            PlayerPrefs.GetFloat("PosY", 0),
+            -10 // Assuming default Z position is -10
+        );
+        transform.localPosition = savedPosition;
+    }
 
     void LateUpdate()
     {
