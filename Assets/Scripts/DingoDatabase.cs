@@ -35,8 +35,16 @@ public static class DingoDatabase
     public static DingoID Tanktop { get; } = new DingoID(26, "Tanktop", "Abnormal", "Tanktop is an abnormal type Dingo with a tough exterior.", 200, 100, 90, 85, "tanktop", 200, 0, 50, 1);
     public static DingoID TrustFundBaby { get; } = new DingoID(27, "TrustFundBaby", "Finance", "TrustFundBaby is a finance type Dingo.", 200, 80, 70, 95, "trustfundbaby", 200, 0, 50, 1);
     public static DingoID Plant { get; } = new DingoID(28, "Plant", "Nature", "Plant is a nature type Dingo.", 200, 75, 80, 90, "plant", 200, 0, 50, 1);
+    public static DingoID Waterslime { get; } = new DingoID(29, "Waterslime", "Water", "Waterslime is a water type Dingo.", 200, 82, 81, 90, "waterslime", 200, 0, 50, 1);
+    public static DingoID Terrortentacle { get; } = new DingoID(30, "Terrortentacle", "Ghost", "Terrortentacle is a ghost type Dingo.", 200, 110, 70, 80, "terrortentacle", 200, 0, 50, 1);
+    public static DingoID Ducky { get; } = new DingoID(31, "Ducky", "Wind", "Ducky gracefully glides through the air with its feather-like wings, harnessing the power of the wind.", 200, 75, 85, 90, "ducky", 200, 0, 50, 1);
+    public static DingoID Forqwa { get; } = new DingoID(32, "Forqwa", "Physical", "Forqwa is a sturdy and muscular Dingo, known for its powerful physical attacks.", 200, 95, 80, 75, "forqwa", 200, 0, 50, 1);
+    public static DingoID Mustache { get; } = new DingoID(33, "Mustache", "Abnormal", "Mustache is a mysterious Dingo with an unusual appearance, its mustache-like tendrils hiding its true intentions.", 200, 70, 70, 100, "mustache", 200, 0, 50, 1);
 
 
+
+    public static DingoID BingoStar2 = new DingoID(1, "BingoStar", "Light", "BingoStar flies around the sky in search of powerful opponents.", 200, 1, 1, 1, "star", 200, 0, 50, 1);
+    public static DingoID Marshmellow2 = new DingoID(8, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 1, 1, 1, "marshmellow", 200, 0, 50, 1);
     public static EnvironmentEffect Rain { get; } = new EnvironmentEffect(0, 3, "Rain");
     public static StatusEffect Goo { get; } = new StatusEffect(0, 3, "Goo");
 
@@ -340,7 +348,7 @@ public static class DingoDatabase
         // Moves for TrustFundBaby
         TrustFundBaby.AddMove(new DingoMove(0, "Lay Offs", "Finance", 0, 90, "Initiates layoffs, reducing the opponent's Defense stat."));
         TrustFundBaby.AddMove(new DingoMove(1, "Market Analysis", "Finance", 0, 100, "Analyzes the opponent's strengths and weaknesses, revealing their stats or type advantages for a few turns."));
-        TrustFundBaby.AddMove(new DingoMove(2, "Bull Market", "Finance", 0, 100, "Creates a favorable market condition, boosting its own Attack and Special Attack stats."));
+        TrustFundBaby.AddMove(new DingoMove(2, "ATM Withdrawal", "Finance", 0, 100, "Pull some money out of your savings."));
         TrustFundBaby.AddMove(new DingoMove(3, "Bear Market", "Finance", 0, 100, "Creates an unfavorable market condition, lowering the opponent's Attack and Special Attack stats."));
         TrustFundBaby.AddMove(new DingoMove(4, "Stock Buyback", "Finance", 0, 100, "Repurchases its own HP, restoring a portion of its health."));
         TrustFundBaby.AddMove(new DingoMove(5, "Hostile Takeover", "Finance", 0, 100, "Seizes control of the battle, forcing the opponent to switch out to another Pokémon."));
@@ -359,6 +367,57 @@ public static class DingoDatabase
         Plant.AddMove(new DingoMove(7, "Canopy Cover", "Nature", 0, 100, "Creates a protective canopy of leaves, reducing incoming damage from special attacks."));
         Plant.AddMove(new DingoMove(8, "Dewdrop Defense", "Nature", 0, 100, "Covers itself in a refreshing dew, raising its evasion and reducing the accuracy of the opponent's next move."));
         Plant.AddMove(new DingoMove(9, "Seedling Surge", "Nature", 95, 100, "Channels the energy of nature into a powerful surge of growth, dealing massive damage to the opponent."));
+
+        Waterslime.AddMove(new DingoMove(0, "Water Cannon", "Water", 30, 100, "The target is blasted with a forceful shot of water."));
+        Waterslime.AddMove(new DingoMove(1, "Hydro Slice", "Water", 40, 90, ""));
+        Waterslime.AddMove(new DingoMove(2, "Aqua Shield", "Water", 0, 100, "Forms a protective shield of water to reduce incoming damage."));
+        Waterslime.AddMove(new DingoMove(3, "Look Sad", "Water", 0, 100, "The user gives a pitiful look, causing the opponent's morale to plummet, lowering the oponent's defense."));
+        Waterslime.AddMove(new DingoMove(4, "Nightfall Strike", "Dark", 60, 100, "The user strikes the opponent with a dark energy infused attack, dealing damage."));
+        Waterslime.AddMove(new DingoMove(5, "Hydro Beam", "Water", 60, 100, "The user unleashes a concentrated beam of pressurized water at the opponent, dealing damage"));
+        Waterslime.AddMove(new DingoMove(6, "Torrential Downpour", "Water", 0, 100, "The user summons a torrential downpour that drenches the battlefield, boosting its attack."));
+        Waterslime.AddMove(new DingoMove(7, "Tidal Wave", "Water", 85, 100, "Creates a massive wave that crashes down on the opponent."));
+        Waterslime.AddMove(new DingoMove(8, "Umbral Strike", "Dark", 90, 95, "The user strikes the opponent with a dark, shadowy force, dealing damage"));
+        Waterslime.AddMove(new DingoMove(9, "Hydro Vortex", "Water", 100, 90, "The user creates a swirling vortex of water that engulfs the opponent, dealing damage"));
+
+        Ducky.AddMove(new DingoMove(0, "Gale Blast", "Wind", 50, 100, "The user unleashes a powerful blast of wind energy at the opponent."));
+        Ducky.AddMove(new DingoMove(1, "Zephyr Slash", "Wind", 70, 95, "The user slashes at the opponent with razor-sharp winds, cutting through defenses."));
+        Ducky.AddMove(new DingoMove(2, "Whirlpool Whisk", "Wind", 60, 100, "The user whisks up a whirlpool of wind around the opponent, dealing damage."));
+        Ducky.AddMove(new DingoMove(3, "Breeze Burst", "Wind", 80, 90, "The user releases a burst of refreshing breeze that restores its own health."));
+        Ducky.AddMove(new DingoMove(4, "Tempest Toss", "Wind", 90, 85, "The user tosses the opponent into a raging tempest, dealing damage."));
+        Ducky.AddMove(new DingoMove(5, "Quack", "Abnormal", 0, 100, "The user emits a bizarre quacking sound that confuses the opponent, potentially causing them to become disoriented."));
+        Ducky.AddMove(new DingoMove(6, "Zephyr Strike", "Wind", 75, 95, "The user charges forward with the speed of a zephyr, striking the opponent."));
+        Ducky.AddMove(new DingoMove(7, "Cyclone Crush", "Wind", 100, 80, "The user generates a powerful cyclone that crushes the opponent with immense force."));
+        Ducky.AddMove(new DingoMove(8, "Whispering Wind", "Wind", 40, 100, "The user releases a gentle whispering wind that lulls the opponent to sleep."));
+        Ducky.AddMove(new DingoMove(9, "Breeze Blade", "Wind", 65, 90, "The user slashes at the opponent with a blade of cutting wind, dealing damage."));
+
+        Forqwa.AddMove(new DingoMove(0, "Lick", "Abnormal", 30, 100, "The user licks the opponent with its rugged tongue, potentially paralyzing them with a tingling sensation."));
+        Forqwa.AddMove(new DingoMove(8, "Earthquake Slam", "Physical", 100, 100, "The user slams the ground with tremendous force, causing a powerful earthquake that damages all opposing Pokémon."));
+        Forqwa.AddMove(new DingoMove(1, "Rock Smash", "Physical", 40, 100, "The user smashes the target with a rock-hard fist, breaking through barriers like Reflect and Light Screen."));
+        Forqwa.AddMove(new DingoMove(2, "Iron Fist", "Physical", 70, 90, "The user's fist becomes as hard as iron, allowing it to deliver a powerful punch that may lower the target's Defense stat."));
+        Forqwa.AddMove(new DingoMove(3, "Tectonic Charge", "Physical", 80, 85, "The user charges forward with seismic energy, slamming into the target with great force."));
+        Forqwa.AddMove(new DingoMove(4, "Stone Edge", "Physical", 100, 80, "The user hurls sharp rocks at the target to strike two to five times in a row."));
+        Forqwa.AddMove(new DingoMove(5, "Mudslide", "Physical", 70, 95, "The user triggers a mudslide that engulfs the opponent, dealing damage and potentially lowering their accuracy."));
+        Forqwa.AddMove(new DingoMove(6, "Meteor Smash", "Physical", 110, 70, "The user smashes into the opponent like a meteor, dealing massive damage but lowering its own Speed."));
+        Forqwa.AddMove(new DingoMove(7, "Boulder Toss", "Physical", 85, 90, "The user tosses a massive boulder at the target, dealing damage and potentially causing flinching."));
+
+
+
+
+
+
+
+
+
+
+        BingoStar2.AddMove(new DingoMove(0, "Shooting Star", "Fire", 35, 90, "Summons the power of the stars to strike the opponent."));
+        BingoStar2.AddMove(new DingoMove(1, "Luminous Burst", "Light", 40, 100, "A burst of radiant light that dazzles the opponent."));
+        BingoStar2.AddMove(new DingoMove(2, "Eclipse", "Light", 0, 100, "Conjures a temporary eclipse that shrouds the battlefield, increases light attack moves."));
+        BingoStar2.AddMove(new DingoMove(3, "Cosmic Shield", "Light", 0, 100, "Creates a protective shield using cosmic energy, raising defense sharply."));
+
+        Marshmellow2.AddMove(new DingoMove(0, "Sugar Slam", "Abnormal", 35, 100, "The user slams into the opponent with sweet force, causing damage."));
+        Marshmellow2.AddMove(new DingoMove(1, "Sweet Shield", "Abnormal", 0, 100, "The user forms a shield of sweetness, raising defense sharply."));
+        Marshmellow2.AddMove(new DingoMove(2, "Toasted Toss", "Fire", 20, 100, "The user throws a toasted marshmallow at the opponent, dealing damage."));
+        Marshmellow2.AddMove(new DingoMove(3, "Gooey Glare", "Abnormal", 0, 100, "The user gives the opponent a gooey glare, lowering their attack and defense."));
     }
 
     private static List<EnvironmentEffect> allEnvironemntEffects = new List<EnvironmentEffect>{
@@ -395,7 +454,8 @@ public static class DingoDatabase
         Octi,
         Tanktop,
         TrustFundBaby,
-        Plant
+        Plant,
+        Waterslime
         // Add more Dingos as needed
     };
     public static List<DingoID> newDingos = new List<DingoID>
@@ -426,8 +486,13 @@ public static class DingoDatabase
     public static List<DingoID> waterDingos = new List<DingoID>
     {
         Waterdino,
-        Weirdtongue,
+        Waterslime,
         Octi
+    };
+    public static List<DingoID> trainerDingos = new List<DingoID>
+    {
+        BingoStar2,
+        Marshmellow2
     };
     public static int GetTotalDingos()
     {

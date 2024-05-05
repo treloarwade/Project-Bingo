@@ -12,13 +12,14 @@ public static class Loader
         SampleScene
     }
 
-    public static void Load(Scene scene, List<DingoID> loadeddingos = null)
+    public static void Load(Scene scene, List<DingoID> loadeddingos = null, bool isTrainer = false)
     {
         switch (scene)
         {
             case Scene.Battle:
                 // Store the list of dingos in a global variable or some data holder accessible to the Battle scene
                 BattleManager.SetRandomDingos(loadeddingos);
+                BattleManager.SetTrainerDingos(isTrainer);
                 UnityEngine.SceneManagement.SceneManager.LoadScene(scene.ToString());
                 break;
             default:

@@ -13,6 +13,8 @@ using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 public class BattleManager : MonoBehaviour
 {
     private static List<DingoID> randomDingos;
+    private static List<DingoID> trainerDingos;
+    private static bool trainerbattle;
     public int minRandomStat = -5; // Minimum value for randomizing stats
     public int maxRandomStat = 5;  // Maximum value for randomizing stats
     public int dingoID;
@@ -48,6 +50,7 @@ public class BattleManager : MonoBehaviour
     public UnityEngine.UI.Image attackImage12;
     public UnityEngine.UI.Image attackImage13;
     public UnityEngine.UI.Image attackImage14;
+    public UnityEngine.UI.Image attackImage15;
     public UnityEngine.UI.Image attackImage101;
     public UnityEngine.UI.Image attackImage102;
     public UnityEngine.UI.Image attackImage103;
@@ -171,11 +174,13 @@ public class BattleManager : MonoBehaviour
     public ParticleSystem MarshmellowEffect2;
     public ParticleSystem MarshmellowEffect3; 
     public ParticleSystem ShootingstarEffect;
+    public ParticleSystem CashEffect;
     private int slotIndex2;
     private int moveDistance = 800;
     public float moveSpeed = 0.5f;
     public float jumpSpeed = 0.2f;
     public float animationTime = 0.2f;
+    public int previousrandomIndex2;
     // Constructor
     public BattleManager()
     {
@@ -274,19 +279,44 @@ public class BattleManager : MonoBehaviour
     {
         randomDingos = dingos;
     }
-    public static DingoID GetRandomDingos()
+    public static void SetTrainerDingos(bool istrainerbattle)
+    {
+        trainerbattle = istrainerbattle;
+    }
+    public static (DingoID, int) GetRandomDingos()
     {
         // Check if the list of dingos is not null and not empty
         if (randomDingos != null && randomDingos.Count > 0)
         {
             // Generate a random index within the range of the list
             int randomIndex = Random.Range(0, randomDingos.Count);
+            // Get the dingo at the random index
+            DingoID randomDingo = randomDingos[randomIndex];
+            // Return the dingo at the random index along with the index itself
+            return (randomDingo, randomIndex);
+        }
+        else
+        {
+            // If the list is null or empty, return null for the dingo and -1 for the index
+            return (null, -1);
+        }
+    }
+
+    public DingoID NextDingo(int randomIndex)
+    {
+        randomDingos.RemoveAt(randomIndex);
+        // Check if the list of dingos is not null and not empty
+        if (randomDingos != null && randomDingos.Count > 0)
+        {
+            // Generate a random index within the range of the list
+            randomIndex = Random.Range(0, randomDingos.Count);
             // Return the dingo at the random index
+            previousrandomIndex2 = randomIndex;
             return randomDingos[randomIndex];
         }
         else
         {
-            // If the list is null or empty, return null
+            Loader.Load(Loader.Scene.SampleScene);
             return null;
         }
     }
@@ -303,7 +333,8 @@ public class BattleManager : MonoBehaviour
     }
     public void Start()
     {
-
+        StartCoroutine(LeftMovetoPosition());
+        StartCoroutine(RightMovetoPosition());
         LoadPlayerDingoFromFile(0);
         if (jsonDingos == null || jsonDingos.Count == 0)
         {
@@ -356,11 +387,15 @@ public class BattleManager : MonoBehaviour
             healthBar2.SetHealth(playerHealth);
             playerImage.sprite = playerSprite;
         }
-        DingoID opponentDingo = GetRandomDingos();
-
+        (DingoID opponentDingo, int previousrandomIndex) = GetRandomDingos();
+        previousrandomIndex2 = previousrandomIndex;
         opponentDingo.Attack += UnityEngine.Random.Range(minRandomStat, maxRandomStat);
         opponentDingo.Defense += UnityEngine.Random.Range(minRandomStat, maxRandomStat);
         opponentDingo.Speed += UnityEngine.Random.Range(minRandomStat, maxRandomStat);
+        SetOpponentDingo(opponentDingo);
+    }
+    public void SetOpponentDingo(DingoID opponentDingo)
+    {
         DingoMove dingomove1 = opponentDingo.Moves[0];
         DingoMove dingomove2 = opponentDingo.Moves[1];
         DingoMove dingomove3 = opponentDingo.Moves[2];
@@ -569,7 +604,13 @@ public class BattleManager : MonoBehaviour
     {
         Debug.Log("Dingo item clicked: " + dingoIndex);
         // Call Use2nd() script with the selected Dingo index
+        StartCoroutine(UseNewDingo(dingoIndex));
+    }
+    IEnumerator UseNewDingo(int dingoIndex)
+    {
+        yield return StartCoroutine(LeftMoveoutPosition());
         Use2nd(dingoIndex);
+        yield return StartCoroutine(LeftMovetoPosition());
     }
     public void Move1()
     {
@@ -840,7 +881,17 @@ public class BattleManager : MonoBehaviour
         if (currentHealth <= 0)
         {
             SavePlayerDingo();
-            Loader.Load(Loader.Scene.SampleScene); // Example scene reload
+            if (trainerbattle)
+            {
+                yield return StartCoroutine(RightMoveoutPosition());
+                DingoID opponentDingo = NextDingo(previousrandomIndex2);
+                SetOpponentDingo(opponentDingo);
+                yield return StartCoroutine(RightMovetoPosition());
+            }
+            else
+            {
+                Loader.Load(Loader.Scene.SampleScene);
+            }
         }
         yield return new WaitForSeconds(1f);
         //yield return StartCoroutine(DecideOpponentAnimationCoroutine(moveName));
@@ -895,9 +946,67 @@ public class BattleManager : MonoBehaviour
         if (currentHealth <= 0)
         {
             SavePlayerDingo();
-            Loader.Load(Loader.Scene.SampleScene); // Example scene reload
+            if (trainerbattle)
+            {
+                yield return StartCoroutine(RightMoveoutPosition());
+                DingoID opponentDingo = NextDingo(previousrandomIndex2);
+                SetOpponentDingo(opponentDingo);
+                yield return StartCoroutine(RightMovetoPosition());
+            }
+            else
+            {
+                Loader.Load(Loader.Scene.SampleScene);
+            }
         }
         canPlayerInput = true;
+    }
+    IEnumerator LeftMovetoPosition()
+    {
+        Vector3 originalPosition = new Vector3(-570, 0, 0);
+        Vector3 outofboundsPosition = new Vector3(-1270, 0, 0);
+        float startTime = Time.time;
+        while (Time.time - startTime < (moveSpeed * 2f))
+        {
+            float fracJourney = (Time.time - startTime) / (moveSpeed * 2f);
+            playerImage.rectTransform.localPosition = Vector3.Lerp(outofboundsPosition, originalPosition, fracJourney);
+            yield return null;
+        }
+    }
+    IEnumerator RightMovetoPosition()
+    {
+        Vector3 originalPosition = new Vector3(570, 0, 0);
+        Vector3 outofboundsPosition = new Vector3(1270, 0, 0);
+        float startTime = Time.time;
+        while (Time.time - startTime < (moveSpeed * 2f))
+        {
+            float fracJourney = (Time.time - startTime) / (moveSpeed * 2f);
+            dingoImage.rectTransform.localPosition = Vector3.Lerp(outofboundsPosition, originalPosition, fracJourney);
+            yield return null;
+        }
+    }
+    IEnumerator LeftMoveoutPosition()
+    {
+        Vector3 originalPosition = new Vector3(-570, 0, 0);
+        Vector3 outofboundsPosition = new Vector3(-1270, 0, 0);
+        float startTime = Time.time;
+        while (Time.time - startTime < (moveSpeed * 2f))
+        {
+            float fracJourney = (Time.time - startTime) / (moveSpeed * 2f);
+            playerImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, outofboundsPosition, fracJourney);
+            yield return null;
+        }
+    }
+    IEnumerator RightMoveoutPosition()
+    {
+        Vector3 originalPosition = new Vector3(570, 0, 0);
+        Vector3 outofboundsPosition = new Vector3(1270, 0, 0);
+        float startTime = Time.time;
+        while (Time.time - startTime < (moveSpeed * 2f))
+        {
+            float fracJourney = (Time.time - startTime) / (moveSpeed * 2f);
+            dingoImage.rectTransform.localPosition = Vector3.Lerp(originalPosition, outofboundsPosition, fracJourney);
+            yield return null;
+        }
     }
     IEnumerator AttackBack(int moveNumber, string movetype)
     {
@@ -1128,6 +1237,7 @@ public class BattleManager : MonoBehaviour
                 playerstatLevel++;
                 CalculateNextLevelMaxXP(playerstatLevel);
 
+                jsonDingo.Add("SkillPoints", jsonDingo["SkillPoints"]+ 5);
                 // Reset XP to 0
                 playerstatXP = 0;
 
@@ -1874,6 +1984,41 @@ public class BattleManager : MonoBehaviour
                 playerImage.rectTransform.localRotation = Quaternion.Lerp(playerImage.rectTransform.localRotation, targetRotation, fracJourney);
                 yield return null;
             }
+        }
+        else if (movename == "ATM Withdrawal")
+        {
+            float startTime = Time.time;
+            Vector3 orignalposition = playerImage.rectTransform.localPosition;
+            Vector3 moveposition = new Vector3(-350, -39, 0);
+            Sprite trustfundbaby = Resources.Load<Sprite>("trustfundbaby");
+            Sprite trustfundbaby2 = Resources.Load<Sprite>("trustfundbabycreditcard");
+            Sprite atm = Resources.Load<Sprite>("BattleMoves/atm");
+            Sprite atm1 = Resources.Load<Sprite>("BattleMoves/atm1");
+            Sprite atm2 = Resources.Load<Sprite>("BattleMoves/atm2");
+            attackImage15.enabled = true;
+            attackImage15.sprite = atm;
+            playerImage.sprite = trustfundbaby2;
+            while (Time.time - startTime < (moveSpeed * 2))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 2);
+                playerImage.rectTransform.localPosition = Vector3.Lerp(orignalposition, moveposition, fracJourney);
+                yield return null;
+            }
+            attackImage15.sprite = atm1;
+            playerImage.sprite = trustfundbaby;
+            CashEffect.Play();
+            yield return new WaitForSeconds(1f);
+            attackImage15.sprite = atm2;
+            yield return new WaitForSeconds(1f);
+            startTime = Time.time;
+            while (Time.time - startTime < (moveSpeed * 2))
+            {
+                float fracJourney = (Time.time - startTime) / (moveSpeed * 2);
+
+                playerImage.rectTransform.localPosition = Vector3.Lerp(moveposition, orignalposition, fracJourney);
+                yield return null;
+            }
+            attackImage15.enabled = false;
         }
 
     }
