@@ -80,7 +80,7 @@ public class CopScript : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (Time.time - lastActivationTime >= 20f)
+        if (collider.CompareTag("Player") && Time.time - lastActivationTime >= 20f)
         {
             dialogBox.SetActive(true);
             dialogText.text = "Everyone catches the high level Dingos, so all the ones here are low level.";

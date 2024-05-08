@@ -40,6 +40,7 @@ public static class DingoDatabase
     public static DingoID Ducky { get; } = new DingoID(31, "Ducky", "Wind", "Ducky gracefully glides through the air with its feather-like wings, harnessing the power of the wind.", 200, 75, 85, 90, "ducky", 200, 0, 50, 1);
     public static DingoID Forqwa { get; } = new DingoID(32, "Forqwa", "Physical", "Forqwa is a sturdy and muscular Dingo, known for its powerful physical attacks.", 200, 95, 80, 75, "forqwa", 200, 0, 50, 1);
     public static DingoID Mustache { get; } = new DingoID(33, "Mustache", "Abnormal", "Mustache is a mysterious Dingo with an unusual appearance, its mustache-like tendrils hiding its true intentions.", 200, 70, 70, 100, "mustache", 200, 0, 50, 1);
+    public static DingoID Flame { get; } = new DingoID(33, "Flame", "Fire", "Flame is a flamer", 200, 70, 70, 100, "flame", 200, 0, 50, 1);
 
 
 
@@ -399,6 +400,16 @@ public static class DingoDatabase
         Forqwa.AddMove(new DingoMove(5, "Mudslide", "Physical", 70, 95, "The user triggers a mudslide that engulfs the opponent, dealing damage and potentially lowering their accuracy."));
         Forqwa.AddMove(new DingoMove(6, "Meteor Smash", "Physical", 110, 70, "The user smashes into the opponent like a meteor, dealing massive damage but lowering its own Speed."));
         Forqwa.AddMove(new DingoMove(7, "Boulder Toss", "Physical", 85, 90, "The user tosses a massive boulder at the target, dealing damage and potentially causing flinching."));
+        Flame.AddMove(new DingoMove(0, "Ember", "Fire", 40, 100, "The target is attacked with small flames. This may also leave the target with a burn."));
+        Flame.AddMove(new DingoMove(1, "Fire Spin", "Fire", 35, 85, "The target becomes trapped within a fierce vortex of fire that rages for four to five turns."));
+        Flame.AddMove(new DingoMove(2, "Flame Charge", "Fire", 50, 100, "Cloaked in flames, the user charges at the target. This may also leave the target with a burn."));
+        Flame.AddMove(new DingoMove(3, "Inferno", "Fire", 100, 50, "The user attacks by engulfing the target in an intense fire. This leaves the target with a burn."));
+        Flame.AddMove(new DingoMove(4, "Flamethrower", "Fire", 90, 100, "The target is scorched with an intense blast of fire. This may also leave the target with a burn."));
+        Flame.AddMove(new DingoMove(5, "Heat Wave", "Fire", 95, 90, "The user attacks by exhaling hot breath on the opposing team. This may also leave the targets with a burn."));
+        Flame.AddMove(new DingoMove(6, "Fire Blast", "Fire", 110, 85, "The target is attacked with an intense blast of all-consuming fire. This may also leave the target with a burn."));
+        Flame.AddMove(new DingoMove(7, "Flare Blitz", "Fire", 120, 100, "The user cloaks itself in fire and charges at the target. This may also leave the target with a burn."));
+        Flame.AddMove(new DingoMove(8, "Overheat", "Fire", 130, 90, "The user attacks the target at full power. The attack's recoil harshly lowers the user's Sp. Atk stat."));
+        Flame.AddMove(new DingoMove(9, "Burn Up", "Fire", 130, 100, "To inflict massive damage, the user burns itself out. After using this move, the user will no longer be Fire type."));
 
 
 
@@ -455,7 +466,10 @@ public static class DingoDatabase
         Tanktop,
         TrustFundBaby,
         Plant,
-        Waterslime
+        Waterslime,
+        Ducky,
+        Forqwa,
+        Flame
         // Add more Dingos as needed
     };
     public static List<DingoID> newDingos = new List<DingoID>
@@ -481,12 +495,14 @@ public static class DingoDatabase
     {
         Marshmellow,
         Weirdtongue,
-        Firefly
+        Firefly,
+        Flame
     };
     public static List<DingoID> waterDingos = new List<DingoID>
     {
         Waterdino,
         Waterslime,
+        Ducky,
         Octi
     };
     public static List<DingoID> trainerDingos = new List<DingoID>
