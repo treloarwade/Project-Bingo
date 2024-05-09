@@ -13,6 +13,7 @@ public class financeGrass : MonoBehaviour
     private float maxWiggleAngle = 10f;
     public List<DingoID> dingos = new List<DingoID>();
     private float lastActivationTime;
+    public int chance;
 
     private void Start()
     {
@@ -35,7 +36,7 @@ public class financeGrass : MonoBehaviour
     {
         if (collider.CompareTag("Player"))
         {
-            int randomNumber = Random.Range(0, 10);
+            int randomNumber = Random.Range(0, chance);
             if (randomNumber < 1)
             {
                 if (Time.time - lastActivationTime >= 3f)
