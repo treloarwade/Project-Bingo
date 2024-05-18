@@ -1,3 +1,6 @@
+using System.Collections;
+using System.IO;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -66,5 +69,14 @@ public class CameraFollow : MonoBehaviour
             Debug.LogWarning("Main camera reference is not set!");
         }
     }
-
+    public void CoordinateFetch()
+    {
+        mainCamera.orthographicSize = 20f;
+        StartCoroutine(ReturntoZoom());
+    }
+    IEnumerator ReturntoZoom()
+    {
+        yield return new WaitForSeconds(2f);
+        mainCamera.orthographicSize = zoomLevels[zoomLevelIndex];
+    }
 }

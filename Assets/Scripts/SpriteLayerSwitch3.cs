@@ -12,7 +12,6 @@ public class SpriteLayerSwitch3 : MonoBehaviour
     public float height;
     void Update()
     {
-        Debug.Log(bingo.transform.position);
         // Check if the bingo GameObject's Y position is below a certain threshold
         if (bingo.transform.position.y < height)
         {

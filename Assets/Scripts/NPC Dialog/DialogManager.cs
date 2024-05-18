@@ -11,7 +11,6 @@ public class DialogManager : MonoBehaviour
 
     public bool IsDialogActive()
     {
-        // Check if the dialog box is active
         return dialogBox.activeSelf;
     }
 

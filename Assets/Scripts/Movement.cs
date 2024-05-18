@@ -28,6 +28,7 @@ public class Movement : MonoBehaviour
 
     // Reference to the dialog manager
     public DialogManager dialogManager;
+    public BoatScript boatScript;
     private Vector3 savedPosition;
     public void LoadCoordinates()
     {
@@ -54,6 +55,7 @@ public class Movement : MonoBehaviour
     void Start()
     {
         body = GetComponent<Rigidbody2D>();
+
         LoadCoordinates();
     }
 
@@ -78,7 +80,7 @@ public class Movement : MonoBehaviour
     private void FixedUpdate()
     {
         // If movement is not disabled, handle movement
-        if (!dialogManager.IsDialogActive())
+        if (!dialogManager.IsDialogActive() && boatScript.movementEnabled)
         {
             Vector2 movement = new Vector2(horizontal * runSpeed, vertical * runSpeed);
             body.velocity = movement;
