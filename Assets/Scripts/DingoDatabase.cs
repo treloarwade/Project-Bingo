@@ -508,7 +508,8 @@ public static class DingoDatabase
     public static List<DingoID> trainerDingos = new List<DingoID>
     {
         BingoStar2,
-        Marshmellow2
+        Marshmellow2,
+        Octi
     };
     public static int GetTotalDingos()
     {

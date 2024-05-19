@@ -5,9 +5,6 @@ using UnityEngine.UI;
 using DingoSystem;
 using System.IO;
 using SimpleJSON;
-using System.Net.NetworkInformation;
-using TMPro;
-using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 
 public class BattleManager : MonoBehaviour
@@ -175,12 +172,16 @@ public class BattleManager : MonoBehaviour
     public ParticleSystem MarshmellowEffect3; 
     public ParticleSystem ShootingstarEffect;
     public ParticleSystem CashEffect;
+    public GameObject CashEffect2;
     private int slotIndex2;
     private int moveDistance = 800;
     public float moveSpeed = 0.5f;
     public float jumpSpeed = 0.2f;
     public float animationTime = 0.2f;
     public int previousrandomIndex2;
+    public BattleDialog dialogBox;
+    public BattleDialog dialogBox2;
+    public AutoHider autoHider;
     // Constructor
     public BattleManager()
     {
@@ -389,10 +390,12 @@ public class BattleManager : MonoBehaviour
         }
         (DingoID opponentDingo, int previousrandomIndex) = GetRandomDingos();
         previousrandomIndex2 = previousrandomIndex;
-        opponentDingo.Attack += UnityEngine.Random.Range(minRandomStat, maxRandomStat);
+        opponentDingo.Attack += UnityEngine.Random.Range(minRandomStat, maxRandomStat); 
         opponentDingo.Defense += UnityEngine.Random.Range(minRandomStat, maxRandomStat);
         opponentDingo.Speed += UnityEngine.Random.Range(minRandomStat, maxRandomStat);
         SetOpponentDingo(opponentDingo);
+        opponentpreviousmoveID = 99;
+        playerpreviousmoveID = 99;
     }
     public void SetOpponentDingo(DingoID opponentDingo)
     {
@@ -664,7 +667,7 @@ public class BattleManager : MonoBehaviour
     }
     private IEnumerator PerformMoveRoutine(int moveNumber, int movePower, float moveAccuracy, string moveName)
     {
-
+        CashEffect2.SetActive(false);
         int opponentMoveNumber = DetermineOpponentMove();
         DingoID dingo = DingoDatabase.GetDingoByID(dingostatID);
         DingoMove opponentMove = DingoDatabase.GetMoveByID(opponentMoveNumber, dingo);
@@ -672,7 +675,9 @@ public class BattleManager : MonoBehaviour
         DingoMove playerMove = DingoDatabase.GetMoveByID(moveNumber, playerdingo);
         if (playerpreviousmoveID == moveNumber)
         {
-            Debug.Log("Player tried to spam: " + moveName);
+            dialogBox2.gameObject.SetActive(true);
+            StartCoroutine(dialogBox2.TypeDialog("Using the same move consecutively causes any special effects to not work"));
+            autoHider.Bingo();
         }
         else
         {
@@ -687,7 +692,7 @@ public class BattleManager : MonoBehaviour
         }
         if (opponentpreviousmoveID == opponentMoveNumber)
         {
-            Debug.Log("Opponent tried to spam: " + opponentMove.Name);
+            Debug.Log("Opponent used " + opponentMove.Name + " for the second time");
         }
         else
         {
@@ -714,6 +719,7 @@ public class BattleManager : MonoBehaviour
         StartCoroutine(StopEffects());
         if (playerpreviousmoveID == moveNumber)
         {
+            playerpreviousmoveID = 99;
         }
         else
         {
@@ -728,6 +734,7 @@ public class BattleManager : MonoBehaviour
         }
         if (opponentpreviousmoveID == opponentMoveNumber)
         {
+            opponentpreviousmoveID = 99;
         }
         else
         {
@@ -783,9 +790,10 @@ public class BattleManager : MonoBehaviour
         // Return the effectiveness multiplier
         return effectiveness;
     }
-    private bool writeToStatus4 = true;
-    public void PerformMove(int moveNumber, int movePower, float moveAccuracy, string moveName, int attackerattack, int defenderdefense, string moveType, string defendertype, List<StatusEffect> attackerEffects, List<StatusEffect> defenderEffects, List<EnvironmentEffect> environmentEffects)
+    public IEnumerator PerformMove(int moveNumber, int movePower, float moveAccuracy, string moveName, int attackerattack, int defenderdefense, string moveType, string defendertype, List<StatusEffect> attackerEffects, List<StatusEffect> defenderEffects, List<EnvironmentEffect> environmentEffects)
     {
+        Status3.text = Status2.text;
+        Status2.text = Status.text;
         attackerEffects = new List<StatusEffect>();
         defenderEffects = new List<StatusEffect>();
         environmentEffects = new List<EnvironmentEffect>();
@@ -826,34 +834,30 @@ public class BattleManager : MonoBehaviour
                 float effectiveness = CalculateTypeModifier(moveType, defendertype);
                 int damageAmount = Mathf.Max(Mathf.RoundToInt((modifier * movePower) * effectiveness), 1);
                 Debug.Log(moveName + " is type " + moveType + ". It did x" + effectiveness + " against " + defendertype);
-                if (writeToStatus4)
-                {
-                    Status4.text = moveName + " is type " + moveType + ". It did x" + effectiveness + " against " + defendertype;
-                }
-                else
-                {
-                    Status5.text = moveName + " is type " + moveType + ". It did x" + effectiveness + " against " + defendertype;
-                }
-                                // Toggle the flag for the next call
-                writeToStatus4 = !writeToStatus4;
                 DefenderHP -= damageAmount; // Apply damage
 
-                // Update status text to indicate move did damage
-                Status.text = moveName + " did " + damageAmount + " damage.";
-                Status.gameObject.SetActive(true); // Set status text to visible
+                string bingo = moveName + " did " + damageAmount + " damage.";
+                if(effectiveness == 0.5f)
+                {
+                    bingo = moveName + " did " + damageAmount + " with x" + effectiveness + " damage against " + defendertype;
+                }
+                if (effectiveness == 2f)
+                {
+                    bingo = moveName + " did " + damageAmount + " with x" + effectiveness + " damage against " + defendertype;
+                }
+
+                yield return StartCoroutine(dialogBox.TypeDialog(bingo));
             }
             else
             {
-                // Update status text to indicate move missed
-                Status.text = moveName + " missed!";
-                Status.gameObject.SetActive(true); // Set status text to visible
+                yield return StartCoroutine(dialogBox.TypeDialog(moveName + " missed!"));
             }
         }
         else
         {
-            Status.text = moveName + " isn't supposed to do damage.";
-            Status.gameObject.SetActive(true);
+            yield return StartCoroutine(dialogBox.TypeDialog(moveName + " used a special effect."));
         }
+        yield return null;
     }
     private IEnumerator PlayerAttackFirst(int moveNumber, int movePower, float moveAccuracy, string moveName, int enemyMoveNumber, string opponentmoveType, string playermoveType, string opponentType)
     {
@@ -864,18 +868,14 @@ public class BattleManager : MonoBehaviour
             for (int i = 0; i < numberOfHits; i++)
             {
                 yield return StartCoroutine(DecideAnimationCoroutine(moveName));
-                PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects);
-                Status3.text = Status.text;
-                Status3.gameObject.SetActive(true);
+                yield return StartCoroutine(PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects));
                 currentHealth = DefenderHP;
                 UpdateUI();
                 yield return new WaitForSeconds(0.4f);
             }
         }
         yield return StartCoroutine(DecideAnimationCoroutine(moveName));
-        PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects);
-        Status3.text = Status.text;
-        Status3.gameObject.SetActive(true);
+        yield return StartCoroutine(PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects));
         currentHealth = DefenderHP;
         UpdateUI();
         if (currentHealth <= 0)
@@ -895,6 +895,7 @@ public class BattleManager : MonoBehaviour
         }
         yield return new WaitForSeconds(1f);
         //yield return StartCoroutine(DecideOpponentAnimationCoroutine(moveName));
+        CashEffect2.SetActive(false);
         yield return StartCoroutine(AttackBack(enemyMoveNumber, opponentmoveType));
         UpdateUI();
         if (playerHealth <= 0)
@@ -929,18 +930,14 @@ public class BattleManager : MonoBehaviour
             for (int i = 0; i < numberOfHits; i++)
             {
                 yield return StartCoroutine(DecideAnimationCoroutine(moveName));
-                PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects);
-                Status3.text = Status.text;
-                Status3.gameObject.SetActive(true);
+                yield return StartCoroutine(PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects));
                 currentHealth = DefenderHP;
                 UpdateUI();
                 yield return new WaitForSeconds(0.4f);
             }
         }
         yield return StartCoroutine(DecideAnimationCoroutine(moveName));
-        PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects);
-        Status3.text = Status.text;
-        Status3.gameObject.SetActive(true);
+        yield return StartCoroutine(PerformMove(moveNumber, movePower, moveAccuracy, moveName, playerstatATK, dingostatDEF, playermoveType, opponentType, playerEffects, opponentEffects, environmentEffects));
         currentHealth = DefenderHP;
         UpdateUI();
         if (currentHealth <= 0)
@@ -1024,27 +1021,23 @@ public class BattleManager : MonoBehaviour
                 {
                     case 0:
                         DefenderHP = playerHealth;
-                        PerformMove(1, dingo1power, dingo1accuracy, dingo1name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                        yield return StartCoroutine(PerformMove(1, dingo1power, dingo1accuracy, dingo1name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                         playerHealth = DefenderHP;
-                        Status2.text = Status.text; Status2.gameObject.SetActive(true);
                         break;
                     case 1:
                         DefenderHP = playerHealth;
-                        PerformMove(2, dingo2power, dingo2accuracy, dingo2name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                        yield return StartCoroutine(PerformMove(2, dingo2power, dingo2accuracy, dingo2name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                         playerHealth = DefenderHP;
-                        Status2.text = Status.text; Status2.gameObject.SetActive(true);
                         break;
                     case 2:
                         DefenderHP = playerHealth;
-                        PerformMove(3, dingo3power, dingo3accuracy, dingo3name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                        yield return StartCoroutine(PerformMove(3, dingo3power, dingo3accuracy, dingo3name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                         playerHealth = DefenderHP;
-                        Status2.text = Status.text; Status2.gameObject.SetActive(true);
                         break;
                     case 3:
                         DefenderHP = playerHealth;
-                        PerformMove(4, dingo4power, dingo4accuracy, dingo4name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                        yield return StartCoroutine(PerformMove(4, dingo4power, dingo4accuracy, dingo4name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                         playerHealth = DefenderHP;
-                        Status2.text = Status.text; Status2.gameObject.SetActive(true);
                         break;
                     default:
                         Debug.LogError("Invalid move selected!");
@@ -1060,27 +1053,23 @@ public class BattleManager : MonoBehaviour
         {
             case 0:
                 DefenderHP = playerHealth;
-                PerformMove(1, dingo1power, dingo1accuracy, dingo1name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                yield return StartCoroutine(PerformMove(1, dingo1power, dingo1accuracy, dingo1name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                 playerHealth = DefenderHP;
-                Status2.text = Status.text; Status2.gameObject.SetActive(true);
                 break;
             case 1:
                 DefenderHP = playerHealth;
-                PerformMove(2, dingo2power, dingo2accuracy, dingo2name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                yield return StartCoroutine(PerformMove(2, dingo2power, dingo2accuracy, dingo2name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                 playerHealth = DefenderHP;
-                Status2.text = Status.text; Status2.gameObject.SetActive(true);
                 break;
             case 2:
                 DefenderHP = playerHealth;
-                PerformMove(3, dingo3power, dingo3accuracy, dingo3name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                yield return StartCoroutine(PerformMove(3, dingo3power, dingo3accuracy, dingo3name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                 playerHealth = DefenderHP;
-                Status2.text = Status.text; Status2.gameObject.SetActive(true);
                 break;
             case 3:
                 DefenderHP = playerHealth;
-                PerformMove(4, dingo4power, dingo4accuracy, dingo4name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects);
+                yield return StartCoroutine(PerformMove(4, dingo4power, dingo4accuracy, dingo4name, dingostatATK, playerstatDEF, movetype, playerstatType, opponentEffects, playerEffects, environmentEffects));
                 playerHealth = DefenderHP;
-                Status2.text = Status.text; Status2.gameObject.SetActive(true);
                 break;
             default:
                 Debug.LogError("Invalid move selected!");
@@ -2006,6 +1995,7 @@ public class BattleManager : MonoBehaviour
             }
             attackImage15.sprite = atm1;
             playerImage.sprite = trustfundbaby;
+            CashEffect2.SetActive(true);
             CashEffect.Play();
             yield return new WaitForSeconds(1f);
             attackImage15.sprite = atm2;
@@ -2054,8 +2044,12 @@ public class BattleManager : MonoBehaviour
         }
         yield return new WaitForSeconds(0.2f);
 
-
+        Status3.text = Status2.text;
+        Status2.text = Status.text;
         float randomValue = Random.value;
+        int randomPercentage = Mathf.RoundToInt(randomValue * 100);
+        string bingo = "Agent Bingo rolled a " + randomPercentage + " you need 70 or higher.";
+        yield return StartCoroutine(dialogBox.TypeDialog(bingo));
         if (randomValue < 0.7f)
         {
             //Miss

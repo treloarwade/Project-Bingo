@@ -5,12 +5,13 @@ using DingoSystem;
 using SimpleJSON;
 using System.IO;
 using System;
+using System.Net.NetworkInformation;
+using Unity.VisualScripting;
 
 public class PlayerDingos : MonoBehaviour
 {
     public static PlayerDingos Instance;
     public Transform PlayerDingoContent;
-    public Transform StatDingoContent;
     public List<DingoID> DingoList = new List<DingoID>(); // Assuming DingoID is defined elsewhere.
     public GameObject DingoItem;
     public GameObject StatScreenPrefab; // Reference to the stat screen prefab
@@ -38,6 +39,9 @@ public class PlayerDingos : MonoBehaviour
     public Text DESCstat;
     public Text HPstat;
     public Text XPstat;
+    private int attack;
+    private int defense;
+    private int speed;
     public Image SPRITEstat;
     public Text ActiveMove1;
     public Text ActiveMove2;
@@ -187,17 +191,151 @@ public class PlayerDingos : MonoBehaviour
             Debug.LogWarning("Dingo JSON file not found at path: " + filePath);
         }
     }
+    public void AddAttack()
+    {
+        filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+        if (File.Exists(filePath))
+        {
+            jsonData = File.ReadAllText(filePath);
+            jsonDingos = JSON.Parse(jsonData) as JSONArray;
+            if (jsonDingos != null && jsonDingos.Count > 0)
+            {
+                JSONObject dingo = jsonDingos[pagenumber].AsObject;
+                attack = dingo["ATK"];
+                defense = dingo["DEF"];
+                speed = dingo["SPD"];
+                attack++;
+                while (jsonDingos.Count <= pagenumber)
+                {
+                    jsonDingos.Add(new JSONObject());
+                }
+
+                JSONObject jsonDingo = new JSONObject();
+                jsonDingo.Add("ID", pagenumber);
+                jsonDingo.Add("DingoID", dingo["DingoID"]);
+                jsonDingo.Add("Name", dingo["Name"]);
+                jsonDingo.Add("Type", dingo["Type"]);
+                jsonDingo.Add("Description", dingo["Description"]);
+                jsonDingo.Add("CurrentHealth", dingo["CurrentHealth"]);
+                jsonDingo.Add("ATK", attack);
+                jsonDingo.Add("DEF", defense);
+                jsonDingo.Add("SPD", speed);
+                jsonDingo.Add("Sprite", dingo["Sprite"]);
+                jsonDingo.Add("MaxHealth", dingo["MaxHealth"]);
+                jsonDingo.Add("XP", dingo["XP"]);
+                jsonDingo.Add("MaxXP", dingo["MaxXP"]);
+                jsonDingo.Add("Level", dingo["Level"]);
+                jsonDingo.Add("Move1ID", dingo["Move1ID"]);
+                jsonDingo.Add("Move2ID", dingo["Move2ID"]);
+                jsonDingo.Add("Move3ID", dingo["Move3ID"]);
+                jsonDingo.Add("Move4ID", dingo["Move4ID"]);
+                jsonDingos[pagenumber] = jsonDingo;
+
+                // Save the updated data back to the file
+                File.WriteAllText(filePath, jsonDingos.ToString());
+            }
+        }
+        ATKstat.text = "Attack " + attack;
+    }
+    public void AddDefense()
+    {
+        filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+        if (File.Exists(filePath))
+        {
+            jsonData = File.ReadAllText(filePath);
+            jsonDingos = JSON.Parse(jsonData) as JSONArray;
+            if (jsonDingos != null && jsonDingos.Count > 0)
+            {
+                JSONObject dingo = jsonDingos[pagenumber].AsObject;
+                attack = dingo["ATK"];
+                defense = dingo["DEF"];
+                speed = dingo["SPD"];
+                defense++;
+                while (jsonDingos.Count <= pagenumber)
+                {
+                    jsonDingos.Add(new JSONObject());
+                }
+
+                JSONObject jsonDingo = new JSONObject();
+                jsonDingo.Add("ID", pagenumber);
+                jsonDingo.Add("DingoID", dingo["DingoID"]);
+                jsonDingo.Add("Name", dingo["Name"]);
+                jsonDingo.Add("Type", dingo["Type"]);
+                jsonDingo.Add("Description", dingo["Description"]);
+                jsonDingo.Add("CurrentHealth", dingo["CurrentHealth"]);
+                jsonDingo.Add("ATK", attack);
+                jsonDingo.Add("DEF", defense);
+                jsonDingo.Add("SPD", speed);
+                jsonDingo.Add("Sprite", dingo["Sprite"]);
+                jsonDingo.Add("MaxHealth", dingo["MaxHealth"]);
+                jsonDingo.Add("XP", dingo["XP"]);
+                jsonDingo.Add("MaxXP", dingo["MaxXP"]);
+                jsonDingo.Add("Level", dingo["Level"]);
+                jsonDingo.Add("Move1ID", dingo["Move1ID"]);
+                jsonDingo.Add("Move2ID", dingo["Move2ID"]);
+                jsonDingo.Add("Move3ID", dingo["Move3ID"]);
+                jsonDingo.Add("Move4ID", dingo["Move4ID"]);
+                jsonDingos[pagenumber] = jsonDingo;
+
+                // Save the updated data back to the file
+                File.WriteAllText(filePath, jsonDingos.ToString());
+            }
+        }
+        DEFstat.text = "Defense " + defense;
+    }
+    public void AddSpeed()
+    {
+        filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+        if (File.Exists(filePath))
+        {
+            jsonData = File.ReadAllText(filePath);
+            jsonDingos = JSON.Parse(jsonData) as JSONArray;
+            if (jsonDingos != null && jsonDingos.Count > 0)
+            {
+                JSONObject dingo = jsonDingos[pagenumber].AsObject;
+                attack = dingo["ATK"];
+                defense = dingo["DEF"];
+                speed = dingo["SPD"];
+                speed++;
+                while (jsonDingos.Count <= pagenumber)
+                {
+                    jsonDingos.Add(new JSONObject());
+                }
+
+                JSONObject jsonDingo = new JSONObject();
+                jsonDingo.Add("ID", pagenumber);
+                jsonDingo.Add("DingoID", dingo["DingoID"]);
+                jsonDingo.Add("Name", dingo["Name"]);
+                jsonDingo.Add("Type", dingo["Type"]);
+                jsonDingo.Add("Description", dingo["Description"]);
+                jsonDingo.Add("CurrentHealth", dingo["CurrentHealth"]);
+                jsonDingo.Add("ATK", attack);
+                jsonDingo.Add("DEF", defense);
+                jsonDingo.Add("SPD", speed);
+                jsonDingo.Add("Sprite", dingo["Sprite"]);
+                jsonDingo.Add("MaxHealth", dingo["MaxHealth"]);
+                jsonDingo.Add("XP", dingo["XP"]);
+                jsonDingo.Add("MaxXP", dingo["MaxXP"]);
+                jsonDingo.Add("Level", dingo["Level"]);
+                jsonDingo.Add("Move1ID", dingo["Move1ID"]);
+                jsonDingo.Add("Move2ID", dingo["Move2ID"]);
+                jsonDingo.Add("Move3ID", dingo["Move3ID"]);
+                jsonDingo.Add("Move4ID", dingo["Move4ID"]);
+                jsonDingos[pagenumber] = jsonDingo;
+
+                // Save the updated data back to the file
+                File.WriteAllText(filePath, jsonDingos.ToString());
+            }
+        }
+        SPDstat.text = "Speed " + speed;
+    }
+
     public void ShowAllDingoStatScreens()
     {
         string filePath;
         filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
         jsonData = File.ReadAllText(filePath);
         jsonDingos = JSON.Parse(jsonData) as JSONArray;
-        // Clear existing stat screen items before populating the list
-        foreach (Transform child in StatDingoContent)
-        {
-            Destroy(child.gameObject);
-        }
 
         Debug.Log("File path: " + filePath);
 
@@ -400,11 +538,6 @@ public class PlayerDingos : MonoBehaviour
                 JSONNode dingoData = jsonDingos[index];
                 JSONObject dingo = dingoData.AsObject;
 
-                // Clear existing stat screen items before populating the list
-                foreach (Transform child in StatDingoContent)
-                {
-                    Destroy(child.gameObject);
-                }
 
                 DESCstat.text = dingo["Description"];
                 NAMEstat.text = dingo["Name"];
@@ -563,11 +696,6 @@ public class PlayerDingos : MonoBehaviour
             JSONNode dingoData = jsonDingos[index];
             JSONObject dingo = dingoData.AsObject;
 
-            // Clear existing stat screen items before populating the list
-            foreach (Transform child in StatDingoContent)
-            {
-                Destroy(child.gameObject);
-            }
 
             DESCstat.text = dingo["Description"];
             NAMEstat.text = dingo["Name"];
