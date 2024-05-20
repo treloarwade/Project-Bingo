@@ -134,7 +134,11 @@ public class Movement : MonoBehaviour
     }
     public void IncreaseRunSpeed()
     {
-        runSpeed = 4.0f;
+        runSpeed += 4.0f;
+    }
+    public void DecreaseRunSpeed()
+    {
+        runSpeed -= 4.0f;
     }
     public void OnClick()
     {

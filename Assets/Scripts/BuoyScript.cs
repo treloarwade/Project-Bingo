@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.GridBrushBase;
 
 public class BuoyScript : MonoBehaviour
 {
@@ -10,14 +9,18 @@ public class BuoyScript : MonoBehaviour
     private float currentRotation = 0f;
     private float rotationDirection = 1f;
     Rigidbody2D body;
+
     void Start()
     {
         body = GetComponent<Rigidbody2D>();
+        StartCoroutine(RandomlyChangeDirection());
     }
+
     private void FixedUpdate()
     {
         RotateSprite();
     }
+
     private void RotateSprite()
     {
         currentRotation += rotationDirection * rotationSpeed * Time.fixedDeltaTime;
@@ -28,5 +31,17 @@ public class BuoyScript : MonoBehaviour
         }
 
         body.SetRotation(currentRotation);
+    }
+
+    private IEnumerator RandomlyChangeDirection()
+    {
+        while (true)
+        {
+            // Wait for a random amount of time
+            yield return new WaitForSeconds(Random.Range(1f, 5f));
+
+            // Randomly change rotation direction
+            rotationDirection = Random.Range(0, 2) == 0 ? -1f : 1f;
+        }
     }
 }

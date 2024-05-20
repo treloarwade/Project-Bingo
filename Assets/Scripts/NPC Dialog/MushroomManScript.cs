@@ -1,33 +1,38 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class MushroomManScript : MonoBehaviour
 {
     public GameObject dialogBox;
     public Text dialogText;
-    private float lastActivationTime;
     private bool treesMoved = false;
     public int moveDistance = 2; // Adjusted moveDistance for a larger movement
     public float moveSpeed = 1.5f; // Adjusted moveSpeed for smoother animation
     public GameObject trees;
     private Vector3 targetPosition;
-    private void OnTriggerEnter2D(Collider2D collider)
+    public void ShingoMushroom()
     {
-        // Check if it hasn't activated in the last 20 seconds
-        if (Time.time - lastActivationTime >= 20f)
+        StartCoroutine(Dingo());
+    }
+    IEnumerator Dingo()
+    {
+        // Check if the dialog box is not active
+        if (!dialogBox.activeSelf)
         {
+            yield return new WaitForSeconds(0.1f);
             dialogBox.SetActive(true);
             dialogText.text = "The path is open my friend. I cannot follow you down the path to glory... I can only open it";
-            lastActivationTime = Time.time;
             if (!treesMoved)
             {
                 dialogText.text = "I'll open the trees for you.";
                 // Set target position to current position + offset to the right
-                targetPosition = trees.transform.position + Vector3.right * moveDistance;
+                targetPosition = new Vector3(-60.8199982f, 27.69f, 0);
                 StartCoroutine(MoveTreesCoroutine());
             }
         }
+        yield return null;
     }
     private IEnumerator MoveTreesCoroutine()
     {

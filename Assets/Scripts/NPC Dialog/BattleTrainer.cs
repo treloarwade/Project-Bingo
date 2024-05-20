@@ -16,16 +16,13 @@ public class BattleTrainer : MonoBehaviour
         lastActivationTime = Time.time;
         dingos = new List<DingoID>(DingoDatabase.trainerDingos);
     }
-    private void OnTriggerEnter2D(Collider2D collider)
+    public void Shingo()
     {
-        if (Time.time - lastActivationTime >= 20f)
-        {
-            dialogBox.SetActive(true);
-            dialogText.text = "I will be the first battle";
-            lastActivationTime = Time.time;
-            SaveCoordinates();
-            Loader.Load(Loader.Scene.Battle, dingos, isTrainer);
-        }
+        dialogBox.SetActive(true);
+        dialogText.text = "I will be the first battle";
+        lastActivationTime = Time.time;
+        SaveCoordinates();
+        Loader.Load(Loader.Scene.Battle, dingos, isTrainer);
     }
     public void SaveCoordinates()
     {

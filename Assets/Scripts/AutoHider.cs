@@ -6,10 +6,6 @@ using UnityEngine.UI;
 public class AutoHider : MonoBehaviour
 {
     public float delayInSeconds = 5f;
-    void Start()
-    {
-        StartCoroutine(HideAfterDelay());
-    }
     public void Bingo()
     {
         StartCoroutine(HideAfterDelay());

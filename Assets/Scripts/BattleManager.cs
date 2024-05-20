@@ -302,7 +302,6 @@ public class BattleManager : MonoBehaviour
             return (null, -1);
         }
     }
-
     public DingoID NextDingo(int randomIndex)
     {
         randomDingos.RemoveAt(randomIndex);
@@ -541,7 +540,6 @@ public class BattleManager : MonoBehaviour
         DingoMenu.SetActive(false);
         canPlayerInput = true;
     }
-
     public void ListDingos()
     {
         // Clear existing Dingo items before populating the list
@@ -660,6 +658,13 @@ public class BattleManager : MonoBehaviour
     {
         if (!canPlayerInput)
         {
+            return; // Exit the method if input is blocked
+        }
+        if (trainerbattle)
+        {
+            dialogBox2.gameObject.SetActive(true);
+            StartCoroutine(dialogBox2.TypeDialog("You cannot catch Dingos that belong to someone else"));
+            autoHider.Bingo();
             return; // Exit the method if input is blocked
         }
         canPlayerInput = false;
@@ -1287,6 +1292,10 @@ public class BattleManager : MonoBehaviour
             Debug.LogError("slotIndex2 is not defined or invalid.");
         }
     }
+    public void Display()
+    {
+        Debug.Log(slotIndex2);
+    }    
     private void Use2nd(int dingoIndex)
     {
         if (jsonDingos != null && dingoIndex >= 0 && dingoIndex < jsonDingos.Count)
@@ -1314,6 +1323,7 @@ public class BattleManager : MonoBehaviour
         {
             Debug.LogWarning("Invalid Dingo index: " + dingoIndex);
         }
+        slotIndex2 = dingoIndex;
     }
     public void CalculateNextLevelMaxXP(int currentLevel)
     {
