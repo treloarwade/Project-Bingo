@@ -46,7 +46,6 @@ public class MushroomManScript : MonoBehaviour
             trees.transform.position = Vector3.Lerp(initialPosition, targetPosition, t);
             yield return null;
         }
-
         treesMoved = true;
     }
 }

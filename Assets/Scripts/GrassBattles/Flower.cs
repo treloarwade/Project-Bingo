@@ -17,7 +17,7 @@ public class Flower : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (Random.value < switchChance)
+        if (Random.value < switchChance && collider.gameObject.CompareTag("shoes"))
         {
             spriteRenderer.sprite = sprites[0];
 

@@ -7,7 +7,7 @@ public class DialogManager : MonoBehaviour
 {
     public GameObject dialogBox;
     public Text dialogText;
-    private bool movementEnabled = true;
+    public bool movementEnabled = true;
 
     public bool IsDialogActive()
     {

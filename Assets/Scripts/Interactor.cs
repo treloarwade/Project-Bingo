@@ -9,22 +9,21 @@ public class Interactor : MonoBehaviour
     public bool isInRange;
     public UnityEvent interactAction;
     public GameObject text;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
-        if(isInRange)
+        if (isInRange)
         {
             if (Input.GetButtonDown("Fire1"))
             {
+                Debug.Log("shingo2");
                 interactAction.Invoke();
             }
         }
+    }
+    public void TurnOff()
+    {
+        isInRange = false;
+        text.SetActive(false);
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -38,8 +37,7 @@ public class Interactor : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            isInRange = false;
-            text.SetActive(false);
+            TurnOff();
         }
     }
 }
