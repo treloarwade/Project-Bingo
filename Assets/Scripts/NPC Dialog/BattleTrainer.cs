@@ -8,19 +8,16 @@ public class BattleTrainer : MonoBehaviour
 {
     public GameObject dialogBox;
     public Text dialogText;
-    private float lastActivationTime;
     public List<DingoID> dingos = new List<DingoID>();
     public bool isTrainer = true;
     private void Start()
     {
-        lastActivationTime = Time.time;
         dingos = new List<DingoID>(DingoDatabase.trainerDingos);
     }
     public void Shingo()
     {
         dialogBox.SetActive(true);
         dialogText.text = "I will be the first battle";
-        lastActivationTime = Time.time;
         SaveCoordinates();
         Loader.Load(Loader.Scene.Battle, dingos, isTrainer);
     }

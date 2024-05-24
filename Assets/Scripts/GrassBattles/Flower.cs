@@ -4,44 +4,55 @@ using UnityEngine;
 
 public class Flower : MonoBehaviour
 {
-#pragma warning disable CS0414 // The field 'GrassBattle.isWiggling' is assigned but its value is never used
-    private bool isWiggling;
-#pragma warning restore CS0414 // The field 'GrassBattle.isWiggling' is assigned but its value is never used
-    public float wiggleDuration = 0.5f;
-    public float maxWiggleAngle = 10f;
-
+    public Sprite[] sprites;
+    public Collider2D col;
+    private SpriteRenderer spriteRenderer;
+    [Range(0.0f, 1.0f)]
+    public float switchChance = 0.5f;
+    public static int destroyedFlowerCount = 0;
+    void Start()
+    {
+        // Get the SpriteRenderer component attached to this GameObject
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (!isWiggling)
+        if (Random.value < switchChance)
         {
-            StartCoroutine(WiggleGrass());
+            spriteRenderer.sprite = sprites[0];
+
+            float randomX = Random.Range(-0.08f, 0.08f);
+            float randomY = Random.Range(-0.15f, -0.05f);
+            // Create a new Vector3 with the random values
+            Vector3 randomMovement = new Vector3(randomX, randomY, 0f);  // Keep Z at 0
+
+            // Update the position with the random movement
+            transform.position += randomMovement;
+            // Randomly rotate the Z axis
+            float randomZRotation = Random.Range(0f, 360f);
+            Debug.Log($"Random Z Rotation: {randomZRotation}");
+
+            // Create the target rotation with the random Z rotation
+            Quaternion targetRotation = Quaternion.Euler(0, 0, randomZRotation);
+
+            // Update the object's rotation
+            transform.rotation = targetRotation;
+
+            // Debug the rotation to verify
+            Debug.Log($"Applied Rotation: {transform.rotation.eulerAngles}");
+            // 50% chance to flip the X axis
+            if (Random.value > 0.5f)
+            {
+                // Flip the X axis by scaling it to -1
+                Vector3 localScale = transform.localScale;
+                localScale.x *= -1;
+                transform.localScale = localScale;
+            }
+            destroyedFlowerCount++;
+            Debug.Log(destroyedFlowerCount);
+            col.enabled = false;
         }
 
-    }
-    private IEnumerator WiggleGrass()
-    {
-        isWiggling = true; // Set wiggling flag to true
-
-        float startTime = Time.time; // Record the start time
-        Quaternion originalRotation = transform.rotation; // Store the original rotation
-
-        // Randomly select the direction of the initial wiggle
-        float direction = Random.Range(0, 2) == 0 ? -1f : 1f;
-
-        while (Time.time - startTime < wiggleDuration)
-        {
-            float t = (Time.time - startTime) / wiggleDuration; // Calculate the interpolation parameter
-
-            // Calculate the angle to rotate using a smooth oscillating motion
-            float smoothAngle = Mathf.Lerp(-1f, 1f, Mathf.Sin(t * Mathf.PI));
-            float angle = Mathf.Lerp(-maxWiggleAngle, maxWiggleAngle, smoothAngle * direction);
-
-            transform.rotation = originalRotation * Quaternion.Euler(0f, 0f, angle); // Rotate the grass object
-            yield return null; // Wait for the next frame
-        }
-
-        transform.rotation = originalRotation; // Reset rotation when wiggling is done
-        isWiggling = false; // Set wiggling flag to false
     }
 }
 

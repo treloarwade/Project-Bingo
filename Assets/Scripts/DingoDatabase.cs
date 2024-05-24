@@ -13,7 +13,7 @@ public static class DingoDatabase
     public static DingoID Pinkthing { get; } = new DingoID(4, "Pinkthing", "Abnormal", "Pink guy.", 200, 22, 156, 100, "pinkthing", 200, 0, 50, 1);
     public static DingoID Waterdino { get; } = new DingoID(5, "Waterdino", "Water", "Loch Ness monster.", 200, 122, 46, 100, "waterdino", 200, 0, 50, 1);
     public static DingoID Weirdtongue { get; } = new DingoID(6, "Weirdtongue", "Fire", "Fire Loch Ness monster.", 200, 122, 46, 100, "weirdtongue", 200, 0, 50, 1);
-    public static DingoID Magicpeni { get; } = new DingoID(7, "Magicpeni", "Dark", "Magicpeni roams the night with mysterious powers.", 200, 84, 78, 100, "magicpeni", 200, 0, 50, 1);
+    public static DingoID Magicfishy { get; } = new DingoID(7, "Magicfishy", "Dark", "Magicfishy roams the night with mysterious powers.", 200, 84, 78, 100, "Magicfishy", 200, 0, 50, 1);
     public static DingoID Marshmellow { get; } = new DingoID(8, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 84, 78, 100, "marshmellow", 200, 0, 50, 1);
     public static DingoID Robbersnail { get; } = new DingoID(9, "Robbersnail", "Dark", "Robbersnail moves slowly but strikes with surprising speed and cunning.", 200, 84, 78, 100, "robbersnail", 200, 0, 50, 1);
     public static DingoID Rock { get; } = new DingoID(10, "Rock", "Ground", "Rock is sturdy and unyielding, standing firm against all attacks.", 200, 84, 78, 100, "rock", 200, 0, 50, 1);
@@ -119,16 +119,16 @@ public static class DingoDatabase
         Weirdtongue.AddMove(new DingoMove(8, "Umbral Strike", "Dark", 90, 95, "The user strikes the opponent with a dark, shadowy force, dealing damage."));
         Weirdtongue.AddMove(new DingoMove(9, "Blazing Meteor", "Fire", 120, 80, "The user summons a meteor made of pure fire from the sky to crash into the opponent, dealing damage."));
 
-        Magicpeni.AddMove(new DingoMove(0, "Mystic Massage", "Spirit", 65, 100, "The user sends out waves of psychic energy to gently soothe the opponent."));
-        Magicpeni.AddMove(new DingoMove(1, "Hypno Kiss", "Spirit", 50, 100, "The user sends the opponent into a deep sleep with a hypnotic kiss."));
-        Magicpeni.AddMove(new DingoMove(2, "Psycho Surge", "Spirit", 90, 90, "The user releases a powerful surge of psychic energy to overwhelm the opponent."));
-        Magicpeni.AddMove(new DingoMove(3, "Mind Meld", "Spirit", 0, 100, "The user connects its mind with the opponent's, causing confusion."));
-        Magicpeni.AddMove(new DingoMove(4, "Telekinetic Tickle", "Spirit", 40, 100, "The user tickles the opponent using telekinetic force, causing slight damage."));
-        Magicpeni.AddMove(new DingoMove(5, "Ectoplasmic Blast", "Spirit", 75, 95, "The user unleashes a blast of ectoplasmic energy to haunt and damage the opponent."));
-        Magicpeni.AddMove(new DingoMove(6, "Spectral Scream", "Spirit", 85, 90, "The user lets out a bone-chilling scream that damages the opponent's spirit."));
-        Magicpeni.AddMove(new DingoMove(7, "Spooky Surprise", "Spirit", 0, 100, "The user surprises the opponent with a spooky trick, causing confusion."));
-        Magicpeni.AddMove(new DingoMove(8, "Psychic Phantasm", "Spirit", 100, 80, "The user creates a terrifying psychic illusion that damages the opponent."));
-        Magicpeni.AddMove(new DingoMove(9, "Ethereal Embrace", "Spirit", 0, 100, "The user envelops the opponent in an ethereal embrace, causing damage over time."));
+        Magicfishy.AddMove(new DingoMove(0, "Water Gun", "Water", 40, 100, "The target is blasted with a forceful shot of water."));
+        Magicfishy.AddMove(new DingoMove(1, "Bubble", "Water", 40, 100, "A spray of countless bubbles is jetted at the opposing Pokémon. This may also lower their Speed stats."));
+        Magicfishy.AddMove(new DingoMove(2, "Octazooka", "Water", 65, 85, "The user attacks by spraying ink in the target's face or eyes. This may also lower the target's accuracy."));
+        Magicfishy.AddMove(new DingoMove(3, "Aqua Jet", "Water", 40, 100, "The user lunges at the target at a speed that makes it almost invisible. This move always goes first."));
+        Magicfishy.AddMove(new DingoMove(4, "Water Pulse", "Water", 60, 100, "The user attacks the target with a pulsing blast of water. This may also confuse the target."));
+        Magicfishy.AddMove(new DingoMove(5, "Bubble Beam", "Water", 65, 100, "A spray of bubbles is forcefully ejected at the target. This may also lower its Speed stat."));
+        Magicfishy.AddMove(new DingoMove(6, "Hydro Pump", "Water", 110, 80, "The target is blasted by a huge volume of water launched under great pressure."));
+        Magicfishy.AddMove(new DingoMove(7, "Surf", "Water", 90, 100, "The user attacks everything around it by swamping its surroundings with a giant wave."));
+        Magicfishy.AddMove(new DingoMove(8, "Waterfall", "Water", 80, 100, "The user charges at the target and may make it flinch."));
+        Magicfishy.AddMove(new DingoMove(9, "Liquidation", "Water", 85, 100, "The user slams into the target using a full-force blast of water. This may also lower the target's Defense stat."));
 
         Marshmellow.AddMove(new DingoMove(0, "Sugar Slam", "Abnormal", 35, 100, "The user slams into the opponent with sweet force, causing damage."));
         Marshmellow.AddMove(new DingoMove(1, "Sweet Shield", "Abnormal", 0, 100, "The user forms a shield of sweetness, raising defense sharply."));
@@ -444,7 +444,7 @@ public static class DingoDatabase
         Pinkthing,
         Waterdino,
         Weirdtongue,
-        Magicpeni,
+        Magicfishy,
         Marshmellow,
         Robbersnail,
         Rock,
@@ -488,7 +488,7 @@ public static class DingoDatabase
     };
     public static List<DingoID> secretDingos = new List<DingoID>
     {
-        Magicpeni,
+        Magicfishy,
         Tanktop
     };
     public static List<DingoID> fireDingos = new List<DingoID>
