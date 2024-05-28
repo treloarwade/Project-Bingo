@@ -21,11 +21,6 @@ public class BoatScript : MonoBehaviour
     public float rotationSpeed = 5f;
     private float currentRotation = 0f;
     private float rotationDirection = 1f;
-    private int currentFrameIndex = 0;
-    private float timer = 0f;
-    private float animationTimer = 0f;
-    public float frameRate = 0.5f;
-    public float animationDuration = 10f;
     public Transform BoatCamera;
     public Transform BingoCamera;
     private Vector3 BoatPosition = new Vector3(108.830002f, 69.2600021f, 0);
@@ -131,6 +126,7 @@ public class BoatScript : MonoBehaviour
 
         }
     }
+
     private void FixedUpdate()
     {
         RotateSprite();
@@ -162,30 +158,6 @@ public class BoatScript : MonoBehaviour
                     spriteRenderer.sprite = frames2[0];
                 }
                 // Update animation timer
-                animationTimer += Time.deltaTime;
-
-                // Check if it's time to reset animation
-                if (animationTimer >= animationDuration)
-                {
-                    // Reset animation timer
-                    animationTimer = 0f;
-                }
-
-                // Update timer
-                timer += Time.deltaTime;
-
-                // Check if it's time to switch frames
-                if (timer >= 1f / frameRate)
-                {
-                    // Increment current frame index
-                    currentFrameIndex = (currentFrameIndex + 1) % frames2.Length;
-
-                    // Update sprite renderer with the new frame
-                    spriteRenderer.sprite = frames2[currentFrameIndex];
-
-                    // Reset timer
-                    timer = 0f;
-                }
             }
             else
             {

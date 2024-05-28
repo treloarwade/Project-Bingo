@@ -486,6 +486,10 @@ public static class DingoDatabase
         TrustFundBaby,
         Freddy
     };
+    public static List<DingoID> marshmellow = new List<DingoID>
+    {
+        Marshmellow
+    };
     public static List<DingoID> secretDingos = new List<DingoID>
     {
         Magicfishy,
