@@ -5,7 +5,24 @@ using UnityEngine;
 public class ItemPickup : MonoBehaviour
 {
     public Item Item;
+    public InventoryManager inventoryManager;
 
+    private void ReloadMenu()
+    {
+        // Find the InventoryManager in the scene
+        inventoryManager = FindObjectOfType<InventoryManager>();
+
+        // Ensure the InventoryManager was found
+        if (inventoryManager != null)
+        {
+            // Call the method
+            inventoryManager.InstantiateInventoryItems();
+        }
+        else
+        {
+            Debug.LogError("InventoryManager not found in the scene.");
+        }
+    }
     void Pickup()
     {
         InventoryManager.Instance.Add(Item);
@@ -17,19 +34,40 @@ public class ItemPickup : MonoBehaviour
                 KnifeLoader knifeLoader = FindObjectOfType<KnifeLoader>(); // Find the KnifeLoader script
                 if (knifeLoader != null)
                 {
-                    knifeLoader.ToggleKnife(); // Call the ToggleKnife method
+                    knifeLoader.ToggleKnife(Item.ID); // Call the ToggleKnife method
                 }
                 else
                 {
                     Debug.LogWarning("KnifeLoader script not found.");
                 }
                 break;
-            // Add more cases for other items
+            case 1: // Example: Equip Knife
+                KnifeLoader knifeLoader1 = FindObjectOfType<KnifeLoader>(); // Find the KnifeLoader script
+                if (knifeLoader1 != null)
+                {
+                    knifeLoader1.ToggleKnife(Item.ID); // Call the ToggleKnife method
+                }
+                else
+                {
+                    Debug.LogWarning("KnifeLoader script not found.");
+                }
+                break;
+            case 2: // Example: Equip Knife
+                KnifeLoader knifeLoader2 = FindObjectOfType<KnifeLoader>(); // Find the KnifeLoader script
+                if (knifeLoader2 != null)
+                {
+                    knifeLoader2.ToggleKnife(Item.ID); // Call the ToggleKnife method
+                }
+                else
+                {
+                    Debug.LogWarning("KnifeLoader script not found.");
+                }
+                break;
             default:
                 Debug.LogWarning("Unknown item ID: " + Item.ID);
                 break;
         }
-
+        ReloadMenu();
         Destroy(gameObject);
     }
 

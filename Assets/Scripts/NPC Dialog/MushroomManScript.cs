@@ -12,6 +12,7 @@ public class MushroomManScript : MonoBehaviour
     public float moveSpeed = 1.5f; // Adjusted moveSpeed for smoother animation
     public GameObject trees;
     private Vector3 targetPosition;
+    public Interactor interactor;
     public void ShingoMushroom()
     {
         StartCoroutine(Dingo());
@@ -32,6 +33,7 @@ public class MushroomManScript : MonoBehaviour
                 StartCoroutine(MoveTreesCoroutine());
             }
         }
+        interactor.TurnOff();
         yield return null;
     }
     private IEnumerator MoveTreesCoroutine()

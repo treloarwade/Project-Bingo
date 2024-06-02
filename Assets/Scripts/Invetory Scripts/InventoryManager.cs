@@ -45,6 +45,7 @@ public class InventoryManager : MonoBehaviour
 
     public void ListItems()
     {
+        LoadInventory();
         foreach (Transform item in ItemContent)
         {
             Destroy(item.gameObject);
@@ -62,11 +63,12 @@ public class InventoryManager : MonoBehaviour
     }
     public void InstantiateInventoryItems()
     {
+        LoadInventory();
         foreach (Transform item in ItemContent)
         {
             Destroy(item.gameObject);
         }
-        foreach (var item in itemDatabase.items)
+        foreach (var item in Items)
         {
             GameObject inventoryItem = Instantiate(InventoryItem, ItemContent);
             Button button = inventoryItem.GetComponent<Button>();
@@ -95,7 +97,31 @@ public class InventoryManager : MonoBehaviour
                 KnifeLoader knifeLoader = FindObjectOfType<KnifeLoader>(); // Assuming KnifeLoader is attached to a GameObject in the scene
                 if (knifeLoader != null)
                 {
-                    knifeLoader.ToggleKnife();
+                    knifeLoader.ToggleKnife(0);
+                }
+                else
+                {
+                    Debug.LogWarning("KnifeLoader script not found.");
+                }
+                break;
+            case 1: // Example: Equip Knife
+                Debug.Log("Equipping Knife");
+                KnifeLoader knifeLoader1 = FindObjectOfType<KnifeLoader>(); // Assuming KnifeLoader is attached to a GameObject in the scene
+                if (knifeLoader1 != null)
+                {
+                    knifeLoader1.ToggleKnife(1);
+                }
+                else
+                {
+                    Debug.LogWarning("KnifeLoader script not found.");
+                }
+                break;
+            case 2: // Example: Equip Knife
+                Debug.Log("Equipping Knife");
+                KnifeLoader knifeLoader2 = FindObjectOfType<KnifeLoader>(); // Assuming KnifeLoader is attached to a GameObject in the scene
+                if (knifeLoader2 != null)
+                {
+                    knifeLoader2.ToggleKnife(2);
                 }
                 else
                 {
