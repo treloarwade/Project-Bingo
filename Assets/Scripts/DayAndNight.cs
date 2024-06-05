@@ -19,12 +19,19 @@ public class DayAndNight : MonoBehaviour
         }
 
         // Toggle the state
-        isNight = !isNight;
     }
-
+    public void TurnToNightIf()
+    {
+        if (!isNight)
+        {
+            isNight = true;
+            StopAllCoroutines();
+            StartCoroutine(TurntoNight());
+        }
+    }
     public void Night()
     {
-
+        isNight = true;
         StartCoroutine(NightTime());
     }
     IEnumerator DayTime()
@@ -36,13 +43,14 @@ public class DayAndNight : MonoBehaviour
 
     public void Day()
     {
+        isNight = false;
         StartCoroutine(EndNight());
     }
     IEnumerator TurntoNight()
     {
 
         SpriteRenderer[] sprites = FindObjectsOfType<SpriteRenderer>();
-
+        isNight = true;
         foreach (SpriteRenderer sprite in sprites)
         {
             // Convert sprite color to grey
@@ -111,8 +119,7 @@ public class DayAndNight : MonoBehaviour
             sprite.color = Color.grey;
         }
         nightLights = GetComponent<NightLights>();
-        nightLights.TurnOnNightLights();
-        nightLights.SwapSprite(1);
+        nightLights.TurnLightsOnForAllMushroomHouses();
         nightLights.ChangeColor(0.80f);
         yield return new WaitForSeconds(670f);
         StartCoroutine(EndNight());
@@ -120,15 +127,14 @@ public class DayAndNight : MonoBehaviour
     }
     IEnumerator EndNight()
     {
-        nightLights.TurnOffNightLights();
-        nightLights.SwapSprite(0);
+        nightLights.TurnLightsOffForAllMushroomHouses();
         StartCoroutine(TurntoDay());
         yield return null;
     }
     IEnumerator TurntoDay()
     {
         SpriteRenderer[] sprites = FindObjectsOfType<SpriteRenderer>();
-
+        isNight = false;
         foreach (SpriteRenderer sprite in sprites)
         {
             // Lighten sprite color
