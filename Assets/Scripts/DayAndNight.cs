@@ -26,97 +26,56 @@ public class DayAndNight : MonoBehaviour
         {
             isNight = true;
             StopAllCoroutines();
-            StartCoroutine(TurntoNight());
+            StartCoroutine(TurntoNight(10f));
         }
     }
     public void Night()
     {
         isNight = true;
-        StartCoroutine(NightTime());
+        StopAllCoroutines();
+        StartCoroutine(TurntoNight(10f));
     }
     IEnumerator DayTime()
     {
         yield return new WaitForSeconds(670f);
-        StartCoroutine(TurntoNight());
+        StartCoroutine(TurntoNight(10f));
         yield return null;
     }
 
     public void Day()
     {
         isNight = false;
+        StopAllCoroutines();
         StartCoroutine(EndNight());
     }
-    IEnumerator TurntoNight()
+    IEnumerator TurntoNight(float speed)
     {
-
         SpriteRenderer[] sprites = FindObjectsOfType<SpriteRenderer>();
         isNight = true;
-        foreach (SpriteRenderer sprite in sprites)
+
+        float[] greyLevels = { 0.95f, 0.90f, 0.85f, 0.80f, 0.75f, 0.70f, 0.65f, 0.60f, 0.55f, 0.50f };
+
+        foreach (float greyLevel in greyLevels)
         {
-            // Convert sprite color to grey
-            sprite.color = new Color(0.95f, 0.95f, 0.95f, 1);
+            foreach (SpriteRenderer sprite in sprites)
+            {
+                Color currentColor = sprite.color;
+                sprite.color = new Color(greyLevel, greyLevel, greyLevel, currentColor.a);
+            }
+            yield return new WaitForSeconds(5f / speed);
         }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Convert sprite color to grey
-            sprite.color = new Color(0.90f, 0.90f, 0.90f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Convert sprite color to grey
-            sprite.color = new Color(0.85f, 0.85f, 0.85f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Convert sprite color to grey
-            sprite.color = new Color(0.80f, 0.80f, 0.80f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Convert sprite color to grey
-            sprite.color = new Color(0.75f, 0.75f, 0.75f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Convert sprite color to grey
-            sprite.color = new Color(0.70f, 0.70f, 0.70f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            sprite.color = new Color(0.65f, 0.65f, 0.65f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            sprite.color = new Color(0.60f, 0.60f, 0.60f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            sprite.color = new Color(0.55f, 0.55f, 0.55f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Convert sprite color to grey
-            sprite.color = Color.grey;
-        }
+
         StartCoroutine(NightTime());
         yield return null;
     }
+
     IEnumerator NightTime()
     {
         SpriteRenderer[] sprites = FindObjectsOfType<SpriteRenderer>();
         foreach (SpriteRenderer sprite in sprites)
         {
-            // Convert sprite color to grey
-            sprite.color = Color.grey;
+            Color currentColor = sprite.color;
+            sprite.color = new Color(0.5f, 0.5f, 0.5f, currentColor.a);
         }
         nightLights = GetComponent<NightLights>();
         nightLights.TurnLightsOnForAllMushroomHouses();
@@ -128,75 +87,30 @@ public class DayAndNight : MonoBehaviour
     IEnumerator EndNight()
     {
         nightLights.TurnLightsOffForAllMushroomHouses();
-        StartCoroutine(TurntoDay());
+        StartCoroutine(TurntoDay(10f));
         yield return null;
     }
-    IEnumerator TurntoDay()
+    IEnumerator TurntoDay(float speed)
     {
         SpriteRenderer[] sprites = FindObjectsOfType<SpriteRenderer>();
         isNight = false;
-        foreach (SpriteRenderer sprite in sprites)
+
+        float[] greyLevels = { 0.55f, 0.60f, 0.65f, 0.70f, 0.75f, 0.80f, 0.85f, 0.90f, 0.95f, 1.0f };
+
+        foreach (float greyLevel in greyLevels)
         {
-            // Lighten sprite color
-            sprite.color = new Color(0.55f, 0.55f, 0.55f, 1);
+            foreach (SpriteRenderer sprite in sprites)
+            {
+                Color currentColor = sprite.color;
+                sprite.color = new Color(greyLevel, greyLevel, greyLevel, currentColor.a);
+            }
+            yield return new WaitForSeconds(5f / speed);
         }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.60f, 0.60f, 0.60f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.65f, 0.65f, 0.65f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.70f, 0.70f, 0.70f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.75f, 0.75f, 0.75f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.80f, 0.80f, 0.80f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.85f, 0.85f, 0.85f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.90f, 0.90f, 0.90f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Lighten sprite color
-            sprite.color = new Color(0.95f, 0.95f, 0.95f, 1);
-        }
-        yield return new WaitForSeconds(5f);
-        foreach (SpriteRenderer sprite in sprites)
-        {
-            // Restore original sprite color
-            sprite.color = Color.white;
-        }
+
         StartCoroutine(DayTime());
         yield return null;
     }
+
 
 }
 
