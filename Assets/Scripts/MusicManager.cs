@@ -2,16 +2,22 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Audio;
 
 public class MusicManager : MonoBehaviour
 {
     [SerializeField] AudioSource musicSource;
     public List<AudioClip> songs = new List<AudioClip>();
-    private int currentSongIndex = 0;
+    public int currentSongIndex = 0;
     private bool isSongPlaying = false;
     private static MusicManager instance;
     private bool isMuted = false;
     public DayAndNight dayandnight;
+    [SerializeField] private AudioMixer audioMixer;
+    [SerializeField] private Slider musicSlider;
+    [SerializeField] private AudioMixerGroup musicMixerGroup;
+    public Text volumetext;
 
     private void Awake()
     {
@@ -24,6 +30,14 @@ public class MusicManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        musicSource.outputAudioMixerGroup = musicMixerGroup;
+    }
+    public void SetMusicVolume()
+    {
+        float volume = musicSlider.value;
+        audioMixer.SetFloat("music", volume);
+        volumetext.text = "Volume:" + volume;
     }
     public void ToggleMute()
     {
@@ -53,15 +67,22 @@ public class MusicManager : MonoBehaviour
     }
     public void PlayNextSong()
     {
-        if (songs.Count == 0)
-        {
-            Debug.LogWarning("No songs added to the list.");
-            return;
-        }
-
         currentSongIndex = (currentSongIndex + 1) % songs.Count;
         PlaySong(currentSongIndex);
     }
+    public void PlayPreviousSong()
+    {
+        // Subtract 1 from currentSongIndex
+        currentSongIndex--;
+        // If currentSongIndex goes below 0, wrap around to the last song
+        if (currentSongIndex < 0)
+        {
+            currentSongIndex = songs.Count - 1;
+        }
+
+        PlaySong(currentSongIndex);
+    }
+
     private void PlaySong(int index)
     {
         musicSource.Stop();

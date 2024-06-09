@@ -202,6 +202,12 @@ public class BattleManager : MonoBehaviour
         opponentEffects = new List<StatusEffect>();
         environmentEffects = new List<EnvironmentEffect>();
     }
+    public void Leave()
+    {
+        SavePlayerDingo();
+        // Load the "SampleScene" when the button is clicked
+        Loader.Load(Loader.Scene.SampleScene);
+    }
     public Color GetTypeColor(string type, out Color textColor)
     {
         // Convert the type string to lowercase for case-insensitive comparison

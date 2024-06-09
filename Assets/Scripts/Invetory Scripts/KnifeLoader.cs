@@ -22,7 +22,9 @@ public class KnifeLoader : MonoBehaviour
     // Toggle between equipping and unequipping the knife
     public void ToggleKnife(int ID)
     {
-            EquipKnife(ID);
+        EquipKnife(ID);
+        FoodScript foodScript = FindObjectOfType<FoodScript>();
+        foodScript.UnequipFood();
     }
     public void Inspect()
     {
@@ -91,9 +93,12 @@ public class KnifeLoader : MonoBehaviour
         currentlyEquipped = ID;
     }
 
-    private void UnequipKnife()
+    public void UnequipKnife()
     {
-        movement.DecreaseRunSpeed();
-        Knife.SetActive(false);
+        if (Knife.activeSelf)
+        {
+            movement.DecreaseRunSpeed();
+            Knife.SetActive(false);
+        }
     }
 }

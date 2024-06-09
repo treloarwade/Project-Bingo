@@ -128,6 +128,27 @@ public class InventoryManager : MonoBehaviour
                     Debug.LogWarning("KnifeLoader script not found.");
                 }
                 break;
+            case 3:
+                FoodScript foodscript3 = FindObjectOfType<FoodScript>(); // Assuming KnifeLoader is attached to a GameObject in the scene
+                if (foodscript3 != null)
+                {
+                    foodscript3.EquipFood(1);
+                }
+                break;
+            case 4:
+                FoodScript foodscript4 = FindObjectOfType<FoodScript>(); // Assuming KnifeLoader is attached to a GameObject in the scene
+                if (foodscript4 != null)
+                {
+                    foodscript4.EquipFood(0);
+                }
+                break;
+            case 5:
+                FoodScript foodscript5 = FindObjectOfType<FoodScript>(); // Assuming KnifeLoader is attached to a GameObject in the scene
+                if (foodscript5 != null)
+                {
+                    foodscript5.EquipFood(2);
+                }
+                break;
             // Add more cases for other items
             default:
                 Debug.LogWarning("Unknown item ID: " + itemId);

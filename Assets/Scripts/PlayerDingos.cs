@@ -191,6 +191,54 @@ public class PlayerDingos : MonoBehaviour
             Debug.LogWarning("Dingo JSON file not found at path: " + filePath);
         }
     }
+    public void Heal()
+    {
+        filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+        if (File.Exists(filePath))
+        {
+            jsonData = File.ReadAllText(filePath);
+            jsonDingos = JSON.Parse(jsonData) as JSONArray;
+            if (jsonDingos != null && jsonDingos.Count > 0)
+            {
+                JSONObject dingo = jsonDingos[pagenumber].AsObject;
+                attack = dingo["ATK"];
+                defense = dingo["DEF"];
+                speed = dingo["SPD"];
+                attack++;
+                while (jsonDingos.Count <= pagenumber)
+                {
+                    jsonDingos.Add(new JSONObject());
+                }
+
+                JSONObject jsonDingo = new JSONObject();
+                jsonDingo.Add("ID", pagenumber);
+                jsonDingo.Add("DingoID", dingo["DingoID"]);
+                jsonDingo.Add("Name", dingo["Name"]);
+                jsonDingo.Add("Type", dingo["Type"]);
+                jsonDingo.Add("Description", dingo["Description"]);
+                jsonDingo.Add("CurrentHealth", dingo["MaxHealth"]);
+                jsonDingo.Add("ATK", attack);
+                jsonDingo.Add("DEF", defense);
+                jsonDingo.Add("SPD", speed);
+                jsonDingo.Add("Sprite", dingo["Sprite"]);
+                jsonDingo.Add("MaxHealth", dingo["MaxHealth"]);
+                jsonDingo.Add("XP", dingo["XP"]);
+                jsonDingo.Add("MaxXP", dingo["MaxXP"]);
+                jsonDingo.Add("Level", dingo["Level"]);
+                jsonDingo.Add("Move1ID", dingo["Move1ID"]);
+                jsonDingo.Add("Move2ID", dingo["Move2ID"]);
+                jsonDingo.Add("Move3ID", dingo["Move3ID"]);
+                jsonDingo.Add("Move4ID", dingo["Move4ID"]);
+                jsonDingos[pagenumber] = jsonDingo;
+                HPstat.text = "HP " + dingo["MaxHealth"] + "/" + dingo["MaxHealth"];
+                healthBar.SetMaxHealth(dingo["MaxHealth"]);
+                healthBar.SetHealth(dingo["MaxHealth"]);
+                // Save the updated data back to the file
+                File.WriteAllText(filePath, jsonDingos.ToString());
+            }
+        }
+
+    }
     public void AddAttack()
     {
         filePath = Path.Combine(Application.persistentDataPath, "dingos.json");

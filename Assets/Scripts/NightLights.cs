@@ -14,6 +14,12 @@ public class NightLights : MonoBehaviour
     public SpriteRenderer[] redspottedmushroomhouses;
     public SpriteRenderer[] houses;
     public SpriteRenderer[] redhouses;
+    public SpriteRenderer[] skyscraperupper1;
+    public SpriteRenderer[] skyscraperlower1;
+    public SpriteRenderer[] skyscraperupper2;
+    public SpriteRenderer[] skyscraperlower2;
+    public SpriteRenderer[] skyscraperupper3;
+    public SpriteRenderer[] skyscraperlower3;
 
     public Sprite[] sprites;
     public void SwapSprite(SpriteRenderer[] houses, int id)
@@ -34,7 +40,19 @@ public class NightLights : MonoBehaviour
         SwapSpriteForRedSpottedMushroomHouses(7);
         SwapSpriteForBlueMushroomHouses(9);
         SwapSpriteForBlueSpottedMushroomHouses(11);
+        SwapSpriteForSkyscraperUpper1(19);
+        SwapSpriteForSkyscraperLower1(17);
+        SwapSpriteForSkyscraperUpper2(23);
+        SwapSpriteForSkyscraperLower2(21);
+        SwapSpriteForSkyscraperUpper3(27);
+        SwapSpriteForSkyscraperLower3(25);
         EnableAllChildGameObjectsForArray(misc);
+        EnableAllChildGameObjectsForArray(skyscraperlower1);
+        EnableAllChildGameObjectsForArray(skyscraperupper1);
+        EnableAllChildGameObjectsForArray(skyscraperlower2);
+        EnableAllChildGameObjectsForArray(skyscraperupper2);
+        EnableAllChildGameObjectsForArray(skyscraperlower3);
+        EnableAllChildGameObjectsForArray(skyscraperupper3);
         EnableAllChildGameObjectsForArray(houses);
         EnableAllChildGameObjectsForArray(redhouses);
         EnableAllChildGameObjectsForArray(mushroomhouses);
@@ -47,6 +65,12 @@ public class NightLights : MonoBehaviour
     public void TurnLightsOffForAllMushroomHouses()
     {
         DisableAllChildGameObjectsForArray(misc);
+        DisableAllChildGameObjectsForArray(skyscraperlower1);
+        DisableAllChildGameObjectsForArray(skyscraperupper1);
+        DisableAllChildGameObjectsForArray(skyscraperlower2);
+        DisableAllChildGameObjectsForArray(skyscraperupper2);
+        DisableAllChildGameObjectsForArray(skyscraperlower3);
+        DisableAllChildGameObjectsForArray(skyscraperupper3);
         DisableAllChildGameObjectsForArray(houses);
         DisableAllChildGameObjectsForArray(redhouses);
         DisableAllChildGameObjectsForArray(mushroomhouses);
@@ -63,6 +87,12 @@ public class NightLights : MonoBehaviour
         SwapSpriteForRedSpottedMushroomHouses(6);
         SwapSpriteForBlueMushroomHouses(8);
         SwapSpriteForBlueSpottedMushroomHouses(10);
+        SwapSpriteForSkyscraperUpper1(18);
+        SwapSpriteForSkyscraperLower1(16);
+        SwapSpriteForSkyscraperUpper2(22);
+        SwapSpriteForSkyscraperLower2(20);
+        SwapSpriteForSkyscraperUpper3(26);
+        SwapSpriteForSkyscraperLower3(24);
     }
 
     public void SwapSpriteForMushroomHouses(int id)
@@ -102,6 +132,30 @@ public class NightLights : MonoBehaviour
     {
         SwapSprite(redhouses, id);
     }
+    public void SwapSpriteForSkyscraperUpper1(int id)
+    {
+        SwapSprite(skyscraperupper1, id);
+    }
+    public void SwapSpriteForSkyscraperLower1(int id)
+    {
+        SwapSprite(skyscraperlower1, id);
+    }
+    public void SwapSpriteForSkyscraperUpper2(int id)
+    {
+        SwapSprite(skyscraperupper2, id);
+    }
+    public void SwapSpriteForSkyscraperLower2(int id)
+    {
+        SwapSprite(skyscraperlower2, id);
+    }
+    public void SwapSpriteForSkyscraperUpper3(int id)
+    {
+        SwapSprite(skyscraperupper3, id);
+    }
+    public void SwapSpriteForSkyscraperLower3(int id)
+    {
+        SwapSprite(skyscraperlower3, id);
+    }
     public void House(SpriteRenderer[] houses, float amount)
     {
         foreach (SpriteRenderer house in houses)
@@ -120,6 +174,12 @@ public class NightLights : MonoBehaviour
         House(redspottedmushroomhouses, amount);
         House(houses, amount);
         House(redhouses, amount);
+        House(skyscraperupper1, amount);
+        House(skyscraperlower1, amount);
+        House(skyscraperupper2, amount);
+        House(skyscraperlower2, amount);
+        House(skyscraperupper3, amount);
+        House(skyscraperlower3, amount);
     }
     public void EnableAllChildGameObjects(SpriteRenderer parentRenderer)
     {
