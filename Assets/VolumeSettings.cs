@@ -15,8 +15,10 @@ public class VolumeSettings : MonoBehaviour
 
     private void Start()
     {
-        // Load the saved volume from PlayerPrefs
-        if (PlayerPrefs.HasKey(MusicVolumeKey))
+        GameObject audioObject = GameObject.FindGameObjectWithTag("Audio");
+        musicManager = audioObject.GetComponent<MusicManager>();
+            // Load the saved volume from PlayerPrefs
+            if (PlayerPrefs.HasKey(MusicVolumeKey))
         {
             float savedVolume = PlayerPrefs.GetFloat(MusicVolumeKey);
             musicSlider.value = savedVolume;
