@@ -1,7 +1,8 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Movement : MonoBehaviour
+public class Movement : NetworkBehaviour
 {
     Rigidbody2D body;
 
@@ -61,6 +62,7 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
+        if (!IsOwner) return;
         // Check if the dialog box is active, if yes, disable movement
         if (dialogManager != null && dialogManager.IsDialogActive())
         {
@@ -80,7 +82,7 @@ public class Movement : MonoBehaviour
     private void FixedUpdate()
     {
         // If movement is not disabled, handle movement
-        if (!dialogManager.IsDialogActive() && boatScript.movementEnabled)
+        if (true)//!dialogManager.IsDialogActive() && boatScript.movementEnabled)
         {
             Vector2 movement = new Vector2(horizontal * runSpeed, vertical * runSpeed);
             body.velocity = movement;
@@ -98,16 +100,10 @@ public class Movement : MonoBehaviour
         else
         {
             // If movement is disabled, set velocity to zero
-            body.velocity = Vector2.zero;
+            //body.velocity = Vector2.zero;
         }
 
-        // Inform the camera about the player's position
-        if (mainCamera != null)
-        {
-            Vector3 targetPosition = new Vector3(transform.position.x, transform.position.y, mainCamera.transform.position.z);
-            mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, targetPosition, ref velocity, smoothTime);
-        }
-        MovementSpeed.text = "Speed: " + runSpeed.ToString();
+        //MovementSpeed.text = "Speed: " + runSpeed.ToString();
     }
 
 
@@ -129,7 +125,7 @@ public class Movement : MonoBehaviour
         Movement movementScript = GetComponent<Movement>();
         if (movementScript != null)
         {
-            movementScript.enabled = !dialogManager.IsDialogActive();
+            //movementScript.enabled = !dialogManager.IsDialogActive();
         }
     }
     public void IncreaseRunSpeed()

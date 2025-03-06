@@ -113,6 +113,7 @@ public class PlayerDingos : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        DingoLoader.Start();
     }
     public void DeleteJson()
     {
@@ -918,6 +919,7 @@ public class PlayerDingos : MonoBehaviour
     }
     public void ExitGame()
     {
+        Bingo = LocalPlayerManager.Instance.LocalPlayer;
         SaveCoordinates();
         // Exit the application
         Application.Quit();
@@ -926,7 +928,7 @@ public class PlayerDingos : MonoBehaviour
     {
         // Save the position and rotation of the object
         PlayerPrefs.SetFloat("PosX", Bingo.transform.localPosition.x);
-        PlayerPrefs.SetFloat("PosY", Bingo.transform.localPosition.y + 5);
+        PlayerPrefs.SetFloat("PosY", Bingo.transform.localPosition.y);
         PlayerPrefs.SetFloat("PosZ", Bingo.transform.localPosition.z);
         // Save PlayerPrefs to disk
         PlayerPrefs.Save();

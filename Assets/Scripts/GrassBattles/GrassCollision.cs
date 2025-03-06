@@ -13,7 +13,6 @@ public class GrassCollision : MonoBehaviour
     private float maxWiggleAngle = 10f;
     public List<DingoID> dingos = new List<DingoID>();
     private float lastActivationTime;
-
     private void Start()
     {
         lastActivationTime = Time.time;
