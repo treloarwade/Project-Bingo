@@ -385,3 +385,5 @@ FodyWeavers.xsd
 /Assets/TextMesh Pro
 /Assets/Materials
 /Assets/Items
+/Assets/ParrelSync
+/ParrelSync.csproj
