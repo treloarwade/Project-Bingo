@@ -387,3 +387,4 @@ FodyWeavers.xsd
 /Assets/Items
 /Assets/ParrelSync
 /ParrelSync.csproj
+/Assets/Plugins/ParrelSync/ScriptableObjects/ParrelSyncProjectSettings.asset
