@@ -36,6 +36,8 @@ public class BattleManagerUtils : NetworkBehaviour
         }
 
         networkObject.SpawnWithOwnership(clientId);
+        string uniqueDingoName = $"Dingo_{networkObject.NetworkObjectId}_{clientId}_{System.Guid.NewGuid()}";
+        dingoInstance.name = uniqueDingoName;  // Assign the unique name
 
         Debug.Log($"[ServerRpc] Spawned DingoPrefab with ID: {networkObject.NetworkObjectId}");
 

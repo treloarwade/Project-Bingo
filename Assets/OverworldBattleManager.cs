@@ -3,34 +3,198 @@ using System.Collections.Generic;
 using DingoSystem;
 using Unity.Netcode;
 using System.Collections;
-using System;
-using UnityEditor.PackageManager;
+using UnityEngine.UI;
+using System.ComponentModel;
 
 public class OverworldBattleManager : NetworkBehaviour
 {
     [Header("Player Positions")]
-    public GameObject Slot1;  // Player 1
-    public GameObject Slot2;  // Player 2 (or AI ally)
-    public GameObject TrainerPosition1;  // Trainer for Slot1
-    public GameObject TrainerPosition2;  // Trainer for Slot2
-
+    public GameObject Slot1, Slot2, TrainerPosition1, TrainerPosition2;
     [Header("Opponent Positions")]
-    public GameObject Opponent1;  // Enemy 1
-    public GameObject Opponent2;  // Enemy 2
-    public GameObject OpponentTrainerPosition1;  // Trainer for Opponent1
-    public GameObject OpponentTrainerPosition2;  // Trainer for Opponent2
+    public GameObject Opponent1, Opponent2, OpponentTrainerPosition1, OpponentTrainerPosition2;
     private Dictionary<GameObject, GameObject> entityInPosition = new Dictionary<GameObject, GameObject>();
 
-    private Dictionary<GameObject, bool> positionOccupied = new Dictionary<GameObject, bool>();
+    public Dictionary<GameObject, bool> positionOccupied = new Dictionary<GameObject, bool>();
     private ulong battleStarterClientId = 99; // Track the clientId of the player who initiated the battle
     private Camera mainCamera;
     private HashSet<ulong> activePlayers = new HashSet<ulong>();
+    public NetworkVariable<bool> player1HasChosenMove = new NetworkVariable<bool>();
+    public NetworkVariable<bool> player2HasChosenMove = new NetworkVariable<bool>();
+    private Button targetButton1, targetButton2, bothTargetsButton;
+    private Dictionary<int, GameObject> slotMapping;
     private void Awake()
     {
+        CacheUIElements();
         InitializePositions();
         StartCoroutine(DelayCollider2D());
         mainCamera = Camera.main;
         SetCameraToObjectPosition();
+    }
+
+    private void CacheUIElements()
+    {
+        targetButton1 = GameObject.Find("Opponents/Canvas/TargetButton1")?.GetComponent<Button>();
+        targetButton2 = GameObject.Find("Opponents/Canvas/TargetButton2")?.GetComponent<Button>();
+        bothTargetsButton = GameObject.Find("Opponents/Canvas/TargetButton3")?.GetComponent<Button>();
+    }
+
+    private void ShowTargetSelectionUI(int moveId, int slotNumber)
+    {
+        targetButton1?.gameObject.SetActive(true);
+        targetButton1?.onClick.RemoveAllListeners();
+        targetButton1?.onClick.AddListener(() => ConfirmAttackServerRPC(1, moveId, slotNumber));
+
+        targetButton2?.gameObject.SetActive(true);
+        targetButton2?.onClick.RemoveAllListeners();
+        targetButton2?.onClick.AddListener(() => ConfirmAttackServerRPC(2, moveId, slotNumber));
+
+        bothTargetsButton?.gameObject.SetActive(true);
+        bothTargetsButton?.onClick.RemoveAllListeners();
+        bothTargetsButton?.onClick.AddListener(() => ConfirmAttackServerRPC(3, moveId, slotNumber));
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ConfirmAttackServerRPC(int targetPosition, int moveId, int slotNumber)
+    {
+        NetworkDingo attacker = GetPlayerNetworkDingo(slotNumber);
+        if (attacker == null) return;
+
+        attacker.battleMoveId.Value = moveId;
+        attacker.battleTargetId.Value = targetPosition;
+        CheckIfAllPlayersReady();
+        HideTargetSelectionUIClientRPC();
+    }
+
+    private void CheckIfAllPlayersReady()
+    {
+        NetworkDingo player1 = GetPlayerNetworkDingo(1);
+        NetworkDingo player2 = GetPlayerNetworkDingo(2);
+
+        if (player1?.battleMoveId.Value != -1 && (player2 == null || player2.battleMoveId.Value != -1))
+        {
+            ResolveTurn(player1, player2);
+        }
+    }
+
+    private void ResolveTurn(NetworkDingo player1, NetworkDingo player2)
+    {
+        if (player2 == null)
+        {
+            ExecuteMove(player1);
+        }
+        else
+        {
+            NetworkDingo first = player1.speed.Value >= player2.speed.Value ? player1 : player2;
+            NetworkDingo second = (first == player1) ? player2 : player1;
+            ExecuteMove(first);
+            ExecuteMove(second);
+        }
+        ResetBattleState(player1, player2);
+    }
+
+
+
+    private void ExecuteMove(NetworkDingo attacker)
+    {
+        if (attacker.battleMoveId.Value == -1) return;
+
+        DingoID dingo = DingoDatabase.GetDingoByID(attacker.id.Value);
+        DingoMove move = DingoDatabase.GetMoveByID(attacker.battleMoveId.Value, dingo);
+        RequestAttackServerRpc(attacker.battleTargetId.Value, move.Power, move.Accuracy);
+    }
+
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestAttackServerRpc(int targetPosition, int power, float accuracy)
+    {
+        switch (targetPosition)
+        {
+            case 1: UseDamageMove(Opponent1, power, accuracy); break;
+            case 2: UseDamageMove(Opponent2, power, accuracy); break;
+            case 3: StartCoroutine(StaggerMoves(Opponent1, power, accuracy, Opponent2)); break;
+        }
+    }
+    private IEnumerator StaggerMoves(GameObject target1, int power, float accuracy, GameObject target2)
+    {
+        UseDamageMove(target1, power, accuracy);
+        yield return new WaitForSeconds(0.3f);
+        UseDamageMove(target2, power, accuracy);
+    }
+    private void ResetBattleState(NetworkDingo player1, NetworkDingo player2)
+    {
+        player1.battleMoveId.Value = -1;
+        player1.battleTargetId.Value = 0;
+        if (player2 != null)
+        {
+            player2.battleMoveId.Value = -1;
+            player2.battleTargetId.Value = 0;
+        }
+    }
+    private NetworkDingo GetPlayerNetworkDingo(int slotNumber)
+    {
+        return DecodeSlotNumber(slotNumber)?.GetComponent<NetworkDingo>();
+    }
+    [ClientRpc]
+    private void HideTargetSelectionUIClientRPC()
+    {
+        targetButton1?.gameObject.SetActive(false);
+        targetButton2?.gameObject.SetActive(false);
+        bothTargetsButton?.gameObject.SetActive(false);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestMoveServerRPC(int slotNumber, int moveId)
+    {
+        GameObject targetEntity = DecodeSlotNumber(slotNumber);
+        if (targetEntity == null)
+        {
+            Debug.LogWarning($"No entity found in slot {slotNumber}.");
+            return;
+        }
+
+        // Ensure the target entity has a NetworkDingo component
+        NetworkDingo networkDingo = targetEntity.GetComponent<NetworkDingo>();
+        if (networkDingo == null)
+        {
+            Debug.LogWarning("Target entity has no NetworkDingo component.");
+            return;
+        }
+
+        DingoID dingo = DingoDatabase.GetDingoByID(networkDingo.id.Value);
+        DingoMove move = DingoDatabase.GetMoveByID(moveId, dingo);
+
+        Text targetText = targetEntity.GetComponentInChildren<Text>();
+        if (targetText != null)
+        {
+            targetText.text = $"Move: {move.Name}"; // Display the move's name
+        }
+        else
+        {
+            Debug.LogWarning("No Text component found in the target entity's children.");
+        }
+    }
+    private void InitializePositions()
+    {
+        // Find all positions under Players and Opponents
+        Slot1 = FindChildByName("Players", "Slot1");
+        Slot2 = FindChildByName("Players", "Slot2");
+        TrainerPosition1 = FindChildByName("Players", "TrainerPosition1");
+        TrainerPosition2 = FindChildByName("Players", "TrainerPosition2");
+
+        Opponent1 = FindChildByName("Opponents", "Opponent1");
+        Opponent2 = FindChildByName("Opponents", "Opponent2");
+        OpponentTrainerPosition1 = FindChildByName("Opponents", "OpponentTrainerPosition1");
+        OpponentTrainerPosition2 = FindChildByName("Opponents", "OpponentTrainerPosition2");
+
+        slotMapping = new Dictionary<int, GameObject>
+        {
+            {1, Slot1}, {2, Slot2}, {3, Opponent1}, {4, Opponent2}
+        };
+    }
+    private GameObject FindChildByName(string parentName, string childName)
+    {
+        Transform parentTransform = transform.Find(parentName);
+        return parentTransform?.Find(childName)?.gameObject;
     }
     private void OnTriggerEnter2D(Collider2D collider)
     {
@@ -55,63 +219,41 @@ public class OverworldBattleManager : NetworkBehaviour
 
         StartCoroutine(DelayCheck(netObj));
     }
-    public void HitButton()
+    // Function to decode the slot number into the correct GameObject
+    private GameObject DecodeSlotNumber(int slotNumber)
     {
-        if (NetworkManager.Singleton.IsHost)
+        GameObject slotKey = null;
+
+        switch (slotNumber)
         {
-            Attack(Opponent1, 50);
-            Attack(Opponent2, 100);
-        }
-        else
-        {
-            RequestAttackServerRpc(3);
+            case 1: slotKey = Slot1; break;
+            case 2: slotKey = Slot2; break;
+            case 3: slotKey = Opponent1; break;
+            case 4: slotKey = Opponent2; break;
+            default:
+                Debug.LogWarning($"Invalid slot number: {slotNumber}");
+                return null;
         }
 
-    }
-    [ServerRpc(RequireOwnership = false)]
-    public void RequestAttackServerRpc(int targetPosition)
-    {
-        // Based on the target position, attack the corresponding opponent
-        if (targetPosition == 1)
+        if (slotKey != null && entityInPosition.ContainsKey(slotKey))
         {
-            Attack(Opponent1, 1); // Attack Opponent1
+            return entityInPosition[slotKey];
         }
-        else if (targetPosition == 2)
-        {
-            Attack(Opponent2, 1); // Attack Opponent2
-        }
-        else if (targetPosition == 3)
-        {
-            Attack(Opponent1, 25); // Attack both targets, or however you want to handle this case
-            Attack(Opponent2, 25);
-        }
-    }
-    public void Attack(GameObject position, int damage)
-    {
-        if (entityInPosition.ContainsKey(position) && entityInPosition[position] != null)
-        {
-            GameObject targetEntity = entityInPosition[position];
-            NetworkDingo dingo = targetEntity.GetComponent<NetworkDingo>();
 
-            if (dingo != null)
-            {
-                dingo.hp.Value -= damage; // Correct way to modify a NetworkVariable<int>
-                Debug.Log($"{targetEntity.name} was attacked! New health: {dingo.hp.Value}");
-                if (dingo.hp.Value <= 0)
-                {
-                    RemoveDingoClientRpc(targetEntity.GetComponent<NetworkObject>().NetworkObjectId);
-                }
-            }
-            else
-            {
-                Debug.LogError($"{targetEntity.name} does not have a NetworkDingo component!");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"No entity found at {position.name} to attack.");
-        }
+        return null;
     }
+    private int EncodeSlot(GameObject slot)
+    {
+        if (slot == Slot1) return 1;
+        if (slot == Slot2) return 2;
+        if (slot == Opponent1) return 3;
+        if (slot == Opponent2) return 4;
+
+        Debug.LogWarning($"Invalid slot: {slot.name}");
+        return -1; // Return -1 for invalid slots
+    }
+
+
     public void UseDamageMove(GameObject position, int power, float accuracy)
     {
         if (entityInPosition.ContainsKey(position) && entityInPosition[position] != null)
@@ -132,7 +274,9 @@ public class OverworldBattleManager : NetworkBehaviour
 
                     if (dingo.hp.Value <= 0)
                     {
-                        RemoveDingoClientRpc(targetEntity.GetComponent<NetworkObject>().NetworkObjectId);
+                        int battlePosition = EncodeSlot(position);
+
+                        RemoveDingoServerRpc(battlePosition);
                     }
                 }
                 else
@@ -150,22 +294,13 @@ public class OverworldBattleManager : NetworkBehaviour
             Debug.LogWarning($"No entity found at {position.name} to attack.");
         }
     }
-    public void DingoMoveButton()
+
+    [ServerRpc]
+    public void RemoveDingoServerRpc(int position)
     {
-    }
-    [ClientRpc]
-    public void RemoveDingoClientRpc(ulong networkObjectId)
-    {
-        // Try to find the NetworkObject with this id in the local SpawnedObjects
-        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject netObj))
-        {
-            // Start the removal animation on this client
-            StartCoroutine(RemoveDingoFromBattle(netObj.gameObject));
-        }
-        else
-        {
-            Debug.LogWarning($"Could not find NetworkObject with id {networkObjectId} on client.");
-        }
+        GameObject dingo = DecodeSlotNumber(position);
+        StartCoroutine(RemoveDingoFromBattle(dingo));
+
     }
     public void RemoveDingos(GameObject position)
     {
@@ -180,6 +315,33 @@ public class OverworldBattleManager : NetworkBehaviour
             }
         }
     }
+    public void RemoveDingoByEntity(GameObject entity)
+    {
+        if (entity == null) return;
+
+        DebugPrintEntityPositions("Before Removing");
+
+        foreach (var kvp in entityInPosition)
+        {
+            if (kvp.Value == entity)
+            {
+                Debug.Log($"[RemoveDingoByEntity] Removing {entity.name} from {kvp.Key.name}");
+
+                Destroy(entity); // Destroy the entity
+                entityInPosition[kvp.Key] = null; // Clear the position
+                positionOccupied[kvp.Key] = false; // Ensure slot is marked as empty
+
+                DebugPrintEntityPositions("After Removing");
+                return;
+            }
+        }
+
+        Debug.LogWarning("[RemoveDingoByEntity] Entity not found in any battle position.");
+    }
+
+
+
+
     private IEnumerator RemoveDingoFromBattle(GameObject dingoObject)
     {
         yield return new WaitForSeconds(0.9f); // Small delay before removal
@@ -198,26 +360,137 @@ public class OverworldBattleManager : NetworkBehaviour
         }
 
         dingoTransform.localScale = new Vector3(originalScale.x, 0f, originalScale.z); // Ensure it fully shrinks
+        RemoveDingoByEntity(dingoObject);
 
-        yield return new WaitForSeconds(0.2f); // Small delay before removal
-                                               // Remove from entity tracking
-        foreach (var position in entityInPosition.Keys)
+        yield return new WaitForSeconds(0.4f);
+        bool isOpponent1Empty = IsPositionOccupied(Opponent1);
+        yield return new WaitForSeconds(0.1f);
+        bool isOpponent2Empty = IsPositionOccupied(Opponent2);
+        yield return new WaitForSeconds(0.1f);
+        if (!isOpponent1Empty)
         {
-            if (entityInPosition[position] == dingoObject)
+            if (NetworkManager.Singleton.IsHost)
             {
-                entityInPosition[position] = null;
-                positionOccupied[position] = false; // Mark the position as occupied
-                break; // Stop looping once we've found the correct position
+                if (Random.value < 0.5f)
+                {
+                    SpawnNewDingo();
+                    Debug.Log("hopefully shit doesn't get crazy");
+                }
+
             }
         }
-        if (!IsPositionOccupied(Opponent1) && !IsPositionOccupied(Opponent2))
+
+        yield return new WaitForSeconds(1f);
+
+        isOpponent1Empty = IsPositionOccupied(Opponent1);
+        yield return new WaitForSeconds(0.1f);
+        isOpponent2Empty = IsPositionOccupied(Opponent2);
+        yield return new WaitForSeconds(0.1f);
+        Debug.Log("IsPositionOccupied1: " + isOpponent1Empty + " IsPositionOccupied2: " + isOpponent2Empty);
+
+
+        if (!isOpponent1Empty && !isOpponent2Empty)
         {
-            BattleEnd(); // End the battle if both positions are empty
-            Destroy(dingoObject); // Destroy the Dingo object
+            Debug.Log("[Server] Both opponent positions are empty. Attempting to end the battle.");
+
+            if (NetworkManager.Singleton.IsHost)
+            {
+                BattleEnd(); // End the battle if both positions are empty
+                Debug.Log("[Server] BattleEnd() was called.");
+            }
         }
+        else
+        {
+            Debug.Log("[Server] At least one opponent position is occupied. Battle will not end.");
+        }
+        if (!(entityInPosition.ContainsKey(Opponent1) && entityInPosition[Opponent1] != null) && !(entityInPosition.ContainsKey(Opponent2) && entityInPosition[Opponent2] != null))
+        {
+            if (NetworkManager.Singleton.IsHost)
+            {
+                BattleEnd(); // End the battle if both positions are empty
+            }
+        }
+
+    }
+    private bool dingoSpawning = false;
+    public void SpawnNewDingo()
+    {
+        if (dingoSpawning)
+        {
+            return;
+        }
+        dingoSpawning = true;
+
+        DebugPrintEntityPositions("Before Spawning New Dingo");
+
+        DingoID enemyDingoData = GetRandomDingo();
+        int[] enemyMoves = { 0, 1, 2, 3 };
+
+        GameObject emptySlot = null;
+
+        if (!IsPositionOccupied(Opponent1) && entityInPosition.GetValueOrDefault(Opponent1, null) == null)
+        {
+            emptySlot = Opponent1;
+        }
+        else if (!IsPositionOccupied(Opponent2) && entityInPosition.GetValueOrDefault(Opponent2, null) == null)
+        {
+            emptySlot = Opponent2;
+        }
+        else
+        {
+            Debug.LogWarning("[SpawnNewDingo] No empty slots available to spawn a new Dingo.");
+            dingoSpawning = false;
+            return;
+        }
+
+        Debug.Log($"[SpawnNewDingo] Spawning new Dingo in {emptySlot.name}");
+
+        SpawnAndAssignDingo(enemyMoves, enemyDingoData, emptySlot);
+
+        DebugPrintEntityPositions("After Spawning New Dingo");
+    }
+
+
+
+    private void SpawnAndAssignDingo(int[] moves, DingoID dingoData, GameObject slot)
+    {
+        BattleManagerUtils.RequestDingoSpawn(dingoData.Sprite, (GameObject dingoObject) =>
+        {
+            NetworkDingo networkDingo = dingoObject.GetComponent<NetworkDingo>();
+            if (networkDingo != null)
+            {
+                networkDingo.SetDingoAttributesServerRpc(
+                    dingoData.ID, dingoData.Sprite, dingoData.Name, dingoData.Type,
+                    dingoData.HP, dingoData.Attack, dingoData.Defense,
+                    dingoData.Speed, dingoData.MaxHP, dingoData.XP,
+                    dingoData.MaxXP, dingoData.Level, moves[0], moves[1], moves[2], moves[3]);
+            }
+            //AssignEntityToPosition(dingoObject, slot);
+
+            StartCoroutine(DelayedAssign(dingoObject, slot));
+        });
+    }
+    public DingoID GetRandomDingo()
+    {
+        List<DingoID> dingos = new List<DingoID>(DingoDatabase.allDingos);
+
+        if (dingos.Count == 0)
+        {
+            Debug.LogWarning("No Dingos available to select.");
+            return null; // Handle empty list case
+        }
+
+        int randomIndex = Random.Range(0, dingos.Count);
+        return dingos[randomIndex];
     }
     private void BattleEnd()
     {
+        Debug.Log("Battle Ended");
+        Debug.Log("Battle Ended");
+
+        Debug.Log("Battle Ended");
+
+
         foreach (ulong clientId in activePlayers)
         {
             PlayerManager.SetPlayerBattleStatus(clientId, false);
@@ -286,7 +559,108 @@ public class OverworldBattleManager : NetworkBehaviour
             }
             Debug.Log("[Client] Sending Dingo data to server...");
             SendDingoDataToServer(playerDingoData); // Send the loaded data to the server
+            SetAttackMovesPlayer2();
         }
+    }
+    public void SetAttackMoves(int slotNumber)
+    {
+        StartCoroutine(DelayAttackButtons(slotNumber));
+    }
+    public IEnumerator DelayAttackButtons(int slotNumber)
+    {
+        yield return new WaitForSeconds(0.3f);
+        Button[] moveButtons = BattleUI.GetMoveButtons();
+        int[] moves = DingoLoader.LoadDingoMovesToSend(0);
+
+        SetMoveButton(moveButtons[0], slotNumber, moves[0]);
+        SetMoveButton(moveButtons[1], slotNumber, moves[1]);
+        SetMoveButton(moveButtons[2], slotNumber, moves[2]);
+        SetMoveButton(moveButtons[3], slotNumber, moves[3]);
+
+    }
+    private void SetMoveButton(Button button, int slotNumber, int moveId)
+    {
+        Text buttonText = button.GetComponentInChildren<Text>();
+        GameObject targetEntity = DecodeSlotNumber(slotNumber);
+        if (targetEntity == null)
+        {
+            Debug.LogWarning($"No entity found in slot {slotNumber}.");
+            return;
+        }
+
+        // Ensure the target entity has a NetworkDingo component
+        NetworkDingo networkDingo = targetEntity.GetComponent<NetworkDingo>();
+        if (networkDingo == null)
+        {
+            Debug.LogWarning("Target entity has no NetworkDingo component.");
+            return;
+        }
+
+        DingoID dingo = DingoDatabase.GetDingoByID(networkDingo.id.Value);
+        DingoMove move = DingoDatabase.GetMoveByID(moveId, dingo);
+        if (buttonText != null)
+        {
+            buttonText.text = move.Name;
+        }
+        else
+        {
+            Debug.LogWarning("No Text component found in the button!");
+        }
+
+        // Clear existing listeners before adding new ones to prevent multiple calls
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(() =>
+        {
+            ShowTargetSelectionUI(moveId, slotNumber); // Open UI for choosing a target
+        });
+        //button.onClick.AddListener(() => RequestMoveServerRPC(slotNumber, moveId));
+    }
+    public void SetAttackMovesPlayer2()
+    {
+        StartCoroutine(DelayAttackButtonsPlayer2());
+    }
+    public IEnumerator DelayAttackButtonsPlayer2()
+    {
+        yield return new WaitForSeconds(0.3f);
+        Button[] moveButtons = BattleUI.GetMoveButtons();
+        DingoID dingo = DingoLoader.LoadPlayerDingoFromFile(0);
+        int[] moves = DingoLoader.LoadDingoMovesToSend(0);
+        if (dingo == null)
+        {
+            Debug.LogError("[Client] Failed to load Dingo data from file!");
+            yield break;
+        }
+        SetMoveButtonPlayer2(moveButtons[0], dingo.ID, moves[0]);
+        SetMoveButtonPlayer2(moveButtons[1], dingo.ID, moves[1]);
+        SetMoveButtonPlayer2(moveButtons[2], dingo.ID, moves[2]);
+        SetMoveButtonPlayer2(moveButtons[3], dingo.ID, moves[3]);
+
+    }
+
+
+    private void SetMoveButtonPlayer2(Button button, int dingoId, int moveId)
+    {
+        DingoMove move = DingoDatabase.GetMoveByID(moveId, DingoDatabase.GetDingoByID(dingoId));
+
+        Text buttonText = button.GetComponentInChildren<Text>();
+
+
+        if (buttonText != null && move != null)
+        {
+            buttonText.text = move.Name;
+        }
+        else
+        {
+            Debug.LogWarning("No Text component found in the button!");
+        }
+
+        // Clear existing listeners before adding new ones to prevent multiple calls
+        button.onClick.RemoveAllListeners();
+        //button.onClick.AddListener(() => RequestMoveServerRPC(2, moveId));
+        button.onClick.AddListener(() =>
+        {
+            ShowTargetSelectionUI(moveId, 2); // Open UI for choosing a target
+        });
     }
     private void SendDingoDataToServer(string playerDingoData)
     {
@@ -305,6 +679,7 @@ public class OverworldBattleManager : NetworkBehaviour
 
         Debug.Log("[Server] Loading Dingo data from string...");
         DingoID playerDingoData = DingoLoader.LoadPlayerDingoFromFileToRecieve(playerDingoString, 0);
+        int[] moves = DingoLoader.LoadDingoMovesToSend(0);
         if (playerDingoData == null)
         {
             Debug.LogError("[Server] Failed to load Dingo data from string.");
@@ -320,10 +695,10 @@ public class OverworldBattleManager : NetworkBehaviour
             if (networkDingo != null)
             {
                 networkDingo.SetDingoAttributesServerRpc(
-                    playerDingoData.Sprite, playerDingoData.Name, playerDingoData.Type,
+                    playerDingoData.ID, playerDingoData.Sprite, playerDingoData.Name, playerDingoData.Type,
                     playerDingoData.HP, playerDingoData.Attack, playerDingoData.Defense,
                     playerDingoData.Speed, playerDingoData.MaxHP, playerDingoData.XP,
-                    playerDingoData.MaxXP, playerDingoData.Level);
+                    playerDingoData.MaxXP, playerDingoData.Level, moves[0], moves[1], moves[2], moves[3]);
             }
 
             Debug.Log($"[Server] Dingo spawned at position {Slot2.transform.position}");
@@ -341,80 +716,90 @@ public class OverworldBattleManager : NetworkBehaviour
         selfcollider.enabled = true;
         yield return null;
     }
-    private void InitializePositions()
-    {
-        // Find all positions under Players and Opponents
-        Slot1 = FindChildByName("Players", "Slot1");
-        Slot2 = FindChildByName("Players", "Slot2");
-        TrainerPosition1 = FindChildByName("Players", "TrainerPosition1");
-        TrainerPosition2 = FindChildByName("Players", "TrainerPosition2");
-
-        Opponent1 = FindChildByName("Opponents", "Opponent1");
-        Opponent2 = FindChildByName("Opponents", "Opponent2");
-        OpponentTrainerPosition1 = FindChildByName("Opponents", "OpponentTrainerPosition1");
-        OpponentTrainerPosition2 = FindChildByName("Opponents", "OpponentTrainerPosition2");
-
-        // Initialize positionOccupied dictionary
-        positionOccupied[Slot1] = false;
-        positionOccupied[Slot2] = false;
-        positionOccupied[TrainerPosition1] = false;
-        positionOccupied[TrainerPosition2] = false;
-        positionOccupied[Opponent1] = false;
-        positionOccupied[Opponent2] = false;
-        positionOccupied[OpponentTrainerPosition1] = false;
-        positionOccupied[OpponentTrainerPosition2] = false;
-    }
-    private GameObject FindChildByName(string parentName, string childName)
-    {
-        // Find the parent GameObject first
-        Transform parentTransform = transform.Find(parentName);
-        if (parentTransform != null)
-        {
-            // Find the child GameObject under the parent
-            Transform childTransform = parentTransform.Find(childName);
-            if (childTransform != null)
-            {
-                return childTransform.gameObject; // Return the GameObject if found
-            }
-            else
-            {
-                Debug.LogError($"Child with name {childName} not found under parent {parentName}!");
-            }
-        }
-        else
-        {
-            Debug.LogError($"Parent with name {parentName} not found!");
-        }
-        return null; // Return null if not found
-    }
     public bool IsPositionOccupied(GameObject position)
     {
         return positionOccupied.ContainsKey(position) && positionOccupied[position];
     }
+    private void DebugPrintEntityPositions(string context)
+    {
+        Debug.Log($"[Debug] --- {context} ---");
+        foreach (var kvp in entityInPosition)
+        {
+            string entityName = kvp.Value != null ? kvp.Value.name : "NULL";
+            Debug.Log($"[Debug] Position {kvp.Key.name}: {entityName}");
+        }
+    }
+
     public void AssignEntityToPosition(GameObject entity, GameObject position)
     {
-        Debug.Log($"Attempting to assign {entity.name} to {position.name}");
-
-        if (!entityInPosition.ContainsKey(position))
+        if (entity == null || position == null)
         {
-            entityInPosition[position] = null;
-        }
-
-        if (entityInPosition[position] != null)
-        {
-            Debug.LogError($"Attempted to assign {entity.name} to {position.name}, but it's already occupied by {entityInPosition[position].name}!");
+            Debug.LogError("[AssignEntityToPosition] Entity or position is null!");
             return;
         }
+
+        DebugPrintEntityPositions("Before Assigning");
+
+        if (entityInPosition.TryGetValue(position, out var currentEntity) && currentEntity != null)
+        {
+            Debug.LogWarning($"[AssignEntityToPosition] Position {position.name} is already occupied by {currentEntity.name}. Removing old entity...");
+            RemoveDingoByEntity(currentEntity);
+        }
+
+        entityInPosition[position] = entity;
+        positionOccupied[position] = true;
+
+        DebugPrintEntityPositions("After Assigning");
+
+        StartCoroutine(AssignAnimation(entity, position));
+
+        Debug.Log($"[AssignEntityToPosition] Successfully assigned {entity.name} to {position.name}");
+    }
+
+
+    public void AssignEntityToPosition2(GameObject entity, int position2)
+    {
+        GameObject position = null;
+        if (position2 == 3)
+        {
+            position = Opponent1;
+        }
+        else if (position2 == 4) 
+        {
+            position = Opponent2;
+        }
+
+        if (!entityInPosition.TryGetValue(position, out var currentEntity))
+        {
+            entityInPosition[position] = null;  // Initialize if not already present
+            currentEntity = null;
+        }
+
+        if (currentEntity != null)
+        {
+            Debug.LogWarning($"Position {position.name} is already occupied by {currentEntity.name}.");
+            return;
+        }
+
+
         SpriteRenderer spriteRenderer = entity.GetComponent<SpriteRenderer>();
+        NetworkDingo networkDingo = entity.GetComponent<NetworkDingo>();
+
         if (spriteRenderer != null && (position.name == "Opponent1" || position.name == "Opponent2"))
         {
             spriteRenderer.flipX = true;
+            networkDingo.isFlipped.Value = true;
+        }
+        else
+        {
+            networkDingo.isFlipped.Value = false;
         }
 
         StartCoroutine(AssignAnimation(entity, position));
         entityInPosition[position] = entity;
-        positionOccupied[position] = true; // Mark the position as occupied
+        positionOccupied[position] = true;
     }
+
     public void UnassignEntityFromPosition(GameObject position)
     {
         if (entityInPosition.ContainsKey(position) && entityInPosition[position] != null)
@@ -446,22 +831,27 @@ public class OverworldBattleManager : NetworkBehaviour
 
         // Ensure the entity is exactly at the target position at the end
         entity.transform.position = endPos;
+        dingoSpawning = false;
     }
     public IEnumerator DelayedAssign(GameObject entity, GameObject position)
     {
-        yield return new WaitForSeconds(0.1f); // Wait until the next frame to ensure the object is spawned
+        yield return new WaitForSeconds(0.15f); // Wait until the next frame to ensure the object is spawned
 
-        Debug.Log($"Delayed assignment: {entity.name} to {position.name}");
+        if (entity == null || position == null)
+        {
+            Debug.LogError("[DelayedAssign] Entity or position is null!");
+            yield break;
+        }
 
-        if (entity != null && position != null)
+        if (entityInPosition.ContainsKey(position) && entityInPosition[position] != null)
         {
-            AssignEntityToPosition(entity, position);
+            Debug.LogWarning($"[DelayedAssign] {position.name} is already occupied by {entityInPosition[position].name}. Skipping reassignment!");
+            yield break;
         }
-        else
-        {
-            Debug.LogError("Entity or position is null after delay!");
-        }
+
+        AssignEntityToPosition(entity, position);
     }
+
     public void ClearPosition(GameObject position)
     {
         if (positionOccupied.ContainsKey(position))

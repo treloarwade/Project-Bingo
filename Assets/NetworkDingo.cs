@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class NetworkDingo : NetworkBehaviour
 {
-    // Networked properties
+    public NetworkVariable<int> id = new NetworkVariable<int>();
     public NetworkVariable<FixedString128Bytes> spritePath = new NetworkVariable<FixedString128Bytes>();
 #pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     public NetworkVariable<FixedString64Bytes> name = new NetworkVariable<FixedString64Bytes>();
@@ -21,6 +21,15 @@ public class NetworkDingo : NetworkBehaviour
     public NetworkVariable<int> xp = new NetworkVariable<int>();
     public NetworkVariable<int> maxXP = new NetworkVariable<int>();
     public NetworkVariable<int> level = new NetworkVariable<int>();
+    public NetworkVariable<int> move1 = new NetworkVariable<int>();
+    public NetworkVariable<int> move2 = new NetworkVariable<int>();
+    public NetworkVariable<int> move3 = new NetworkVariable<int>();
+    public NetworkVariable<int> move4 = new NetworkVariable<int>();
+    public NetworkVariable<bool> isFlipped = new NetworkVariable<bool>(false); // Default to not flipped
+    public NetworkVariable<int> battleMoveId = new NetworkVariable<int>(-1); // Default to not flipped
+    public NetworkVariable<int> battleTargetId = new NetworkVariable<int>(-1); // Default to not flipped
+
+
     public Slider healthSlider;
     private SpriteRenderer spriteRenderer;
     private Coroutine healthAnimation;
@@ -30,10 +39,11 @@ public class NetworkDingo : NetworkBehaviour
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        
+        battleMoveId.Value = -1;
         // Subscribe to value changes
         spritePath.OnValueChanged += OnSpritePathChanged;
         name.OnValueChanged += OnNameChanged;
+        isFlipped.OnValueChanged += OnFlippedChanged;
 
         // Initialize sprite
         UpdateSprite(spritePath.Value.ToString());
@@ -45,7 +55,7 @@ public class NetworkDingo : NetworkBehaviour
     private IEnumerator SetText()
     {
         yield return new WaitForSeconds(0.3f);
-
+        UpdateSprite(spritePath.Value.ToString());
         nameText.text = name.Value.ToString();
         typeText.text = type.Value.ToString();
         hpText.text = hp.Value.ToString() + "/" + maxHP.Value.ToString();
@@ -66,6 +76,7 @@ public class NetworkDingo : NetworkBehaviour
         // Unsubscribe to prevent memory leaks
         spritePath.OnValueChanged -= OnSpritePathChanged;
         name.OnValueChanged -= OnNameChanged;
+        isFlipped.OnValueChanged -= OnFlippedChanged;
     }
 
     private void OnSpritePathChanged(FixedString128Bytes oldValue, FixedString128Bytes newValue)
@@ -77,10 +88,16 @@ public class NetworkDingo : NetworkBehaviour
     {
         Debug.Log($"Dingo name changed to: {newValue}");
     }
+    private void OnFlippedChanged(bool oldValue, bool newValue)
+    {
+        spriteRenderer.flipX = newValue;
+    }
+
 
     public void UpdateSprite(string newSpritePath)
     {
         Sprite newSprite = Resources.Load<Sprite>(newSpritePath);
+
         if (newSprite != null)
         {
             spriteRenderer.sprite = newSprite;
@@ -89,12 +106,14 @@ public class NetworkDingo : NetworkBehaviour
         {
             Debug.LogError($"Failed to load sprite at path: {newSpritePath}");
         }
+        spriteRenderer.flipX = isFlipped.Value;
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SetDingoAttributesServerRpc(FixedString128Bytes newSpritePath, FixedString64Bytes newName, FixedString64Bytes newType,
-        int newHP, int newAttack, int newDefense, int newSpeed, int newMaxHP, int newXP, int newMaxXP, int newLevel)
+    public void SetDingoAttributesServerRpc(int iD, FixedString128Bytes newSpritePath, FixedString64Bytes newName, FixedString64Bytes newType,
+        int newHP, int newAttack, int newDefense, int newSpeed, int newMaxHP, int newXP, int newMaxXP, int newLevel, int Move1, int Move2, int Move3, int Move4)
     {
+        id.Value = iD;
         spritePath.Value = newSpritePath;
         name.Value = newName;
         type.Value = newType;
@@ -106,6 +125,11 @@ public class NetworkDingo : NetworkBehaviour
         xp.Value = newXP;
         maxXP.Value = newMaxXP;
         level.Value = newLevel;
+        move1.Value = Move1;
+        move2.Value = Move2;
+        move3.Value = Move3;
+        move4.Value = Move4;
+
     }
 
     // Update Health Bar Smoothly

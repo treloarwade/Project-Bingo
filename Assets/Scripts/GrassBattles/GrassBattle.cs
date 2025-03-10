@@ -128,12 +128,17 @@ public class GrassBattle : NetworkBehaviour
                         DingoID enemyDingoData1 = GetRandomDingo();
                         DingoID enemyDingoData2 = GetRandomDingo();
                         DingoID playerDingoData = DingoLoader.LoadPlayerDingoFromFile(0);
+                        int[] moves = DingoLoader.LoadDingoMovesToSend(0);
+                        int[] enemyMoves1 = { 0, 1, 2, 3 };
+                        int[] enemyMoves2 = { 0, 1, 2, 3 };
 
-                        SpawnAndAssignDingo(playerDingoData, battleManager.Slot1, "Player Dingo assigned to Slot1!");
-                        SpawnAndAssignDingo(enemyDingoData1, battleManager.Opponent1, "Enemy Dingo assigned to Opponent1!");
-                        SpawnAndAssignDingo(enemyDingoData2, battleManager.Opponent2, "Enemy Dingo assigned to Opponent2!");
 
 
+                        SpawnAndAssignDingo(moves, playerDingoData, battleManager.Slot1);
+                        SpawnAndAssignDingo(enemyMoves1, enemyDingoData1, battleManager.Opponent1);
+                        SpawnAndAssignDingo(enemyMoves2, enemyDingoData2, battleManager.Opponent2);
+
+                        battleManager.SetAttackMoves(1);
                         // Set the player who started the battle (only on server)
                         battleManager.SetBattleStarter(clientId);
                         PlayerManager.SetPlayerBattleStatus(clientId, true);
@@ -160,7 +165,7 @@ public class GrassBattle : NetworkBehaviour
             Debug.Log("[Server] Battle prefab already exists.");
         }
     }
-    private void SpawnAndAssignDingo(DingoID dingoData, GameObject slot, string debugMessage)
+    private void SpawnAndAssignDingo(int[] moves, DingoID dingoData, GameObject slot)
     {
         BattleManagerUtils.RequestDingoSpawn(dingoData.Sprite, (GameObject dingoObject) =>
         {
@@ -168,14 +173,13 @@ public class GrassBattle : NetworkBehaviour
             if (networkDingo != null)
             {
                 networkDingo.SetDingoAttributesServerRpc(
-                    dingoData.Sprite, dingoData.Name, dingoData.Type,
+                    dingoData.ID, dingoData.Sprite, dingoData.Name, dingoData.Type,
                     dingoData.HP, dingoData.Attack, dingoData.Defense,
                     dingoData.Speed, dingoData.MaxHP, dingoData.XP,
-                    dingoData.MaxXP, dingoData.Level);
+                    dingoData.MaxXP, dingoData.Level, moves[0], moves[1], moves[2], moves[3]);
             }
 
             StartCoroutine(FindObjectOfType<OverworldBattleManager>().DelayedAssign(dingoObject, slot));
-            Debug.Log(debugMessage);
         });
     }
     public DingoID GetRandomDingo()

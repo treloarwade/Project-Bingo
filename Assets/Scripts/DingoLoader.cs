@@ -57,6 +57,103 @@ public static class DingoLoader
 
         return null; // Return null if not found
     }
+    public static int[] LoadDingoMovesToSend(int slot)
+    {
+        string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+
+        if (File.Exists(filePath))
+        {
+            string jsonData = File.ReadAllText(filePath);
+            JSONArray jsonDingos = JSON.Parse(jsonData) as JSONArray;
+
+            if (jsonDingos != null && jsonDingos.Count > slot)
+            {
+                JSONObject dingoData = jsonDingos[slot].AsObject;
+
+                return new int[]
+                {
+dingoData["Move1ID"],
+dingoData["Move2ID"],
+dingoData["Move3ID"],
+dingoData["Move4ID"]
+                };
+            }
+        }
+
+        Debug.LogError("Failed to load moves: File not found or slot invalid.");
+        return null;
+    }
+    public static DingoMove[] LoadDingoMoves(int slot)
+    {
+        string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+
+        if (File.Exists(filePath))
+        {
+            string jsonData = File.ReadAllText(filePath);
+            JSONArray jsonDingos = JSON.Parse(jsonData) as JSONArray;
+
+            if (jsonDingos != null && jsonDingos.Count > slot)
+            {
+                JSONObject dingoData = jsonDingos[slot].AsObject;
+                DingoID dingo = DingoDatabase.GetDingoByID(dingoData["DingoID"]);
+
+                return new DingoMove[]
+                {
+                DingoDatabase.GetMoveByID(dingoData["Move1ID"], dingo),
+                DingoDatabase.GetMoveByID(dingoData["Move2ID"], dingo),
+                DingoDatabase.GetMoveByID(dingoData["Move3ID"], dingo),
+                DingoDatabase.GetMoveByID(dingoData["Move4ID"], dingo)
+                };
+            }
+        }
+
+        Debug.LogError("Failed to load moves: File not found or slot invalid.");
+        return null;
+    }
+    public static DingoMove[] LoadDingoMovesByID(int dingoID)
+    {
+        string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+
+        if (File.Exists(filePath))
+        {
+            string jsonData = File.ReadAllText(filePath);
+            JSONArray jsonDingos = JSON.Parse(jsonData) as JSONArray;
+
+            if (jsonDingos != null)
+            {
+                foreach (JSONObject dingoData in jsonDingos)
+                {
+                    if (dingoData["DingoID"] == dingoID)
+                    {
+                        DingoID dingo = DingoDatabase.GetDingoByID(dingoID);
+                        return new DingoMove[]
+                        {
+                        DingoDatabase.GetMoveByID(dingoData["Move1ID"], dingo),
+                        DingoDatabase.GetMoveByID(dingoData["Move2ID"], dingo),
+                        DingoDatabase.GetMoveByID(dingoData["Move3ID"], dingo),
+                        DingoDatabase.GetMoveByID(dingoData["Move4ID"], dingo)
+                        };
+                    }
+                }
+            }
+        }
+
+        Debug.LogError("Failed to load moves: DingoID not found.");
+        return null;
+    }
+
+    public static DingoMove[] LoadDingoMovesInput(int move1, int move2, int move3, int move4, int dingoID)
+    {
+        DingoID dingo = DingoDatabase.GetDingoByID(dingoID);
+        return new DingoMove[]
+        {
+                        DingoDatabase.GetMoveByID(move1, dingo),
+                        DingoDatabase.GetMoveByID(move2, dingo),
+                        DingoDatabase.GetMoveByID(move3, dingo),
+                        DingoDatabase.GetMoveByID(move4, dingo)
+        };
+    }
+
     public static string LoadPlayerDingoFromFileToSend()
     {
         string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
