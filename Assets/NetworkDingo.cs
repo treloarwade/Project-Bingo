@@ -28,6 +28,7 @@ public class NetworkDingo : NetworkBehaviour
     public NetworkVariable<bool> isFlipped = new NetworkVariable<bool>(false); // Default to not flipped
     public NetworkVariable<int> battleMoveId = new NetworkVariable<int>(-1); // Default to not flipped
     public NetworkVariable<int> battleTargetId = new NetworkVariable<int>(-1); // Default to not flipped
+    public NetworkVariable<int> slotNumber = new NetworkVariable<int>(-1); // Default to not flipped
 
 
     public Slider healthSlider;
@@ -55,10 +56,12 @@ public class NetworkDingo : NetworkBehaviour
     private IEnumerator SetText()
     {
         yield return new WaitForSeconds(0.3f);
+
         UpdateSprite(spritePath.Value.ToString());
         nameText.text = name.Value.ToString();
         typeText.text = type.Value.ToString();
         hpText.text = hp.Value.ToString() + "/" + maxHP.Value.ToString();
+
         yield return null;
     }
     private IEnumerator WaitForNetworkValues()
@@ -77,6 +80,10 @@ public class NetworkDingo : NetworkBehaviour
         spritePath.OnValueChanged -= OnSpritePathChanged;
         name.OnValueChanged -= OnNameChanged;
         isFlipped.OnValueChanged -= OnFlippedChanged;
+        maxHP.OnValueChanged -= OnMaxHPChanged;
+        hp.OnValueChanged -= OnHPChanged;
+
+
     }
 
     private void OnSpritePathChanged(FixedString128Bytes oldValue, FixedString128Bytes newValue)
@@ -96,6 +103,12 @@ public class NetworkDingo : NetworkBehaviour
 
     public void UpdateSprite(string newSpritePath)
     {
+        if (string.IsNullOrEmpty(newSpritePath))
+        {
+            Debug.LogError("Sprite path is empty or null.");
+            return;
+        }
+
         Sprite newSprite = Resources.Load<Sprite>(newSpritePath);
 
         if (newSprite != null)
@@ -106,6 +119,7 @@ public class NetworkDingo : NetworkBehaviour
         {
             Debug.LogError($"Failed to load sprite at path: {newSpritePath}");
         }
+
         spriteRenderer.flipX = isFlipped.Value;
     }
 
@@ -129,7 +143,6 @@ public class NetworkDingo : NetworkBehaviour
         move2.Value = Move2;
         move3.Value = Move3;
         move4.Value = Move4;
-
     }
 
     // Update Health Bar Smoothly
@@ -145,10 +158,17 @@ public class NetworkDingo : NetworkBehaviour
 
     private IEnumerator AnimateHealthBar(int targetHealth)
     {
+        if (healthSlider == null)
+        {
+            Debug.LogWarning("Health slider is not assigned.");
+            yield break;
+        }
+
         float startValue = healthSlider.value;
         float endValue = (float)targetHealth;
         float duration = 1f;
         float elapsed = 0f;
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
@@ -176,4 +196,5 @@ public class NetworkDingo : NetworkBehaviour
             StartCoroutine(AnimateHealthBar(newValue));
         }
     }
+
 }

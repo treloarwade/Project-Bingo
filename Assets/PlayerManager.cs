@@ -39,6 +39,8 @@ public class PlayerManager : NetworkBehaviour
         Debug.Log($"Client {clientId} is Player {playerNumber}");
         GameObject playerObject = NetworkManager.Singleton.SpawnManager.GetPlayerNetworkObject(clientId).gameObject;
         playerObject.name = $"Player{playerNumber}";
+        playerMapping[clientId] = playerNumber;
+
     }
 
     // Method to get player number by clientId

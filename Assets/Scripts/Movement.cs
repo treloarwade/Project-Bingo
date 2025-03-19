@@ -31,6 +31,7 @@ public class Movement : NetworkBehaviour
     public DialogManager dialogManager;
     public BoatScript boatScript;
     private Vector3 savedPosition;
+    public bool movementEnabled = true;
     public void LoadCoordinates()
     {
         // Load the position and rotation from PlayerPrefs
@@ -63,6 +64,13 @@ public class Movement : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
+        if (!movementEnabled)
+        {
+            horizontal = 0f;
+            vertical = 0f;
+            UpdateMovement(); // Ensure movement is updated immediately
+            return;
+        }
         // Check if the dialog box is active, if yes, disable movement
         if (dialogManager != null && dialogManager.IsDialogActive())
         {

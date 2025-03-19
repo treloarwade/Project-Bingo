@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DingoSystem;
 using System.Net.NetworkInformation;
+using System;
 
 public static class DingoDatabase
 {
@@ -434,8 +435,54 @@ public static class DingoDatabase
     private static List<EnvironmentEffect> allEnvironemntEffects = new List<EnvironmentEffect>{
         Rain
     };
-
-
+    public enum DingoListType
+    {
+        AllDingos,
+        NewDingos,
+        FinanceDingos,
+        Marshmellow,
+        SecretDingos,
+        FireDingos,
+        WaterDingos,
+        TrainerDingos
+    }
+    public const int AllDingos = 0;
+    public const int NewDingos = 1;
+    public const int FinanceDingos = 2;
+    public const int SecretDingos = 3;
+    public const int FireDingos = 4;
+    public const int WaterDingos = 5;
+    public const int TrainerDingos = 6;
+    public static List<DingoID> GetDingoList(int listType)
+    {
+        try
+        {
+            switch (listType)
+            {
+                case DingoDatabase.AllDingos:
+                    return allDingos;
+                case DingoDatabase.NewDingos:
+                    return newDingos;
+                case DingoDatabase.FinanceDingos:
+                    return financeDingos;
+                case DingoDatabase.SecretDingos:
+                    return secretDingos;
+                case DingoDatabase.FireDingos:
+                    return fireDingos;
+                case DingoDatabase.WaterDingos:
+                    return waterDingos;
+                case DingoDatabase.TrainerDingos:
+                    return trainerDingos;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(listType), listType, "Invalid Dingo list type.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[DingoDatabase] Error retrieving Dingo list: {ex.Message}");
+            return null;
+        }
+    }
     public static List<DingoID> allDingos = new List<DingoID> 
     {
         BingoStar,
