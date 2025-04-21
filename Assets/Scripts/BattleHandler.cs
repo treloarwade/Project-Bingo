@@ -7,6 +7,9 @@ using System.Linq;
 using SimpleJSON;
 using System.IO;
 using System.Collections;
+using System;
+using System.Net.NetworkInformation;
+using UnityEditor.PackageManager;
 
 public static class BattleHandler
 {
@@ -36,7 +39,7 @@ public static class BattleHandler
             _battlePrefabInstances.Remove(clientId);
         }
     }
-    public static void StartBattle(ulong clientId, int dingoListInt, Vector3 spawnPosition)
+    public static void StartBattle(ulong clientId, int dingoListInt, Vector3 spawnPosition, string filePath, string agentBingoPath)
     {
         BattleStarter.Instance.SetBattleUIVisibilityClientRPC(true, clientId);
         List<DingoID> dingoList = DingoDatabase.GetDingoList(dingoListInt);
@@ -90,9 +93,8 @@ public static class BattleHandler
 
         // Cache the Dingo list for this client
         cachedList = dingoList;
-
         // Load player's Dingo - modified to find first healthy one
-        NetworkDingo playerDingo1 = FindFirstHealthyDingo(clientId);
+        NetworkDingo playerDingo1 = FindFirstHealthyDingo(clientId, filePath, agentBingoPath);
         if (playerDingo1 == null)
         {
             Debug.LogError("No healthy Dingos available for battle!");
@@ -129,31 +131,83 @@ public static class BattleHandler
     }
 
     // New helper method to find first healthy Dingo
-    private static NetworkDingo FindFirstHealthyDingo(ulong clientId)
+    private static NetworkDingo FindFirstHealthyDingo(ulong clientId, string filePath, string agentBingoPath)
     {
-        // Get the save file path using existing function
-        string filePath = DingoLoader.LoadPlayerDingoFromFileToSend();
-
-        // Get actual Dingo count from the save file
         int dingoCount = DingoLoader.GetPlayerDingoCount(filePath);
-        for (int i = 0; i < dingoCount; i++)
+        NetworkDingo healthyDingo = null;
+        List<NetworkDingo> loadedDingos = new List<NetworkDingo>();
+
+        try
         {
-
-            NetworkDingo dingo = DingoLoader.LoadPrefabWithStats(i);
-            if (dingo != null && dingo.hp.Value > 0)
+            for (int i = 0; i < dingoCount; i++)
             {
-                Debug.Log($"Found healthy Dingo at slot {i} with HP: {dingo.hp.Value}");
-                BattleStarter.Instance.AssignMoveButtonsSlotClientRPC(clientId, i);
+                NetworkDingo dingo = DingoLoader.LoadPrefabWithStats(i);
+                if (dingo == null) continue;
 
-                BattleStarter.Instance.StoreClientSlot(clientId, i);
-                return dingo;
+                loadedDingos.Add(dingo); // Track all loaded Dingos
+
+                if (dingo.hp.Value > 0)
+                {
+                    Debug.Log($"Found healthy Dingo at slot {i} with HP: {dingo.hp.Value}");
+                    BattleStarter.Instance.AssignMoveButtonsSlotClientRPC(clientId, i);
+                    BattleStarter.Instance.StoreClientSlot(clientId, i);
+
+                    healthyDingo = dingo;
+                    break; // Found a healthy one, stop searching
+                }
+                else
+                {
+                    Debug.Log($"Skipping fainted Dingo at slot {i} with HP: {dingo.hp.Value}");
+                }
             }
-            else if (dingo != null)
+
+            // Clean up unused Dingos (all except the healthy one we found)
+            foreach (var dingo in loadedDingos)
             {
-                Debug.Log($"Skipping Dingo at slot {i} with HP: {dingo.hp.Value}");
+                if (dingo != healthyDingo)
+                {
+                    CleanupDingo(dingo);
+                }
             }
+
+            // If no healthy player Dingo found, use Agent Bingo as fallback
+            if (healthyDingo == null)
+            {
+                healthyDingo = DingoLoader.LoadNetworkDingoFromFileToReceive(agentBingoPath, 0);
+                Debug.Log("No healthy player Dingos found, using Agent Bingo");
+            }
+
+            return healthyDingo;
         }
-        return null; // No healthy Dingos found
+        catch (System.Exception e)
+        {
+            // Ensure cleanup happens even if something goes wrong
+            foreach (var dingo in loadedDingos)
+            {
+                if (dingo != healthyDingo)
+                {
+                    CleanupDingo(dingo);
+                }
+            }
+            Debug.LogError($"Error finding healthy Dingo: {e.Message}");
+            return DingoLoader.LoadRandomDingoFromList(DingoDatabase.agentBingo);
+        }
+    }
+
+    private static void CleanupDingo(NetworkDingo dingo)
+    {
+        if (dingo == null) return;
+
+        // Properly clean up the Dingo instance
+        if (dingo.gameObject != null)
+        {
+            if (dingo.GetComponent<NetworkObject>().IsSpawned)
+            {
+                dingo.GetComponent<NetworkObject>().Despawn();
+            }
+            GameObject.Destroy(dingo.gameObject);
+        }
+        Debug.Log($"Cleaned up unused Dingo: {dingo.name.Value}");
     }
     public static void AssignDingos(ulong clientId, NetworkDingo[] playerDingos, NetworkDingo[] opponentDingos)
     {
@@ -213,11 +267,11 @@ public static class BattleHandler
             NetworkDingo existingDingo = BattleSlots[clientId][slotNumber].Dingo;
             if (existingDingo != null && existingDingo != dingo)
             {
-                existingDingo.gameObject.SetActive(false);
                 if (existingDingo.GetComponent<NetworkObject>().IsSpawned)
                 {
                     existingDingo.GetComponent<NetworkObject>().Despawn();
                 }
+                GameObject.Destroy(dingo.gameObject);
             }
         }
 
@@ -231,7 +285,6 @@ public static class BattleHandler
         {
             dingo.GetComponent<NetworkObject>().Spawn();
         }
-
         Debug.Log($"Assigned {dingo.name.Value} to slot {slotNumber} (Player: {isPlayer})");
     }
     public static void AssignMoveButtons(NetworkDingo networkDingo)
@@ -352,11 +405,6 @@ public static class BattleHandler
 
         return null;
     }
-
-    private static Vector3 BezierCurve(Vector3 start, Vector3 control, Vector3 end, float t)
-    {
-        return Vector3.Lerp(Vector3.Lerp(start, control, t), Vector3.Lerp(control, end, t), t);
-    }
     public static void AttemptCatchDingo(ulong clientId, NetworkDingo targetDingo)
     {
         if (targetDingo == null)
@@ -374,7 +422,11 @@ public static class BattleHandler
         // Check if this was the last opponent Dingo
         bool opponentsRemain = false;
         ulong hostClientId = clientId;
-
+        if (targetDingo.GetComponent<NetworkObject>().IsSpawned)
+        {
+            targetDingo.GetComponent<NetworkObject>().Despawn();
+        }
+        GameObject.Destroy(targetDingo);
         // Handle Player 2 case
         if (playerToHostMap.ContainsKey(clientId))
         {
@@ -456,28 +508,7 @@ public static class BattleHandler
         newDingo.battleMoveId.Value = -1;
         newDingo.battleTargetId.Value = -1;
         Debug.Log($"Successfully switched to {newDingo.name.Value} in fixed battle slot {battleSlot}");
-    }
-
-    // New helper method to find first healthy Dingo from file
-    private static NetworkDingo FindFirstHealthyDingo(ulong clientId, int startingSlot = 0)
-    {
-        // Get the actual Dingo count for this player
-        int dingoCount = BattleStarter.Instance.GetPlayerDingoCount(clientId);
-
-        for (int slot = startingSlot; slot < dingoCount; slot++)
-        {
-            NetworkDingo dingo = DingoLoader.LoadPrefabWithStats(slot);
-            if (dingo != null)
-            {
-                if (dingo.hp.Value > 0)
-                {
-                    Debug.Log($"Found healthy Dingo at slot {slot} with HP: {dingo.hp.Value}");
-                    return dingo;
-                }
-                Debug.Log($"Skipping fainted Dingo at slot {slot} (HP: {dingo.hp.Value})");
-            }
-        }
-        return null;
+        BattleStarter.Instance.PauseBattle(clientId, false);
     }
     public static ulong GetHostClientIdIfApplicable(ulong clientId, out bool isConverted)
     {
@@ -563,6 +594,7 @@ public static class BattleHandler
     }
     public static void CheckIfPlayersReady(ulong clientId)
     {
+
         // First determine if this is Player 2 checking in
         bool isPlayer2 = playerToHostMap.ContainsKey(clientId);
         ulong hostClientId = isPlayer2 ? GetHostForPlayer2(clientId) : clientId;
@@ -633,8 +665,9 @@ public static class BattleHandler
 
         return moveReady && targetReady;
     }
-    public static void JoinBattleAsPlayer2(ulong clientId, string filePath)
+    public static void JoinBattleAsPlayer2(ulong clientId, string filePath, string agentBingoPath)
     {
+        Debug.Log("Successfully joined as Player 2");
         // Ensure at least one battle exists
         if (BattleSlots.Count == 0)
         {
@@ -678,7 +711,7 @@ public static class BattleHandler
         }
 
         // Load Player 2's Dingo
-        NetworkDingo player2Dingo = DingoLoader.LoadNetworkDingoFromFileToReceive(filePath, 0);
+        NetworkDingo player2Dingo = FindFirstHealthyDingo(clientId, filePath, agentBingoPath);
         BattleStarter.Instance.StoreClientSlot(clientId, 0);
         if (player2Dingo == null)
         {
@@ -1331,6 +1364,7 @@ public static class BattleHandler
             // Flip opponents if needed
             dingo.isFlipped.Value = (slotIndex >= 2); // Simplified flip logic
         }
+
     }
     private static void SetBattlePositions(ulong clientId)
     {
@@ -1359,17 +1393,19 @@ public static class BattleHandler
                 {
                     playerMovement.movementEnabled = false;
                     playerObject.transform.position = playerPosition1.position;
-
-                    // Now, tell the client where to move to (if client, send RPC)
-                    if (NetworkManager.Singleton.IsServer)
+                    if (BattleSlots[clientId][0].Dingo.id.Value == 0)
                     {
-                        Vector3 position = playerPosition1.position;
-                        // Send the position to the client
-                        BattleStarter.Instance.BattlePositionClientRPC(position, clientId);
+                        // Disable the Dingo's sprite renderer
+                        SpriteRenderer dingoRenderer = BattleSlots[clientId][0].Dingo.GetComponent<SpriteRenderer>();
+                        if (dingoRenderer != null)
+                        {
+                            dingoRenderer.enabled = false;
+                        }
+                        BattleStarter.Instance.BattlePositionClientRPC(playerSlot1.position, clientId);
                     }
                     else
                     {
-                        Debug.LogError("Movement script not found on the player.");
+                        BattleStarter.Instance.BattlePositionClientRPC(playerPosition1.position, clientId);
                     }
                 }
                 else
@@ -1392,6 +1428,7 @@ public static class BattleHandler
             BattleSlots[clientId][0].Dingo.transform.position = playerSlot1.position;
             if (playerSlot2 != null && BattleSlots[clientId].ContainsKey(1) && BattleSlots[clientId][1].Dingo != null)
             {
+
                 BattleSlots[clientId][1].Dingo.transform.position = playerSlot2.position;
             }
             else
@@ -1424,7 +1461,6 @@ public static class BattleHandler
         }
 
         // Position the joining player's character
-        BattleStarter.Instance.BattlePositionClientRPC(playerPosition2.position, joiningClientId);
         Debug.Log($"Position the camera at {battlePrefab.transform.position}");
 
         // Position the camera
@@ -1436,6 +1472,20 @@ public static class BattleHandler
             BattleSlots[hostClientId][1].Dingo != null)
         {
             BattleSlots[hostClientId][1].Dingo.transform.position = playerSlot2.position;
+
+            if (BattleSlots[hostClientId][1].Dingo.id.Value == 0)
+            {
+                BattleStarter.Instance.BattlePositionClientRPC(playerSlot2.position, joiningClientId);
+                SpriteRenderer dingoRenderer = BattleSlots[hostClientId][1].Dingo.GetComponent<SpriteRenderer>();
+                if (dingoRenderer != null)
+                {
+                    dingoRenderer.enabled = false;
+                }
+            }
+            else
+            {
+                BattleStarter.Instance.BattlePositionClientRPC(playerPosition2.position, joiningClientId);
+            }
             Debug.Log($"Set Player 2 Dingo position in battle hosted by {hostClientId}");
         }
 
@@ -1444,8 +1494,15 @@ public static class BattleHandler
     public static void HandleDingoFaint(ulong clientId, NetworkDingo dingo)
     {
         Debug.Log($"{dingo.name.Value} has fainted!");
-        dingo.gameObject.SetActive(false);
-
+        if (dingo.TryGetComponent<NetworkObject>(out var netObj) && netObj.IsSpawned)
+        {
+            netObj.Despawn(true); // Destroy on all clients
+        }
+        else
+        {
+            // Fallback if NetworkObject isn't available
+            dingo.gameObject.SetActive(false);
+        }
         // Determine the actual player client ID (host or Player 2)
         ulong playerClientId = clientId;
         bool isPlayer2 = false;
@@ -1454,8 +1511,6 @@ public static class BattleHandler
         if (BattleSlots.ContainsKey(clientId) && BattleSlots[clientId].ContainsKey(0) &&
             BattleSlots[clientId][0].Dingo == dingo)
         {
-            Debug.Log($"{dingo.name.Value} has fainted!1234541354354321");
-
             isPlayerDingo = true;
         }
         // Check if this is Player 2's Dingo (slot 1)
@@ -1552,28 +1607,54 @@ public static class BattleHandler
     {
         if (BattleStarter.Instance != null && dingo != null)
         {
-            BattleStarter.Instance.RequestSaveDingoServerRPC(
-                clientId,
-                dingo.id.Value,
-                dingo.name.Value,
-                dingo.type.Value.ToString(),
-                dingo.hp.Value,
-                dingo.maxHP.Value,
-                dingo.attack.Value,
-                dingo.defense.Value,
-                dingo.speed.Value,
-                dingo.spritePath.Value,
-                dingo.xp.Value,
-                dingo.maxXP.Value,
-                dingo.level.Value,
-                dingo.move1.Value,
-                dingo.move2.Value,
-                dingo.move3.Value,
-                dingo.move4.Value,
-                wild
-            );
+            if (dingo.id.Value == 0)
+            {
+                BattleStarter.Instance.RequestSavePlayerServerRPC(
+    clientId,
+    dingo.id.Value,
+    dingo.name.Value,
+    dingo.type.Value.ToString(),
+    dingo.hp.Value,
+    dingo.maxHP.Value,
+    dingo.attack.Value,
+    dingo.defense.Value,
+    dingo.speed.Value,
+    dingo.spritePath.Value,
+    dingo.xp.Value,
+    dingo.maxXP.Value,
+    dingo.level.Value,
+    dingo.move1.Value,
+    dingo.move2.Value,
+    dingo.move3.Value,
+    dingo.move4.Value
+);
+            }
+            else
+            {
+                BattleStarter.Instance.RequestSaveDingoServerRPC(
+    clientId,
+    dingo.id.Value,
+    dingo.name.Value,
+    dingo.type.Value.ToString(),
+    dingo.hp.Value,
+    dingo.maxHP.Value,
+    dingo.attack.Value,
+    dingo.defense.Value,
+    dingo.speed.Value,
+    dingo.spritePath.Value,
+    dingo.xp.Value,
+    dingo.maxXP.Value,
+    dingo.level.Value,
+    dingo.move1.Value,
+    dingo.move2.Value,
+    dingo.move3.Value,
+    dingo.move4.Value,
+    wild
+);
+            }
         }
     }
+
     public static void SavePlayerDingoData(
         int slotIndex,
         int dingoId,
@@ -1660,10 +1741,81 @@ public static class BattleHandler
         File.WriteAllText(filePath, jsonDingos.ToString());
         Debug.Log($"Saved Dingo data to slot {slotIndex}");
     }
+    public static void SavePlayerCharacterData(
+    int slotIndex,
+    int dingoId,
+    string dingoName,
+    string dingoType,
+    int currentHp,
+    int maxHp,
+    int atk,
+    int def,
+    int spd,
+    string spritePath,
+    int xp,
+    int maxXp,
+    int level,
+    int move1Id,
+    int move2Id,
+    int move3Id,
+    int move4Id
+)
+    {
+        // Load or create JSON data
+        JSONArray jsonDingos;
+        string filePath = Path.Combine(Application.persistentDataPath, "playerinfo.json");
+
+        if (File.Exists(filePath))
+        {
+            jsonDingos = JSON.Parse(File.ReadAllText(filePath)) as JSONArray ?? new JSONArray();
+        }
+        else
+        {
+            jsonDingos = new JSONArray();
+        }
+
+        // Create/update Dingo entry
+        JSONObject jsonDingo = new JSONObject();
+        jsonDingo.Add("ID", slotIndex);
+        jsonDingo.Add("DingoID", dingoId);
+        jsonDingo.Add("Name", dingoName);
+        jsonDingo.Add("Type", dingoType);
+        jsonDingo.Add("Description", DingoDatabase.GetDingoDescriptionByID(dingoId));
+        jsonDingo.Add("CurrentHealth", currentHp);
+        jsonDingo.Add("ATK", atk);
+        jsonDingo.Add("DEF", def);
+        jsonDingo.Add("SPD", spd);
+        jsonDingo.Add("Sprite", spritePath);
+        jsonDingo.Add("MaxHealth", maxHp);
+        jsonDingo.Add("XP", xp);
+        jsonDingo.Add("MaxXP", maxXp);
+        jsonDingo.Add("Level", level);
+        jsonDingo.Add("Move1ID", move1Id);
+        jsonDingo.Add("Move2ID", move2Id);
+        jsonDingo.Add("Move3ID", move3Id);
+        jsonDingo.Add("Move4ID", move4Id);
+
+
+        // Update or add slot
+        if (jsonDingos.Count > slotIndex)
+        {
+            jsonDingos[slotIndex] = jsonDingo;
+        }
+        else
+        {
+            jsonDingos.Add(jsonDingo);
+        }
+
+        // Save file
+        File.WriteAllText(filePath, jsonDingos.ToString());
+        Debug.Log($"Saved Dingo data to slot {slotIndex}");
+    }
+
 
     private static void EndBattle(ulong hostClientId)
     {
         Debug.Log($"Ending battle hosted by client {hostClientId}...");
+        SavePlayerDingosAtBattleEnd(hostClientId);
 
         // Clean up battle slots
         if (BattleSlots.ContainsKey(hostClientId))
@@ -1686,6 +1838,7 @@ public static class BattleHandler
             Debug.Log($"Destroyed battle prefab for host {hostClientId}");
         }
         BattleStarter.Instance.SetBattleUIVisibilityClientRPC(false, hostClientId);
+        RestorePlayerPositions(hostClientId);
 
         // Clean up Player 2 association if exists
         var player2ClientId = GetPlayer2FromHost(hostClientId);
@@ -1700,10 +1853,62 @@ public static class BattleHandler
         }
 
         // Restore positions for all participants
-        RestorePlayerPositionAndCamera(hostClientId);
+        CleanupBattlePrefab(hostClientId);
+        HandlePlayer2Cleanup(hostClientId);
+    }
+
+    private static void SavePlayerDingosAtBattleEnd(ulong hostClientId)
+    {
+        // Save host player's Dingo (slot 0)
+        if (BattleSlots.TryGetValue(hostClientId, out var hostSlots) &&
+            hostSlots.TryGetValue(0, out var hostSlot) &&
+            hostSlot.Dingo != null)
+        {
+            Debug.Log($"Saving host player's Dingo: {hostSlot.Dingo.name.Value}");
+            RequestSaveDingo(hostClientId, hostSlot.Dingo, false);
+        }
+
+        // Check if Player 2 exists and save their Dingo (slot 1)
+        var player2Id = GetPlayer2FromHost(hostClientId);
+        if (player2Id.HasValue &&
+            hostSlots.TryGetValue(1, out var player2Slot) &&
+            player2Slot.Dingo != null)
+        {
+            Debug.Log($"Saving Player 2's Dingo: {player2Slot.Dingo.name.Value}");
+            RequestSaveDingo(player2Id.Value, player2Slot.Dingo, false);
+        }
+    }
+
+    private static void CleanupBattlePrefab(ulong hostClientId)
+    {
+        if (_battlePrefabInstances.TryGetValue(hostClientId, out var prefab))
+        {
+            GameObject.Destroy(prefab);
+            _battlePrefabInstances.Remove(hostClientId);
+            Debug.Log($"Destroyed battle prefab for host {hostClientId}");
+        }
+    }
+
+    private static void HandlePlayer2Cleanup(ulong hostClientId)
+    {
+        var player2ClientId = GetPlayer2FromHost(hostClientId);
         if (player2ClientId.HasValue)
         {
-            RestorePlayerPositionAndCamera(player2ClientId.Value);
+            int playerNumber = PlayerManager.GetPlayerNumberByClientId(player2ClientId.Value);
+            BattleStarter.Instance.SetPlayerPhysicsStateClientRPC(false, player2ClientId.Value, playerNumber);
+            BattleStarter.Instance.SetBattleUIVisibilityClientRPC(false, player2ClientId.Value);
+            playerToHostMap.Remove(player2ClientId.Value);
+            Debug.Log($"Removed Player2 {player2ClientId.Value} from battle hosted by {hostClientId}");
+        }
+    }
+
+    private static void RestorePlayerPositions(ulong hostClientId)
+    {
+        RestorePlayerPositionAndCamera(hostClientId);
+        var player2Id = GetPlayer2FromHost(hostClientId);
+        if (player2Id.HasValue)
+        {
+            RestorePlayerPositionAndCamera(player2Id.Value);
         }
         Debug.Log($"Battle ended for host {hostClientId}");
     }
@@ -1837,8 +2042,9 @@ public static class BattleHandler
 
         Debug.Log("NetworkDingo data saved to: " + filePath);
     }
-    public static void SaveSlotPlayerDingoData()
-    {
 
+    internal static void RequestSaveDingo(object localClientID, NetworkDingo dingo, bool v)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -322,6 +322,12 @@ dingoData["Move4ID"]
 
         return filePath; // Return null if not found
     }
+    public static string LoadPlayerDataFromFileToSend()
+    {
+        string filePath = Path.Combine(Application.persistentDataPath, "playerinfo.json");
+
+        return filePath; // Return null if not found
+    }
     public static DingoID LoadPlayerDingoFromFileToReceive(string filePath, int slot)
     {
         if (File.Exists(filePath))

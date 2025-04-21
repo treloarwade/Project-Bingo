@@ -46,74 +46,15 @@ public class GrassBattle : NetworkBehaviour
         if (BattleStarter.Instance != null)
         {
             string filePath = DingoLoader.LoadPlayerDingoFromFileToSend();
+            string agentBingoPath = DingoLoader.LoadPlayerDataFromFileToSend();
             // Call the RequestStartBattle method on the instance
-            BattleStarter.Instance.RequestStartBattle(NetworkManager.Singleton.LocalClientId, 0, transform.position, filePath);
+            BattleStarter.Instance.RequestStartBattle(NetworkManager.Singleton.LocalClientId, 0, transform.position, filePath, agentBingoPath);
         }
         else
         {
             Debug.LogError("[StartBattle] BattleStarter instance not found in the scene.");
         }
     }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestBattleStartServerRpc(ulong clientId, Vector3 triggerPosition)
-    {
-        // Log the request from the client
-        Debug.Log($"[Server] Client {clientId} requested battle start.");
-
-        // Ensure there are enough Dingos (2 for the player, 2 for the opponent)
-        if (dingos.Count < 4)
-        {
-            Debug.LogError("Not enough Dingos available for the battle. Need 4 Dingos (2 for the player, 2 for the opponent).");
-            return;
-        }
-
-        // Start battle using BattleHandler and pass the list of opponent Dingos
-
-
-
-        Debug.Log("Battle started successfully!");
-    }
-
-
-    // Select a random Dingo from the list
-    public DingoID GetRandomDingo()
-    {
-        if (dingos.Count == 0)
-        {
-            Debug.LogWarning("No Dingos available to select.");
-            return null;
-        }
-
-        int randomIndex = Random.Range(0, dingos.Count);
-        return dingos[randomIndex];
-    }
-
-    private GameObject FindClosestBattleSpot(Vector3 position)
-    {
-        GameObject[] battleSpots = GameObject.FindGameObjectsWithTag("BattleSpot");
-        if (battleSpots.Length == 0)
-        {
-            Debug.LogError("[Server] No BattleSpots found in the scene.");
-            return null;
-        }
-
-        GameObject closestSpot = null;
-        float minDistance = float.MaxValue;
-
-        foreach (GameObject spot in battleSpots)
-        {
-            float distance = Vector3.Distance(spot.transform.position, position);
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                closestSpot = spot;
-            }
-        }
-
-        return closestSpot;
-    }
-
     private IEnumerator WiggleGrass()
     {
         isWiggling = true;

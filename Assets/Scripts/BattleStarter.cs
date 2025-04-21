@@ -7,6 +7,7 @@ using Unity.Collections;
 using SimpleJSON;
 using System.Collections;
 using System;
+using UnityEditor.PackageManager;
 
 public class BattleStarter : NetworkBehaviour
 {
@@ -29,7 +30,7 @@ public class BattleStarter : NetworkBehaviour
             Destroy(gameObject);
             return;
         }
-
+        
         Instance = this;
     }
     // In BattleStarter.cs
@@ -55,7 +56,7 @@ public class BattleStarter : NetworkBehaviour
             movement.SetPhysicsStateForBattle(inBattle);
         }
     }
-    public void RequestStartBattle(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath)
+    public void RequestStartBattle(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath)
     {
         Debug.Log($"[BattleStarter] RequestStartBattle called by client {clientId} at position {triggerPosition}.");
         // Load the player's Dingo count from their save file
@@ -64,23 +65,23 @@ public class BattleStarter : NetworkBehaviour
         if (IsServer)
         {
             Debug.Log("[BattleStarter] Running on server, handling directly.");
-            HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath);
+            HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath, agentBingoPath);
         }
         else
         {
             Debug.Log("[BattleStarter] Running on client, sending ServerRpc.");
-            RequestStartBattleServerRpc(clientId, dingoList, triggerPosition, filePath);
+            RequestStartBattleServerRpc(clientId, dingoList, triggerPosition, filePath, agentBingoPath);
         }
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestStartBattleServerRpc(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath)
+    private void RequestStartBattleServerRpc(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath)
     {
         Debug.Log($"[Server] Received battle start request from client {clientId} at position {triggerPosition}.");
-        HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath);
+        HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath, agentBingoPath);
     }
     [ServerRpc]
-    private void HandleStartBattleServerRPC(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath)
+    private void HandleStartBattleServerRPC(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath)
     {
         Debug.Log($"[Server] HandleStartBattleServerRPC called for Client {clientId} at Position {triggerPosition}");
         // Check if the client is already in a battle
@@ -106,13 +107,8 @@ public class BattleStarter : NetworkBehaviour
 
             // Request the client's save file path
             //string filePath = DingoLoader.LoadPlayerDingoFromFileToSend();
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Debug.LogError($"[Server] Failed to get the save file path for client {clientId}.");
-                return;
-            }
             // Join the battle as Player 2
-            BattleHandler.JoinBattleAsPlayer2(clientId, filePath);
+            BattleHandler.JoinBattleAsPlayer2(clientId, filePath, agentBingoPath);
             return;
         }
 
@@ -123,7 +119,7 @@ public class BattleStarter : NetworkBehaviour
         clientBattleSpots[clientId] = closestSpot.transform.position;
 
         // Start the battle for Player 1
-        BattleHandler.StartBattle(clientId, dingoList, closestSpot.transform.position);
+        BattleHandler.StartBattle(clientId, dingoList, closestSpot.transform.position, filePath, agentBingoPath);
         Debug.Log($"[Server] Battle started successfully for client {clientId}!");
     }
     public void RequestDingoSpawn(ulong clientId, int battleSlotIndex)
@@ -145,22 +141,34 @@ public class BattleStarter : NetworkBehaviour
         BattleHandler.SpawnDingoInSlot(clientId, battleSlotIndex, playerDingo);
     }
     [ClientRpc]
-    public void AssignMoveButtonsClientRPC(ulong clientId)
-    {
-        if (!(clientId == NetworkManager.Singleton.LocalClientId)) { return; }
-
-        //BattleHandler.AssignMoveButtons(networkDingo);
-        NewAssignMoveButtons(0);
-    }
-    [ClientRpc]
     public void AssignMoveButtonsSlotClientRPC(ulong clientId, int slot)
     {
         if (!(clientId == NetworkManager.Singleton.LocalClientId)) { return; }
 
-        //BattleHandler.AssignMoveButtons(networkDingo);
-        NewAssignMoveButtons(slot);
+        StartCoroutine(AssignButtonsAfterDelay(slot));
     }
-    public void NewAssignMoveButtons(int moveslot)
+
+    private IEnumerator AssignButtonsAfterDelay(int slot)
+    {
+        int maxAttempts = 5;
+        int attempts = 0;
+
+        while (attempts < maxAttempts)
+        {
+            yield return new WaitForSeconds(0.1f); // Slight delay between attempts
+            if (NewAssignMoveButtons(slot))
+            {
+                yield break; // Success, stop coroutine
+            }
+
+            attempts++;
+        }
+
+        Debug.LogError("AssignButtonsAfterDelay: Failed to assign move buttons after multiple attempts.");
+    }
+
+    // Updated to return bool indicating success
+    public bool NewAssignMoveButtons(int moveslot)
     {
 
         // Find move buttons in the scene
@@ -172,7 +180,7 @@ public class BattleStarter : NetworkBehaviour
         if (moveButton1 == null || moveButton2 == null || moveButton3 == null || moveButton4 == null)
         {
             Debug.LogError("AssignMoveButtons: One or more move buttons not found in the scene!");
-            return;
+            return false;
         }
 
         // Load Dingo's moves
@@ -180,7 +188,7 @@ public class BattleStarter : NetworkBehaviour
         if (moves == null || moves.Length < 4)
         {
             Debug.LogError("AssignMoveButtons: Failed to load moves for Dingo.");
-            return;
+            return false;
         }
 
         // Assign move names and functions to buttons
@@ -190,6 +198,8 @@ public class BattleStarter : NetworkBehaviour
         NewAssignMoveToButton(moveButton4, moves[3]);
 
         Debug.Log("Assigned moves to buttons and updated text.");
+        return true;
+
     }
     private void NewAssignMoveToButton(GameObject buttonObj, DingoMove move)
     {
@@ -205,14 +215,19 @@ public class BattleStarter : NetworkBehaviour
         buttonText.text = move.Name; // Set button text to move name
         button.onClick.RemoveAllListeners(); // Clear previous listeners
         button.onClick.AddListener(() => SelectMoveServerRpc(NetworkManager.Singleton.LocalClientId, move.MoveID)); // Assign new move function
-        button.onClick.AddListener(() => NewAssignTargetButtons()); // Assign new move function
+        button.onClick.AddListener(() => NewAssignTargetButtons(NetworkManager.Singleton.LocalClientId)); // Assign new move function
 
         //NewAssignTargetButtons();
     }
     [ServerRpc(RequireOwnership = false)]
     public void SelectMoveServerRpc(ulong clientId, int moveId, ServerRpcParams rpcParams = default)
     {
+        bool isBattlePaused = IsBattlePaused(clientId);
 
+        if (isBattlePaused)
+        {
+            return;
+        }
         // Handle the move selection on the host
         Debug.Log($"Client {clientId} selected move {moveId}");
         // You can now update the game state or perform other actions based on the move selection
@@ -228,10 +243,14 @@ public class BattleStarter : NetworkBehaviour
 
         Debug.Log($"Dingo {dingo.name.Value} (Client {clientId}) is selecting move {dingo.battleMoveId.Value} slot: {dingo.slotNumber.Value}");
     }
-    public void NewAssignTargetButtons()
+    public void NewAssignTargetButtons(ulong clientId)
     {
+        bool isBattlePaused = IsBattlePaused(clientId);
 
-
+        if (isBattlePaused)
+        {
+            return;
+        }
         // Find target buttons
         GameObject targetButton1 = GameObject.Find("Canvas/Battle/Target1");
         GameObject targetButton2 = GameObject.Find("Canvas/Battle/Target2");
@@ -259,6 +278,10 @@ public class BattleStarter : NetworkBehaviour
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => SelectTargetServerRpc(NetworkManager.Singleton.LocalClientId, targetId));
         //button.onClick.AddListener(NewAssignTargetButtons);
+    }
+    public bool IsBattlePaused(ulong clientId)
+    {
+        return isBattlePaused && NetworkManager.Singleton.LocalClientId == clientId;
     }
     public void SwitchPlayerDingos(int slot)
     {
@@ -559,6 +582,47 @@ public class BattleStarter : NetworkBehaviour
             move4Id
         );
     }
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestSavePlayerServerRPC(
+    ulong clientId,
+    int dingoId,
+    FixedString64Bytes dingoName,
+    FixedString32Bytes dingoType,
+    int currentHp,
+    int maxHp,
+    int atk,
+    int def,
+    int spd,
+    FixedString128Bytes spritePath,
+    int xp,
+    int maxXp,
+    int level,
+    int move1Id,
+    int move2Id,
+    int move3Id,
+    int move4Id)
+    {
+        SavePlayerDataClientRPC(
+            clientId,
+            0,
+            dingoId,
+            dingoName.Value,
+            dingoType.Value,
+            currentHp,
+            maxHp,
+            atk,
+            def,
+            spd,
+            spritePath.Value,
+            xp,
+            maxXp,
+            level,
+            move1Id,
+            move2Id,
+            move3Id,
+            move4Id
+        );
+    }
     [ClientRpc]
     public void SaveDingoDataClientRPC(ulong clientId, int slotIndex, int dingoId, string dingoName, string dingoType,
     int currentHp, int maxHp, int atk, int def, int spd, string spritePath,
@@ -567,6 +631,33 @@ public class BattleStarter : NetworkBehaviour
         if (clientId != NetworkManager.Singleton.LocalClientId) return;
 
         BattleHandler.SavePlayerDingoData(
+            slotIndex,
+            dingoId,
+            dingoName,
+            dingoType,
+            currentHp,
+            maxHp,
+            atk,
+            def,
+            spd,
+            spritePath,
+            xp,
+            maxXp,
+            level,
+            move1Id,
+            move2Id,
+            move3Id,
+            move4Id
+        );
+    }
+    [ClientRpc]
+    public void SavePlayerDataClientRPC(ulong clientId, int slotIndex, int dingoId, string dingoName, string dingoType,
+int currentHp, int maxHp, int atk, int def, int spd, string spritePath,
+int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id)
+    {
+        if (clientId != NetworkManager.Singleton.LocalClientId) return;
+
+        BattleHandler.SavePlayerCharacterData(
             slotIndex,
             dingoId,
             dingoName,

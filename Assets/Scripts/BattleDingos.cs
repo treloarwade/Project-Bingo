@@ -18,13 +18,14 @@ public class BattleDingos : MonoBehaviour
     }
     public void ListDingos()
     {
-        Debug.Log("Bingo shingo: ");
         dingosUI.SetActive(true);
+
         // Clear existing Dingo items before populating the list
         foreach (Transform child in PlayerDingoContent)
         {
             Destroy(child.gameObject);
         }
+
         int dingoCount = 0;
         if (File.Exists(filePath))
         {
@@ -32,23 +33,35 @@ public class BattleDingos : MonoBehaviour
             {
                 string existingData = File.ReadAllText(filePath);
                 jsonDingos = JSON.Parse(existingData) as JSONArray;
+
                 if (jsonDingos != null)
                 {
                     foreach (JSONNode dingoData in jsonDingos)
                     {
                         JSONObject dingo = dingoData.AsObject;
                         GameObject obj = Instantiate(DingoItem, PlayerDingoContent);
+
+                        // Get UI components
                         var dingoName = obj.transform.Find("ItemName").GetComponent<Text>();
                         var dingoIcon = obj.transform.Find("ItemIcon").GetComponent<Image>();
                         var dingoType = obj.transform.Find("ItemType").GetComponent<Text>();
                         var dingoID = obj.transform.Find("ItemID").GetComponent<Text>();
+                        var dingoHP = obj.transform.Find("ItemHP").GetComponent<Text>(); // Assuming HP display exists
 
+                        // Set basic info
                         dingoName.text = dingo["Name"];
                         dingoType.text = dingo["Type"];
                         dingoID.text = dingoCount.ToString();
-                        dingoCount++;
 
-                        // Load Dingo icon sprite from Resources folder based on the icon path in JSON data
+                        // Add HP display if available
+                        int currentHP = dingo["CurrentHealth"].AsInt;
+                        int maxHP = dingo["MaxHealth"].AsInt;
+                        if (dingoHP != null)
+                        {
+                            dingoHP.text = $"{currentHP}/{maxHP}";
+                        }
+
+                        // Load Dingo icon
                         string iconPath = dingo["Sprite"];
                         Sprite iconSprite = Resources.Load<Sprite>(iconPath);
                         if (iconSprite != null)
@@ -60,10 +73,42 @@ public class BattleDingos : MonoBehaviour
                             Debug.LogWarning("Failed to load Dingo icon: " + iconPath);
                         }
 
-                        // Add a click event handler to each Dingo item
-                        int dingoIndex = dingoCount - 1; // Adjust for zero-based indexing
-                        obj.GetComponent<Button>().onClick.AddListener(() => OnDingoItemClick(dingoIndex));
+                        // Handle fainted Dingos (HP ? 0)
+                        if (currentHP <= 0)
+                        {
+                            // Visual indication of fainted Dingo
+                            obj.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f, 0.5f); // Gray out
+
+                            // Disable interaction but keep visible
+                            var button = obj.GetComponent<Button>();
+                            button.interactable = false;
+
+                            // Add tooltip or explanation
+                            if (dingoName != null)
+                            {
+                                dingoName.text += " (Fainted)";
+                            }
+                        }
+
+                        // Add click handler only for healthy Dingos
+                        if (currentHP > 0)
+                        {
+                            int dingoIndex = dingoCount;
+                            obj.GetComponent<Button>().onClick.AddListener(() => OnDingoItemClick(dingoIndex));
+                        }
+                        else
+                        {
+                            // Optional: Add handler that explains why they can't select this Dingo
+                            obj.GetComponent<Button>().onClick.AddListener(() => {
+                                Debug.Log("This Dingo has fainted and cannot be selected");
+                                // You could show a message to the player here
+                            });
+                        }
+
+                        dingoCount++;
                     }
+                    AdjustContentWindowSize(dingoCount);
+
                 }
                 else
                 {
@@ -80,10 +125,41 @@ public class BattleDingos : MonoBehaviour
             Debug.LogWarning("Dingo JSON file not found at path: " + filePath);
         }
     }
+
+    private void AdjustContentWindowSize(int dingoCount)
+    {
+        RectTransform contentRect = PlayerDingoContent.GetComponent<RectTransform>();
+        float bottomValue = 0f;
+        if (dingoCount >= 36)
+        {
+            bottomValue = -2000f;
+        }
+        else if (dingoCount >= 31 && dingoCount <= 35)
+        {
+            bottomValue = -1000f;
+        }
+        else if(dingoCount >= 26 && dingoCount <= 30)
+        {
+            bottomValue = -750f;
+        }
+        else if (dingoCount >= 21 && dingoCount <= 25)
+        {
+            bottomValue = -500f;
+        }
+        else if (dingoCount >= 16 && dingoCount <= 20)
+        {
+            bottomValue = -250f;
+        }
+        // 15 or under keeps the default 0 value
+
+        contentRect.offsetMin = new Vector2(contentRect.offsetMin.x, bottomValue);
+
+    }
     private void OnDingoItemClick(int dingoIndex)
     {
         Debug.Log("Dingo item clicked: " + dingoIndex);
         // Call Use2nd() script with the selected Dingo index
+        dingosUI.gameObject.SetActive(false);
         BattleStarter.Instance.SwitchPlayerDingos(dingoIndex);
     }
     public void CatchSlot1()

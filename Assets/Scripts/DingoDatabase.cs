@@ -7,7 +7,7 @@ using System;
 
 public static class DingoDatabase
 {
-    // Define properties for each Dingo type
+    public static DingoID AgentBingo { get; } = new DingoID(0, "Agent Bingo", "Physical", "Agent Bingo is a skilled martial artist.", 2000, 84, 78, 100, "image1", 2000, 0, 50, 1);
     public static DingoID BingoStar { get; } = new DingoID(1, "BingoStar", "Light", "BingoStar flies around the sky in search of powerful opponents.", 200, 84, 78, 100, "star", 200, 0, 50, 1);
     public static DingoID Bean { get; } = new DingoID(2, "Bean", "Nature", "Bean has a grudge against certain people.", 200, 84, 78, 100, "bean", 200, 0, 50, 1);
     public static DingoID Bird { get; } = new DingoID(3, "Bird", "Wind", "Bird is the word.", 200, 90, 58, 100, "bird", 200, 0, 50, 1);
@@ -41,7 +41,7 @@ public static class DingoDatabase
     public static DingoID Ducky { get; } = new DingoID(31, "Ducky", "Wind", "Ducky gracefully glides through the air with its feather-like wings, harnessing the power of the wind.", 200, 75, 85, 90, "ducky", 200, 0, 50, 1);
     public static DingoID Forqwa { get; } = new DingoID(32, "Forqwa", "Physical", "Forqwa is a sturdy and muscular Dingo, known for its powerful physical attacks.", 200, 95, 80, 75, "forqwa", 200, 0, 50, 1);
     public static DingoID Mustache { get; } = new DingoID(33, "Mustache", "Abnormal", "Mustache is a mysterious Dingo with an unusual appearance, its mustache-like tendrils hiding its true intentions.", 200, 70, 70, 100, "mustache", 200, 0, 50, 1);
-    public static DingoID Flame { get; } = new DingoID(33, "Flame", "Fire", "Flame is a flamer", 200, 70, 70, 100, "flame", 200, 0, 50, 1);
+    public static DingoID Flame { get; } = new DingoID(34, "Flame", "Fire", "Flame is a flamer", 200, 70, 70, 100, "flame", 200, 0, 50, 1);
 
 
 
@@ -54,6 +54,19 @@ public static class DingoDatabase
     // Add more base Dingos as needed
     static DingoDatabase()
     {
+
+        AgentBingo.AddMove(new DingoMove(0, "Quick Jab", "Physical", 30, 100, "A fast and precise punch aimed at the opponent's guard."));
+        AgentBingo.AddMove(new DingoMove(1, "Heavy Kick", "Physical", 40, 95, "A powerful roundhouse kick meant to knock the opponent back."));
+        AgentBingo.AddMove(new DingoMove(2, "Leg Sweep", "Physical", 35, 100, "A low sweeping kick that may cause the opponent to stumble."));
+        AgentBingo.AddMove(new DingoMove(3, "Uppercut", "Physical", 50, 90, "A strong upward punch that can launch lighter foes."));
+        AgentBingo.AddMove(new DingoMove(4, "Squirt Gun", "Water", 10, 100, "Fires a short-range taser that deals damage and may paralyze."));
+        AgentBingo.AddMove(new DingoMove(5, "Equip Knife", "Physical", 0, 100, "Uses a hook to reposition quickly, boosting evasion and speed."));
+        AgentBingo.AddMove(new DingoMove(6, "Baton Strike", "Physical", 60, 95, "Strikes the target with a collapsible baton for solid damage."));
+        AgentBingo.AddMove(new DingoMove(7, "Flamethrower", "Fire", 70, 90, "Disables enemy tech and deals moderate damage to mechanical foes."));
+        AgentBingo.AddMove(new DingoMove(8, "Tactical Shield Bash", "Physical", 65, 100, "Uses a compact shield to bash the opponent, raising defense."));
+        AgentBingo.AddMove(new DingoMove(9, "Run Over", "Physical", 90, 85, "Plants and detonates a small charge for heavy damage."));
+
+
         BingoStar.AddMove(new DingoMove(0, "Shooting Star", "Fire", 35, 90, "Summons the power of the stars to strike the opponent."));
         BingoStar.AddMove(new DingoMove(1, "Luminous Burst", "Light", 40, 100, "A burst of radiant light that dazzles the opponent."));
         BingoStar.AddMove(new DingoMove(2, "Eclipse", "Light", 0, 100, "Conjures a temporary eclipse that shrouds the battlefield, increases light attack moves."));
@@ -401,6 +414,7 @@ public static class DingoDatabase
         Forqwa.AddMove(new DingoMove(5, "Mudslide", "Physical", 70, 95, "The user triggers a mudslide that engulfs the opponent, dealing damage and potentially lowering their accuracy."));
         Forqwa.AddMove(new DingoMove(6, "Meteor Smash", "Physical", 110, 70, "The user smashes into the opponent like a meteor, dealing massive damage but lowering its own Speed."));
         Forqwa.AddMove(new DingoMove(7, "Boulder Toss", "Physical", 85, 90, "The user tosses a massive boulder at the target, dealing damage and potentially causing flinching."));
+
         Flame.AddMove(new DingoMove(0, "Ember", "Fire", 40, 100, "The target is attacked with small flames. This may also leave the target with a burn."));
         Flame.AddMove(new DingoMove(1, "Fire Spin", "Fire", 35, 85, "The target becomes trapped within a fierce vortex of fire that rages for four to five turns."));
         Flame.AddMove(new DingoMove(2, "Flame Charge", "Fire", 50, 100, "Cloaked in flames, the user charges at the target. This may also leave the target with a burn."));
@@ -536,6 +550,10 @@ public static class DingoDatabase
     public static List<DingoID> marshmellow = new List<DingoID>
     {
         Marshmellow
+    };
+    public static List<DingoID> agentBingo = new List<DingoID>
+    {
+        AgentBingo
     };
     public static List<DingoID> secretDingos = new List<DingoID>
     {
