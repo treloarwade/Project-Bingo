@@ -213,10 +213,18 @@ public class BattleStarter : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void SelectMoveServerRpc(ulong clientId, int moveId, ServerRpcParams rpcParams = default)
     {
+
         // Handle the move selection on the host
         Debug.Log($"Client {clientId} selected move {moveId}");
         // You can now update the game state or perform other actions based on the move selection
         NetworkDingo dingo = BattleHandler.GetPlayer2Dingo(clientId);
+        if (dingo.hasAttemptedCatch.Value)
+        {
+
+                Debug.Log("Cannot switch moves after attempting to catch.");
+                return;
+            
+        }
         dingo.battleMoveId.Value = moveId;
         
         Debug.Log($"Dingo {dingo.name.Value} (Client {clientId}) is selecting move {dingo.battleMoveId.Value} slot: {dingo.slotNumber.Value}");
@@ -283,6 +291,7 @@ public class BattleStarter : NetworkBehaviour
         if (targetDingo == null) return;
 
         // Mark the player's turn as complete (-2 = catch attempt)
+        playerDingo.hasAttemptedCatch.Value = true;
         playerDingo.battleMoveId.Value = -2;
         playerDingo.battleTargetId.Value = targetId;
 

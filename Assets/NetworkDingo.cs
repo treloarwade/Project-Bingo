@@ -29,6 +29,7 @@ public class NetworkDingo : NetworkBehaviour
     public NetworkVariable<int> battleMoveId = new NetworkVariable<int>(-1); // Default to not flipped
     public NetworkVariable<int> battleTargetId = new NetworkVariable<int>(-1); // Default to not flipped
     public NetworkVariable<int> slotNumber = new NetworkVariable<int>(-1); // Default to not flipped
+    public NetworkVariable<bool> hasAttemptedCatch = new NetworkVariable<bool>(false);
 
 
     public Slider healthSlider;
