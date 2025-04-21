@@ -113,7 +113,6 @@ public class BattleStarter : NetworkBehaviour
             }
             // Join the battle as Player 2
             BattleHandler.JoinBattleAsPlayer2(clientId, filePath);
-            AssignMoveButtonsClientRPC(clientId);
             return;
         }
 
@@ -148,7 +147,7 @@ public class BattleStarter : NetworkBehaviour
     [ClientRpc]
     public void AssignMoveButtonsClientRPC(ulong clientId)
     {
-        if(!(clientId == NetworkManager.Singleton.LocalClientId)) { return; }
+        if (!(clientId == NetworkManager.Singleton.LocalClientId)) { return; }
 
         //BattleHandler.AssignMoveButtons(networkDingo);
         NewAssignMoveButtons(0);
@@ -221,12 +220,12 @@ public class BattleStarter : NetworkBehaviour
         if (dingo.hasAttemptedCatch.Value)
         {
 
-                Debug.Log("Cannot switch moves after attempting to catch.");
-                return;
-            
+            Debug.Log("Cannot switch moves after attempting to catch.");
+            return;
+
         }
         dingo.battleMoveId.Value = moveId;
-        
+
         Debug.Log($"Dingo {dingo.name.Value} (Client {clientId}) is selecting move {dingo.battleMoveId.Value} slot: {dingo.slotNumber.Value}");
     }
     public void NewAssignTargetButtons()
@@ -522,7 +521,8 @@ public class BattleStarter : NetworkBehaviour
         int move2Id,
         int move3Id,
         int move4Id, bool wild)
-    {                        Debug.Log("SHINGO...");
+    {
+        Debug.Log("SHINGO...");
         int slotIndex;
         if (wild)
         {
@@ -684,7 +684,17 @@ public class BattleStarter : NetworkBehaviour
             Debug.LogError($"[Server] No battle spot found for client {clientId}.");
         }
     }
+    public int GetPlayerDingoCount(ulong clientId)
+    {
+        if (clientDingoCount.TryGetValue(clientId, out int count))
+        {
+            return count;
+        }
 
+        // Fallback - load from save file if not cached
+        string filePath = DingoLoader.LoadPlayerDingoFromFileToSend();
+        return DingoLoader.GetPlayerDingoCount(filePath);
+    }
     // Helper method to check if a battle spot is available
     private static bool IsBattleSpotAvailable(Vector3 position)
     {
