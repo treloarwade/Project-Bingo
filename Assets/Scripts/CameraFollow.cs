@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using TMPro;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -8,6 +9,8 @@ using UnityEngine.UI;
 public class CameraFollow : MonoBehaviour
 {
     public Transform target; // Reference to the player object
+    public Vector3 battlePosition;
+    public bool battleActive;
     public Text Speed;
     public float smoothTime = 0.5f;
     private Vector3 velocity = Vector3.zero;
@@ -58,20 +61,32 @@ public class CameraFollow : MonoBehaviour
     void LateUpdate()
     {
         ulong Bingo = NetworkManager.Singleton.LocalClientId;
-        if (target != null && !PlayerManager.IsPlayerInBattle(Bingo))
+        if (target != null)
         {
-            // Calculate the target position
-            Vector3 targetPosition = new Vector3(target.position.x, target.position.y, transform.position.z);
 
-            // Smoothly interpolate towards the target position
-            transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
+            if (!battleActive)
+            {
+                // Calculate the target position when battle is not active
+                Vector3 targetPosition = new Vector3(target.position.x, target.position.y, -10);
+
+                // Smoothly interpolate towards the target position
+                transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
+            }
+            else
+            {
+                // Use battlePosition when battle is active
+                // Assuming battlePosition is set somewhere else in your code.
+                Vector3 targetPosition = battlePosition;
+                targetPosition.z = -10;
+                // Smoothly interpolate towards the battle position
+                transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
+            }
+
+            // Update the speed text (you may want to adjust this as per your requirement)
+            Speed.text = "Speed: " + smoothTime.ToString();
         }
-        else
-        {
-            mainCamera.orthographicSize = 3.7f;
-        }
-        Speed.text = "Speed: " + smoothTime.ToString();
     }
+
     public void OnClick()
     {
         // Increment the smoothTime index

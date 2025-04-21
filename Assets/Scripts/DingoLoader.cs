@@ -60,6 +60,19 @@ public static class DingoLoader
 
         return null; // Return null if not found
     }
+    // In DingoLoader.cs
+    public static int GetPlayerDingoCount(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+        {
+            Debug.LogError("Invalid file path or file does not exist.");
+            return 0;
+        }
+
+        string jsonData = File.ReadAllText(filePath);
+        JSONArray jsonDingos = JSON.Parse(jsonData) as JSONArray;
+        return jsonDingos != null ? jsonDingos.Count : 0;
+    }
     public static NetworkDingo LoadRandomDingoFromList(List<DingoID> dingoList)
     {
         if (dingoList == null || dingoList.Count == 0)
@@ -120,11 +133,8 @@ public static class DingoLoader
         return networkDingo;
     }
 
-
-    public static NetworkDingo LoadPrefabWithStats(int slot)
+    private static NetworkDingo TryLoadFromSlot(string filePath, int slot)
     {
-        string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
-
         if (!File.Exists(filePath))
         {
             Debug.LogError("Dingos.json not found!");
@@ -135,17 +145,22 @@ public static class DingoLoader
         string jsonData = File.ReadAllText(filePath);
         JSONArray jsonDingos = JSON.Parse(jsonData) as JSONArray;
 
+        // Check if slot is valid and has data
         if (jsonDingos == null || jsonDingos.Count <= slot)
         {
-            Debug.LogError($"No Dingo found in slot {slot}. Cannot instantiate prefab.");
             return null;
         }
 
         JSONObject dingoData = jsonDingos[slot].AsObject;
 
+        // Check if this slot has valid Dingo data
+        if (dingoData == null || !dingoData.HasKey("DingoID"))
+        {
+            return null;
+        }
+
         // Load the DingoPrefab
         GameObject dingoPrefab = Resources.Load<GameObject>("Prefabs/DingoPrefab");
-
         if (dingoPrefab == null)
         {
             Debug.LogError("DingoPrefab not found in Resources/Prefabs!");
@@ -155,7 +170,6 @@ public static class DingoLoader
         // Instantiate the prefab
         GameObject dingoInstance = GameObject.Instantiate(dingoPrefab);
         NetworkDingo networkDingo = dingoInstance.GetComponent<NetworkDingo>();
-
         if (networkDingo == null)
         {
             Debug.LogError("NetworkDingo script not found on instantiated prefab!");
@@ -187,7 +201,23 @@ public static class DingoLoader
 
         return networkDingo;
     }
+    public static NetworkDingo LoadPrefabWithStats(int slot)
+    {
+        string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
 
+        // First try to load from the specified slot
+        NetworkDingo loadedDingo = TryLoadFromSlot(filePath, slot);
+
+        // If slot was empty or invalid, get a random Dingo from database
+        if (loadedDingo == null)
+        {
+            loadedDingo = LoadRandomDingoFromList(DingoDatabase.allDingos);
+
+
+        }
+
+        return loadedDingo;
+    }
 
     public static int[] LoadDingoMovesToSend(int slot)
     {

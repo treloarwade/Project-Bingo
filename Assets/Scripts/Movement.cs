@@ -32,6 +32,12 @@ public class Movement : NetworkBehaviour
     public BoatScript boatScript;
     private Vector3 savedPosition;
     public bool movementEnabled = true;
+
+    // Store original Rigidbody properties
+    private RigidbodyType2D originalBodyType;
+    private float originalDrag;
+    private float originalAngularDrag;
+    private bool originalGravityScale;
     public void LoadCoordinates()
     {
         // Load the position and rotation from PlayerPrefs
@@ -57,10 +63,53 @@ public class Movement : NetworkBehaviour
     void Start()
     {
         body = GetComponent<Rigidbody2D>();
-
+        originalBodyType = body.bodyType;
+        originalDrag = body.drag;
+        originalAngularDrag = body.angularDrag;
+        originalGravityScale = body.gravityScale > 0;
         LoadCoordinates();
     }
+    public void SetPhysicsStateForBattle(bool inBattle)
+    {
+        if (body == null) return;
 
+        body.bodyType = inBattle ? RigidbodyType2D.Static : originalBodyType;
+
+        if (!inBattle)
+        {
+            // Reset velocities when exiting battle
+            body.velocity = Vector2.zero;
+            body.angularVelocity = 0f;
+        }
+
+        movementEnabled = !inBattle;
+    }
+    public void SetRigidbodyStatic(bool makeStatic)
+    {
+        if (body == null) return;
+
+        if (makeStatic)
+        {
+            // Save current velocity if needed
+            // body.velocity = Vector2.zero;
+            // body.angularVelocity = 0f;
+
+            // Make static
+            body.bodyType = RigidbodyType2D.Static;
+        }
+        else
+        {
+            // Restore to original dynamic state
+            body.bodyType = originalBodyType;
+            body.drag = originalDrag;
+            body.angularDrag = originalAngularDrag;
+            body.gravityScale = originalGravityScale ? 1f : 0f;
+
+            // Reset velocity
+            body.velocity = Vector2.zero;
+            body.angularVelocity = 0f;
+        }
+    }
     void Update()
     {
         if (!IsOwner) return;
@@ -89,29 +138,24 @@ public class Movement : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        // If movement is not disabled, handle movement
-        if (true)//!dialogManager.IsDialogActive() && boatScript.movementEnabled)
+        // Skip physics updates if Rigidbody is static or kinematic
+        if (body.bodyType != RigidbodyType2D.Dynamic || !movementEnabled)
         {
-            Vector2 movement = new Vector2(horizontal * runSpeed, vertical * runSpeed);
-            body.velocity = movement;
+            return;
+        }
 
-            if (movement.magnitude > 0)
-            {
-                RotateSprite();
-            }
-            else
-            {
-                currentRotation = 0f;
-                body.SetRotation(currentRotation);
-            }
+        Vector2 movement = new Vector2(horizontal * runSpeed, vertical * runSpeed);
+        body.velocity = movement;
+
+        if (movement.magnitude > 0)
+        {
+            RotateSprite();
         }
         else
         {
-            // If movement is disabled, set velocity to zero
-            //body.velocity = Vector2.zero;
+            currentRotation = 0f;
+            body.SetRotation(currentRotation);
         }
-
-        //MovementSpeed.text = "Speed: " + runSpeed.ToString();
     }
 
 

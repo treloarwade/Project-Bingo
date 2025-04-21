@@ -602,6 +602,29 @@ public static class DingoDatabase
         // If no matching Dingo is found, return null
         return null;
     }
+    public static string GetDingoDescriptionByID(int id)
+    {
+        // Iterate through each property in the DingoDatabase class
+        foreach (var property in typeof(DingoDatabase).GetProperties())
+        {
+            // Check if the property is of type DingoID
+            if (property.PropertyType == typeof(DingoID))
+            {
+                // Get the value of the property (which is a DingoID object)
+                DingoID dingo = (DingoID)property.GetValue(null);
+
+                // Check if the ID of the Dingo matches the provided ID
+                if (dingo.ID == id)
+                {
+                    // Return the DingoID object
+                    return dingo.Description;
+                }
+            }
+        }
+
+        // If no matching Dingo is found, return null
+        return null;
+    }
     public static DingoMove GetMoveByID(int id, DingoID dingo)
     {
         // Iterate through each move in the BingoStar object
