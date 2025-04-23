@@ -12,7 +12,6 @@ using UnityEditor.PackageManager;
 public class BattleStarter : NetworkBehaviour
 {
     public static BattleStarter Instance { get; private set; }
-
     private static HashSet<Vector3> activeBattleSpots = new HashSet<Vector3>();
     private static Dictionary<ulong, Vector3> clientBattleSpots = new Dictionary<ulong, Vector3>();
     private static Dictionary<ulong, int> clientSlotIndex = new Dictionary<ulong, int>();
@@ -73,7 +72,6 @@ public class BattleStarter : NetworkBehaviour
             RequestStartBattleServerRpc(clientId, dingoList, triggerPosition, filePath, agentBingoPath);
         }
     }
-
     [ServerRpc(RequireOwnership = false)]
     private void RequestStartBattleServerRpc(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath)
     {
@@ -147,7 +145,6 @@ public class BattleStarter : NetworkBehaviour
 
         StartCoroutine(AssignButtonsAfterDelay(slot));
     }
-
     private IEnumerator AssignButtonsAfterDelay(int slot)
     {
         int maxAttempts = 5;
@@ -166,7 +163,6 @@ public class BattleStarter : NetworkBehaviour
 
         Debug.LogError("AssignButtonsAfterDelay: Failed to assign move buttons after multiple attempts.");
     }
-
     // Updated to return bool indicating success
     public bool NewAssignMoveButtons(int moveslot)
     {
@@ -182,9 +178,17 @@ public class BattleStarter : NetworkBehaviour
             Debug.LogError("AssignMoveButtons: One or more move buttons not found in the scene!");
             return false;
         }
+        DingoMove[] moves = null;
+        if (moveslot == -1)
+        {
+            moves = DingoLoader.LoadAgentBingoMoves();
 
-        // Load Dingo's moves
-        DingoMove[] moves = DingoLoader.LoadDingoMoves(moveslot);
+        }
+        else
+        {
+            moves = DingoLoader.LoadDingoMoves(moveslot);
+
+        }
         if (moves == null || moves.Length < 4)
         {
             Debug.LogError("AssignMoveButtons: Failed to load moves for Dingo.");
@@ -232,7 +236,7 @@ public class BattleStarter : NetworkBehaviour
         Debug.Log($"Client {clientId} selected move {moveId}");
         // You can now update the game state or perform other actions based on the move selection
         NetworkDingo dingo = BattleHandler.GetPlayer2Dingo(clientId);
-        if (dingo.hasAttemptedCatch.Value)
+        if (dingo.battleMoveId.Value == -2)
         {
 
             Debug.Log("Cannot switch moves after attempting to catch.");
@@ -497,7 +501,6 @@ public class BattleStarter : NetworkBehaviour
         NewAssignCatchToButton(targetButton2, 1); // Second opponent
         NewAssignCatchToButton(targetButton3, 2); // Both opponents (not used for catching)
     }
-
     private void NewAssignCatchToButton(GameObject buttonObj, int targetId)
     {
         Button button = buttonObj.GetComponent<Button>();
@@ -775,36 +778,18 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
             Debug.LogError($"[Server] No battle spot found for client {clientId}.");
         }
     }
-    public int GetPlayerDingoCount(ulong clientId)
-    {
-        if (clientDingoCount.TryGetValue(clientId, out int count))
-        {
-            return count;
-        }
-
-        // Fallback - load from save file if not cached
-        string filePath = DingoLoader.LoadPlayerDingoFromFileToSend();
-        return DingoLoader.GetPlayerDingoCount(filePath);
-    }
-    // Helper method to check if a battle spot is available
     private static bool IsBattleSpotAvailable(Vector3 position)
     {
         return !activeBattleSpots.Contains(position);
     }
-
-    // Helper method to reserve a battle spot
     private static void ReserveBattleSpot(Vector3 position)
     {
         activeBattleSpots.Add(position);
     }
-
-    // Helper method to release a battle spot
     private static void ReleaseBattleSpot(Vector3 position)
     {
         activeBattleSpots.Remove(position);
     }
-
-    // Helper method to find the closest battle spot
     private static GameObject FindClosestBattleSpot(Vector3 position)
     {
         GameObject[] battleSpots = GameObject.FindGameObjectsWithTag("BattleSpot");
@@ -829,12 +814,10 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
 
         return closestSpot;
     }
-    // In BattleStarter.cs
     public void ShowSwitchUI(ulong clientId, int slotNumber)
     {
         ShowSwitchUIClientRPC(clientId, slotNumber);
     }
-
     [ClientRpc]
     private void ShowSwitchUIClientRPC(ulong clientId, int slotNumber)
     {
@@ -843,26 +826,10 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
             battleDingos.ListDingos();
         }
     }
-
-    public void HideSwitchUI(ulong clientId)
-    {
-        HideSwitchUIClientRPC(clientId);
-    }
-
-    [ClientRpc]
-    private void HideSwitchUIClientRPC(ulong clientId)
-    {
-        if (NetworkManager.Singleton.LocalClientId == clientId)
-        {
-            //battleDingos.ListDingos();
-        }
-    }
-
     public void PauseBattle(ulong clientId, bool pause)
     {
         PauseBattleClientRPC(clientId, pause);
     }
-
     [ClientRpc]
     private void PauseBattleClientRPC(ulong clientId, bool pause)
     {

@@ -10,6 +10,7 @@ using System.Collections;
 using System;
 using System.Net.NetworkInformation;
 using UnityEditor.PackageManager;
+using Random = UnityEngine.Random;
 
 public static class BattleHandler
 {
@@ -21,6 +22,10 @@ public static class BattleHandler
     private static Dictionary<ulong, bool> waitingForSwitch = new Dictionary<ulong, bool>();
     private static Dictionary<ulong, float> switchTimer = new Dictionary<ulong, float>();
     private static Dictionary<ulong, HashSet<ulong>> ongoingCatches = new Dictionary<ulong, HashSet<ulong>>();
+    public static Dictionary<ulong, Dictionary<int, StatusEffect>> statusEffects = new Dictionary<ulong, Dictionary<int, StatusEffect>>();
+    public static Dictionary<ulong, EnvironmentEffect> environmentEffects = new Dictionary<ulong, EnvironmentEffect>();
+    public const string STATUS_GOO = "goo";
+
     public static GameObject GetBattlePrefab(ulong clientId)
     {
         if (!_battlePrefabInstances.TryGetValue(clientId, out var prefab))
@@ -29,15 +34,6 @@ public static class BattleHandler
             _battlePrefabInstances[clientId] = prefab;
         }
         return prefab;
-    }
-
-    public static void CleanupBattle(ulong clientId)
-    {
-        if (_battlePrefabInstances.TryGetValue(clientId, out var prefab))
-        {
-            GameObject.Destroy(prefab);
-            _battlePrefabInstances.Remove(clientId);
-        }
     }
     public static void StartBattle(ulong clientId, int dingoListInt, Vector3 spawnPosition, string filePath, string agentBingoPath)
     {
@@ -174,6 +170,7 @@ public static class BattleHandler
             if (healthyDingo == null)
             {
                 healthyDingo = DingoLoader.LoadNetworkDingoFromFileToReceive(agentBingoPath, 0);
+                BattleStarter.Instance.AssignMoveButtonsSlotClientRPC(clientId, -1);
                 Debug.Log("No healthy player Dingos found, using Agent Bingo");
             }
 
@@ -286,57 +283,6 @@ public static class BattleHandler
             dingo.GetComponent<NetworkObject>().Spawn();
         }
         Debug.Log($"Assigned {dingo.name.Value} to slot {slotNumber} (Player: {isPlayer})");
-    }
-    public static void AssignMoveButtons(NetworkDingo networkDingo)
-    {
-        if (networkDingo == null)
-        {
-            Debug.LogError("AssignMoveButtons: No active network Dingo found!");
-            return;
-        }
-
-        // Find move buttons in the scene
-        GameObject moveButton1 = GameObject.Find("MoveButton1");
-        GameObject moveButton2 = GameObject.Find("MoveButton2");
-        GameObject moveButton3 = GameObject.Find("MoveButton3");
-        GameObject moveButton4 = GameObject.Find("MoveButton4");
-
-        if (moveButton1 == null || moveButton2 == null || moveButton3 == null || moveButton4 == null)
-        {
-            Debug.LogError("AssignMoveButtons: One or more move buttons not found in the scene!");
-            return;
-        }
-
-        // Load Dingo's moves
-        DingoMove[] moves = DingoLoader.LoadDingoMovesByID(networkDingo.id.Value);
-        if (moves == null || moves.Length < 4)
-        {
-            Debug.LogError("AssignMoveButtons: Failed to load moves for Dingo.");
-            return;
-        }
-
-        // Assign move names and functions to buttons
-        AssignMoveToButton(moveButton1, networkDingo, moves[0]);
-        AssignMoveToButton(moveButton2, networkDingo, moves[1]);
-        AssignMoveToButton(moveButton3, networkDingo, moves[2]);
-        AssignMoveToButton(moveButton4, networkDingo, moves[3]);
-
-        Debug.Log("Assigned moves to buttons and updated text.");
-    }
-    private static void AssignMoveToButton(GameObject buttonObj, NetworkDingo dingo, DingoMove move)
-    {
-        Button button = buttonObj.GetComponent<Button>();
-        Text buttonText = buttonObj.GetComponentInChildren<Text>(); // Get button text
-
-        if (button == null || buttonText == null)
-        {
-            Debug.LogError($"AssignMoveToButton: Button or Text component missing on {buttonObj.name}.");
-            return;
-        }
-
-        buttonText.text = move.Name; // Set button text to move name
-        button.onClick.RemoveAllListeners(); // Clear previous listeners
-        button.onClick.AddListener(() => UseMove(dingo, move)); // Assign new move function
     }
     public static void AssignTargetButtons(ulong clientId, NetworkDingo dingo)
     {
@@ -542,40 +488,6 @@ public static class BattleHandler
         }
 
         CheckIfPlayersReady(clientId);
-    }
-    public static NetworkDingo GetDingoForClientId(ulong clientId)
-    {
-        Debug.Log($"GetDingoForClientId: Searching for Client {clientId}.");
-
-        // Check if the client is Player 2 and not the host
-        if (playerToHostMap.ContainsKey(clientId))
-        {
-            clientId = GetHostForPlayer2(clientId); // Use the host's clientId if Player 2
-            Debug.Log($"Client {clientId} is Player 2. Using host clientId.");
-        }
-
-        // Proceed to find the Dingo for the (host or Player 2)
-        if (!BattleSlots.TryGetValue(clientId, out var slotDictionary))
-        {
-            Debug.LogError($"GetDingoForClientId: Client {clientId} NOT FOUND in BattleSlots.");
-            return null;
-        }
-
-        Debug.Log($"GetDingoForClientId: Found battle entry for Client {clientId}.");
-
-        foreach (var slot in slotDictionary)
-        {
-            Debug.Log($"Checking Slot {slot.Key}: {slot.Value.Dingo}");
-
-            if (slot.Value.Dingo != null)
-            {
-                Debug.Log($"GetDingoForClientId: Returning Dingo in Slot {slot.Key}.");
-                return slot.Value.Dingo;
-            }
-        }
-
-        Debug.LogWarning($"GetDingoForClientId: No Dingo found for Client {clientId}.");
-        return null;
     }
     private static ulong GetClientIdForDingo(NetworkDingo dingo)
     {
@@ -820,6 +732,47 @@ public static class BattleHandler
 
         Debug.Log($"Player 2 with clientId {player2ClientId} has joined the battle hosted by {hostClientId}.");
     }
+    public static bool ProcessStatusEffects(ulong clientId, int slotIndex)
+    {
+        if (!BattleSlots.TryGetValue(clientId, out var slots) ||
+            !slots.TryGetValue(slotIndex, out var slot) ||
+            slot.Dingo == null)
+            return false;
+
+        var dingo = slot.Dingo;
+        bool skipTurn = false;
+
+        // Process all status effects from the slot
+        foreach (var status in slot.StatusEffects.ToList()) // ToList() to avoid modification during iteration
+        {
+            BattleStarter.Instance.StartCoroutine(PlayStatusEffectAnimation(dingo, status.Name));
+
+            // Skip turn chance (like paralysis or sleep)
+            if (status.SkipTurnChance > 0 && Random.value < status.SkipTurnChance)
+            {
+                Debug.Log($"{dingo.name.Value} is affected by {status.Name} and can't move!");
+                skipTurn = true;
+            }
+
+            // Damage over time
+            if (status.DamagePerTurn > 0)
+            {
+                int damage = Math.Max(1, (int)(dingo.maxHP.Value * (status.DamagePerTurn / 100f)));
+                dingo.hp.Value -= damage;
+                Debug.Log($"{dingo.name.Value} is hurt by {status.Name}!");
+            }
+
+            // Reduce duration and remove if expired
+            status.Duration--;
+            if (status.Duration <= 0)
+            {
+                slot.StatusEffects.Remove(status);
+                Debug.Log($"{dingo.name.Value} is no longer affected by {status.Name}!");
+            }
+        }
+
+        return skipTurn;
+    }
     public static void ProceedWithBattle(ulong clientId)
     {
         Debug.Log($"Proceeding with battle logic for client {clientId}...");
@@ -836,66 +789,363 @@ public static class BattleHandler
             return;
         }
 
-        // Sorting battle slots based on speed
-        var orderedSlots = BattleSlots[clientId].Values
-            .Where(slot => slot.Dingo != null)
-            .OrderByDescending(slot => DingoDatabase.GetDingoByID(slot.Dingo.id.Value).Speed)
-            .ToList();
+        // Get turn order based on speed
+        var turnOrder = GetTurnOrder(clientId);
 
-        // Start processing turns in sequence
-        BattleStarter.Instance.StartCoroutine(ProcessBattleTurns(clientId, orderedSlots));
+        // Start processing turns
+        BattleStarter.Instance.StartCoroutine(ProcessBattleTurns(clientId, turnOrder));
     }
-    private static IEnumerator ProcessBattleTurns(ulong clientId, List<BattleSlot> orderedSlots)
+    private static IEnumerator PlayStatusEffectAnimation(NetworkDingo target, string statusName)
     {
-        foreach (var battleSlot in orderedSlots)
+        if (target == null)
         {
-            NetworkDingo selectedDingo = battleSlot.Dingo;
-            if (selectedDingo == null) continue;
+            Debug.LogError("Cannot play status animation - Target is null");
+            yield break;
+        }
 
-            Debug.Log($"Processing battle slot: {battleSlot.SlotIndex} for Dingo: {selectedDingo.name.Value}");
+        SpriteRenderer renderer = target.GetComponent<SpriteRenderer>();
+        Vector3 originalPosition = target.transform.localPosition;
+        Vector3 originalScale = target.transform.localScale;
+        Quaternion originalRotation = target.transform.localRotation;
+        Color originalColor = renderer != null ? renderer.color : Color.white;
 
-            // Handle AI turns (Enemy's move)
-            if (battleSlot == BattleSlots[clientId][2] || battleSlot == BattleSlots[clientId][3])
+        try
+        {
+            switch (statusName.ToLower())
             {
-                yield return BattleStarter.Instance.StartCoroutine(HandleAITurn(clientId, selectedDingo, battleSlot));
+                case "goo":
+                    yield return GooAnimation(target, renderer);
+                    break;
+                // Add more status effects as needed
+                default:
+                    // Default animation for unknown status effects
+                    yield return new WaitForSeconds(0.5f);
+                    break;
             }
-            else // Player's turn
+        }
+        finally
+        {
+            if (renderer != null)
             {
-                yield return BattleStarter.Instance.StartCoroutine(HandlePlayerTurn(clientId, selectedDingo));
+                renderer.color = originalColor;
             }
+            target.transform.localPosition = originalPosition;
+            target.transform.localScale = originalScale;
+            target.transform.localRotation = originalRotation;
+        }
+    }
+    private static IEnumerator GooAnimation(NetworkDingo target, SpriteRenderer renderer)
+    {
+        // Goo makes the Dingo look sticky and green
+        float duration = 1f;
+        float startTime = Time.time;
+
+        while (Time.time - startTime < duration)
+        {
+            if (renderer != null)
+            {
+                // Alternate between normal and greenish color
+                float t = (Time.time - startTime) * 2f;
+                renderer.color = Color.Lerp(Color.white, new Color(0.5f, 1f, 0.5f, 1f), Mathf.PingPong(t, 1f));
+
+                // Slight squish effect
+                float squishAmount = Mathf.Sin(t * Mathf.PI) * 0.1f;
+                target.transform.localScale = new Vector3(
+                    1f + squishAmount,
+                    1f - squishAmount,
+                    1f
+                );
+            }
+            yield return null;
+        }
+    }
+    private static IEnumerator PlayMoveAnimation(NetworkDingo attacker, NetworkDingo target, DingoMove move)
+    {
+        if (attacker == null)
+        {
+            Debug.LogError("Cannot play animation - Attacker is null");
+            yield return new WaitForSeconds(0.5f);
+            yield break;
+        }
+
+        SpriteRenderer renderer = attacker.GetComponent<SpriteRenderer>();
+        Vector3 originalPosition = attacker.transform.localPosition;
+        Vector3 originalScale = attacker.transform.localScale;
+        Quaternion originalRotation = attacker.transform.localRotation;
+
+        try
+        {
+            switch (move.Name)
+            {
+                case "Squishy Frenzy":
+                    if (target != null)
+                    {
+                        yield return SquishyFrenzyAnimation(attacker, target, renderer);
+                    }
+                    break;
+
+                // Other move cases...
+
+                default:
+                    yield return new WaitForSeconds(0.5f);
+                    break;
+            }
+        }
+        finally
+        {
+            attacker.transform.localPosition = originalPosition;
+            attacker.transform.localScale = originalScale;
+            attacker.transform.localRotation = originalRotation;
+            if (renderer != null) renderer.color = Color.white;
+        }
+    }
+    private static IEnumerator SquishyFrenzyAnimation(NetworkDingo attacker, NetworkDingo target, SpriteRenderer renderer)
+    {
+        if (attacker == null || target == null) yield break;
+
+        const float moveSpeed = 0.15f; // Faster than default for snappier animation
+        Vector3 originalPosition = attacker.transform.position;
+        Vector3 originalScale = attacker.transform.localScale;
+        Quaternion originalRotation = attacker.transform.rotation;
+
+        try
+        {
+            // 1. Calculate key positions relative to combatants
+            Vector3 targetPosition = target.transform.position;
+            Vector3 attackDirection = (targetPosition - originalPosition).normalized;
+
+            // Calculate bounce points as percentages between combatants
+            Vector3 bouncePoint1 = originalPosition + (targetPosition - originalPosition) * 0.3f + Vector3.up * 2f;
+            Vector3 bouncePoint2 = originalPosition + (targetPosition - originalPosition) * 0.7f + Vector3.up * 3f;
+
+            // 2. Initial squish preparation
+            Vector3 squishScale = new Vector3(1.3f, 0.4f, 1f);
+            yield return LerpTransform(attacker.transform,
+                originalScale, squishScale,
+                originalPosition, originalPosition,
+                originalRotation, moveSpeed * 0.8f);
+
+            // 3. Launch toward first bounce point
+            Vector3 launchScale = new Vector3(0.8f, 1.2f, 1f);
+            yield return LerpTransform(attacker.transform,
+                squishScale, launchScale,
+                originalPosition, bouncePoint1,
+                Quaternion.Euler(0, 0, -25f), moveSpeed * 1.2f);
+
+            // 4. Bounce toward second point
+            yield return LerpTransform(attacker.transform,
+                launchScale, squishScale,
+                bouncePoint1, bouncePoint2,
+                Quaternion.Euler(0, 0, 15f), moveSpeed * 1f);
+
+            // 5. Crashing down onto target
+            Vector3 impactScale = new Vector3(1.5f, 0.3f, 1f);
+            yield return LerpTransform(attacker.transform,
+                squishScale, impactScale,
+                bouncePoint2, targetPosition,
+                Quaternion.Euler(0, 0, -45f), moveSpeed * 0.8f);
+
+            // 6. Quick bounce back
+            Vector3 reboundPos = originalPosition + (originalPosition - targetPosition).normalized * 0.5f;
+            yield return LerpTransform(attacker.transform,
+                impactScale, originalScale,
+                targetPosition, reboundPos,
+                Quaternion.Euler(0, 0, 10f), moveSpeed * 0.5f);
+
+            // 7. Final return home with small bounce
+            yield return LerpTransform(attacker.transform,
+                originalScale, originalScale * 1.1f,
+                reboundPos, originalPosition,
+                originalRotation, moveSpeed * 0.3f);
+
+            yield return LerpScale(attacker.transform, originalScale * 1.1f, originalScale, moveSpeed * 0.2f);
+        }
+        finally
+        {
+            // Ensure reset even if interrupted
+            attacker.transform.position = originalPosition;
+            attacker.transform.localScale = originalScale;
+            attacker.transform.rotation = originalRotation;
+        }
+    }
+    private static IEnumerator LerpTransform(Transform target, Vector3 fromScale, Vector3 toScale,
+                                       Vector3 fromPos, Vector3 toPos,
+                                       Quaternion toRot, float duration)
+    {
+        float startTime = Time.time;
+        while (Time.time - startTime < duration)
+        {
+            float t = (Time.time - startTime) / duration;
+            target.localScale = Vector3.Lerp(fromScale, toScale, t);
+            target.localPosition = Vector3.Lerp(fromPos, toPos, t);
+            target.localRotation = Quaternion.Lerp(target.localRotation, toRot, t);
+            yield return null;
+        }
+    }
+
+    private static IEnumerator LerpScale(Transform target, Vector3 fromScale, Vector3 toScale, float duration)
+    {
+        float startTime = Time.time;
+        while (Time.time - startTime < duration)
+        {
+            float t = (Time.time - startTime) / duration;
+            target.localScale = Vector3.Lerp(fromScale, toScale, t);
+            yield return null;
+        }
+    }
+
+    private static IEnumerator LerpRotation(Transform target, Quaternion fromRot, Quaternion toRot, float duration)
+    {
+        float startTime = Time.time;
+        while (Time.time - startTime < duration)
+        {
+            float t = (Time.time - startTime) / duration;
+            target.localRotation = Quaternion.Slerp(fromRot, toRot, t);
+            yield return null;
+        }
+    }
+
+    // Bezier curve helper
+    private static Vector3 BezierCurve(Vector3 p0, Vector3 p1, Vector3 p2, float t)
+    {
+        float u = 1 - t;
+        float tt = t * t;
+        float uu = u * u;
+
+        Vector3 p = uu * p0;
+        p += 2 * u * t * p1;
+        p += tt * p2;
+
+        return p;
+    }
+    private static List<BattleSlot> GetTurnOrder(ulong clientId)
+    {
+        if (!BattleSlots.ContainsKey(clientId))
+        {
+            Debug.LogError($"No battle slots found for client {clientId}!");
+            return new List<BattleSlot>();
+        }
+
+        // Get all active participants with their speed and selected move
+        var participants = new List<(BattleSlot slot, int priority, int speed)>();
+
+        foreach (var slot in BattleSlots[clientId].Values)
+        {
+            if (slot.Dingo == null || slot.Dingo.hp.Value <= 0)
+                continue;
+
+            // Get move priority (default to 0 if no move selected)
+            int movePriority = 0;
+            if (slot.Dingo.battleMoveId.Value != -1)
+            {
+                var move = DingoDatabase.GetMoveByID(
+                    slot.Dingo.battleMoveId.Value,
+                    DingoDatabase.GetDingoByID(slot.Dingo.id.Value)
+                );
+                movePriority = move?.Priority ?? 0;
+            }
+
+            // Get modified speed from BattleSlot (which accounts for speed modifiers and status effects)
+            int modifiedSpeed = slot.GetModifiedSpeed();
+
+            participants.Add((slot, movePriority, modifiedSpeed));
+        }
+
+        // Sort by:
+        // 1. Move priority (higher priority goes first)
+        // 2. Modified speed (higher speed goes first if priorities are equal)
+        // 3. Random if both priority and speed are equal
+        return participants
+            .OrderByDescending(p => p.priority)
+            .ThenByDescending(p => p.speed)
+            .ThenBy(_ => Random.value)
+            .Select(p => p.slot)
+            .ToList();
+    }
+    public static void AddStatus(ulong clientId, int slotIndex, string status, int duration = -1)
+    {
+        if (!BattleSlots.TryGetValue(clientId, out var slots) || !slots.TryGetValue(slotIndex, out var slot))
+            return;
+
+        status = status.ToLower();
+
+        // Check if status already exists (by name)
+        if (slot.StatusEffects.Any(se => se.Name == status))
+            return;
+
+        // Create appropriate status effect
+        StatusEffect effect = status switch
+        {
+            "goo" => StatusEffect.CreateGooEffect(duration > 0 ? duration : 3),
+            "sadlook" => StatusEffect.CreateSadLookEffect(duration > 0 ? duration : 3),
+            "throwball" => StatusEffect.CreateSadLookEffect(duration > 0 ? duration : 3),
+            _ => new StatusEffect(999, duration, status) // Default fallback
+        };
+
+        slot.StatusEffects.Add(effect);
+        Debug.Log($"{slot.Dingo.name.Value} gained {status} status");
+        BattleStarter.Instance.StartCoroutine(PlayStatusEffectAnimation(slot.Dingo, status));
+
+    }
+
+    public static void RemoveStatus(ulong clientId, int slotIndex, string status)
+    {
+        if (BattleSlots.TryGetValue(clientId, out var slots) && slots.TryGetValue(slotIndex, out var slot))
+        {
+            status = status.ToLower();
+            slot.StatusEffects.RemoveAll(se => se.Name == status);
+            Debug.Log($"{slot.Dingo?.name.Value ?? "Dingo"} had {status} removed");
+        }
+    }
+
+    public static bool HasStatus(ulong clientId, int slotIndex, string status)
+    {
+        if (BattleSlots.TryGetValue(clientId, out var slots) && slots.TryGetValue(slotIndex, out var slot))
+        {
+            return slot.StatusEffects.Any(se => se.Name == status.ToLower());
+        }
+        return false;
+    }
+
+    private static IEnumerator ProcessBattleTurns(ulong clientId, List<BattleSlot> turnOrder)
+    {
+        foreach (var battleSlot in turnOrder)
+        {
+            NetworkDingo currentDingo = battleSlot.Dingo;
+            if (currentDingo == null || currentDingo.hp.Value <= 0) continue;
+
+            Debug.Log($"[ProcessBattleTurns] Processing turn for {currentDingo.name.Value}");
+
+            bool skipTurn = ProcessStatusEffects(clientId, battleSlot.SlotIndex);
+            if (skipTurn) continue;
+            if (!battleSlot.IsPlayer) // AI turn
+            {
+                yield return BattleStarter.Instance.StartCoroutine(HandleAITurn(clientId, currentDingo, battleSlot));
+            }
+            else // Player turn
+            {
+                // For players, we just need to wait for their selection
+                while (currentDingo.battleMoveId.Value == -1 || currentDingo.battleTargetId.Value == -1)
+                {
+                    yield return null;
+                }
+
+                yield return BattleStarter.Instance.StartCoroutine(HandlePlayerTurn(clientId, currentDingo));
+            }
+
+            // Check if battle should end after each turn
+            if (CheckBattleEndCondition(clientId))
+                yield break;
         }
 
         ResetSelections(clientId);
     }
 
-    private static void ResetSelections(ulong clientId)
-    {
-        Debug.Log($"Resetting move/target selections for client {clientId}");
-
-        // Reset host player (slot 0)
-        if (BattleSlots[clientId].ContainsKey(0) && BattleSlots[clientId][0].Dingo != null)
-        {
-            BattleSlots[clientId][0].Dingo.battleMoveId.Value = -1;
-            BattleSlots[clientId][0].Dingo.battleTargetId.Value = -1;
-            Debug.Log($"Reset selections for host player's Dingo");
-        }
-
-        // Reset Player 2 (slot 1) if they exist
-        if (BattleSlots[clientId].ContainsKey(1) && BattleSlots[clientId][1].Dingo != null)
-        {
-            BattleSlots[clientId][1].Dingo.battleMoveId.Value = -1;
-            BattleSlots[clientId][1].Dingo.battleTargetId.Value = -1;
-            Debug.Log($"Reset selections for Player 2's Dingo");
-        }
-
-        // Don't reset opponent selections (slots 2-3) as they're AI-controlled
-    }
     private static IEnumerator HandleAITurn(ulong clientId, NetworkDingo selectedDingo, BattleSlot battleSlot)
     {
         Debug.Log($"BattleSlot {battleSlot.SlotIndex} is AI turn.");
 
         List<NetworkDingo> possibleTargets = GetAITargets(clientId);
-
         if (possibleTargets.Count == 0)
         {
             Debug.LogWarning($"No possible targets found for AI turn.");
@@ -919,9 +1169,109 @@ public static class BattleHandler
         Debug.Log($"{selectedDingo.name.Value} (Enemy) uses {move.Name} on {target.name.Value}!");
 
         // Play animation and wait for it to complete
-        //yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, move));
+        yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, target, move));
 
         ApplyMove(clientId, selectedDingo, target, move);
+    }
+
+    private static IEnumerator HandlePlayerTurn(ulong clientId, NetworkDingo selectedDingo)
+    {
+        // Check for catch attempt first
+        if (selectedDingo.battleMoveId.Value == -2)
+        {
+            Debug.Log($"{selectedDingo.name.Value} attempting to catch opponent!");
+            NetworkDingo targetDingo = GetOpponentDingo(clientId, selectedDingo.battleTargetId.Value);
+            if (targetDingo == null) yield break;
+
+            // Play catch animation and wait
+            yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, targetDingo, null));
+            yield break;
+        }
+
+        if (selectedDingo.battleMoveId.Value == -1 || selectedDingo.battleTargetId.Value == -1)
+        {
+            Debug.LogError($"{selectedDingo.name.Value} has not selected a move or target.");
+            yield break;
+        }
+
+        DingoMove move = DingoDatabase.GetMoveByID(
+            selectedDingo.battleMoveId.Value,
+            DingoDatabase.GetDingoByID(selectedDingo.id.Value)
+        );
+
+        if (move == null)
+        {
+            Debug.LogError($"Move with ID {selectedDingo.battleMoveId.Value} not found.");
+            yield break;
+        }
+
+        Debug.Log($"{selectedDingo.name.Value} is using {move.Name}!");
+        NetworkDingo targetDingo2 = GetOpponentDingo(clientId, selectedDingo.battleTargetId.Value);
+        // Play animation and wait for it to complete
+        yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, targetDingo2, move));
+
+        ApplyMoveBasedOnTarget(clientId, selectedDingo, move);
+    }
+    private static void ApplyMoveBasedOnTarget(ulong clientId, NetworkDingo selectedDingo, DingoMove move)
+    {
+        switch (selectedDingo.battleTargetId.Value)
+        {
+            case 0:
+                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][2].Dingo, move);
+                break;
+            case 1:
+                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][3].Dingo, move);
+                break;
+            case 2:
+                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][2].Dingo, move);
+                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][3].Dingo, move);
+                break;
+            default:
+                Debug.LogError($"Invalid target ID {selectedDingo.battleTargetId.Value} for {selectedDingo.name}.");
+                break;
+        }
+    }
+
+    private static bool CheckBattleEndCondition(ulong clientId)
+    {
+        bool playersAlive = BattleSlots[clientId].Values
+            .Where(slot => slot.IsPlayer && slot.Dingo != null)
+            .Any(slot => slot.Dingo.hp.Value > 0);
+
+        bool opponentsAlive = BattleSlots[clientId].Values
+            .Where(slot => !slot.IsPlayer && slot.Dingo != null)
+            .Any(slot => slot.Dingo.hp.Value > 0);
+
+        if (!playersAlive || !opponentsAlive)
+        {
+            Debug.Log("Battle ending - one side has been defeated");
+            EndBattle(clientId);
+            return true;
+        }
+
+        return false;
+    }
+    private static void ResetSelections(ulong clientId)
+    {
+        Debug.Log($"Resetting move/target selections for client {clientId}");
+
+        // Reset host player (slot 0)
+        if (BattleSlots[clientId].ContainsKey(0) && BattleSlots[clientId][0].Dingo != null)
+        {
+            BattleSlots[clientId][0].Dingo.battleMoveId.Value = -1;
+            BattleSlots[clientId][0].Dingo.battleTargetId.Value = -1;
+            Debug.Log($"Reset selections for host player's Dingo");
+        }
+
+        // Reset Player 2 (slot 1) if they exist
+        if (BattleSlots[clientId].ContainsKey(1) && BattleSlots[clientId][1].Dingo != null)
+        {
+            BattleSlots[clientId][1].Dingo.battleMoveId.Value = -1;
+            BattleSlots[clientId][1].Dingo.battleTargetId.Value = -1;
+            Debug.Log($"Reset selections for Player 2's Dingo");
+        }
+
+        // Don't reset opponent selections (slots 2-3) as they're AI-controlled
     }
     private static List<NetworkDingo> GetAITargets(ulong clientId)
     {
@@ -946,81 +1296,6 @@ public static class BattleHandler
         int[] moves = { selectedDingo.move1.Value, selectedDingo.move2.Value, selectedDingo.move3.Value, selectedDingo.move4.Value };
         return moves[UnityEngine.Random.Range(0, moves.Length)];
     }
-    private static IEnumerator HandlePlayerTurn(ulong clientId, NetworkDingo selectedDingo)
-    {
-        // Check for catch attempt first
-        if (selectedDingo.battleMoveId.Value == -2)
-        {
-            Debug.Log($"{selectedDingo.name.Value} attempting to catch opponent!");
-
-            NetworkDingo targetDingo = GetOpponentDingo(clientId, selectedDingo.battleTargetId.Value);
-            if (targetDingo == null) yield break;
-
-            // Play catch animation and wait for it to complete
-
-
-            yield break;
-        }
-
-        if (selectedDingo.battleMoveId.Value == -1 || selectedDingo.battleTargetId.Value == -1)
-        {
-            Debug.LogError($"{selectedDingo.name.Value} has not selected a move or target.");
-            yield break;
-        }
-
-        DingoMove move = DingoDatabase.GetMoveByID(
-            selectedDingo.battleMoveId.Value,
-            DingoDatabase.GetDingoByID(selectedDingo.id.Value)
-        );
-
-        if (move == null)
-        {
-            Debug.LogError($"Move with ID {selectedDingo.battleMoveId.Value} not found.");
-            yield break;
-        }
-
-        Debug.Log($"{selectedDingo.name.Value} is using {move.Name}!");
-
-        // Play animation and wait for it to complete
-        //yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, move));
-
-        ApplyMoveBasedOnTarget(clientId, selectedDingo, move);
-    }
-    private static void ApplyMoveBasedOnTarget(ulong clientId, NetworkDingo selectedDingo, DingoMove move)
-    {
-        switch (selectedDingo.battleTargetId.Value)
-        {
-            case 0:
-                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][2].Dingo, move);
-                break;
-            case 1:
-                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][3].Dingo, move);
-                break;
-            case 2:
-                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][2].Dingo, move);
-                ApplyMove(clientId, selectedDingo, BattleSlots[clientId][3].Dingo, move);
-                break;
-            default:
-                Debug.LogError($"Invalid target ID {selectedDingo.battleTargetId.Value} for {selectedDingo.name}.");
-                break;
-        }
-    }
-    private static void TriggerDingoAnimation(NetworkDingo selectedDingo, DingoMove move)
-    {
-        // Trigger animation based on the move
-        Debug.Log($"Triggering {selectedDingo.name.Value}'s animation for move: {move.Name}");
-
-        // Example: Use Unity's Animator to play animations
-        Animator animator = selectedDingo.GetComponent<Animator>();
-        if (animator != null)
-        {
-            animator.Play(move.Name);
-        }
-        else
-        {
-            Debug.LogError("Animator component not found on Dingo.");
-        }
-    }
     private static void ApplyMove(ulong clientId, NetworkDingo attacker, NetworkDingo target, DingoMove move)
     {
         if (target == null)
@@ -1028,24 +1303,77 @@ public static class BattleHandler
             Debug.LogError($"{attacker.name.Value} tried to attack a null target.");
             return;
         }
+        BattleSlot attackerSlot = GetBattleSlotForDingo(clientId, attacker);
+        BattleSlot targetSlot = GetBattleSlotForDingo(clientId, target);
 
-        int attackStat = attacker.attack.Value;
-        int defenseStat = target.defense.Value;
-        int baseDamage = move.Power;
-
-        float damageMultiplier = 1f + ((float)(attackStat - defenseStat) / Mathf.Max(1, defenseStat));
-        damageMultiplier = Mathf.Max(damageMultiplier, 0.01f);
-
-        int finalDamage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * damageMultiplier));
-
-        target.hp.Value -= finalDamage;
-
-        Debug.Log($"{attacker.name.Value} used {move.Name} on {target.name.Value} for {finalDamage} damage!");
-
-        if (target.hp.Value <= 0)
+        try
         {
-            HandleDingoFaint(clientId, target);
+            // Convert string types to DingoType enums
+            DingoType attackerType = (DingoType)Enum.Parse(typeof(DingoType), attacker.type.Value.ToString());
+            DingoType defenderType = (DingoType)Enum.Parse(typeof(DingoType), target.type.Value.ToString());
+
+            // Calculate type effectiveness
+            float typeEffectiveness = DingoTypeEffectivenessCalculator.GetEffectiveness(attackerType, defenderType);
+
+            if (typeEffectiveness == 0f)
+            {
+                Debug.Log($"{move.Name} has no effect on {target.name.Value}!");
+                return;
+            }
+
+            int attackStat = BattleSlots[clientId][attacker.slotNumber.Value].GetModifiedAttack();
+            int defenseStat = BattleSlots[clientId][target.slotNumber.Value].GetModifiedDefense();
+            int baseDamage = move.Power;
+
+            // Apply type effectiveness to damage calculation
+            float damageMultiplier = 1f + ((float)(attackStat - defenseStat) / Mathf.Max(1, defenseStat));
+            damageMultiplier = Mathf.Max(damageMultiplier, 0.01f) * typeEffectiveness;
+
+            int finalDamage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * damageMultiplier));
+
+            target.hp.Value -= finalDamage;
+
+            // Add type effectiveness message
+            string effectivenessMessage = typeEffectiveness switch
+            {
+                > 1f => "It's super effective!",
+                < 1f and > 0f => "It's not very effective...",
+                0f => "It had no effect!",
+                _ => ""
+            };
+
+            Debug.Log($"{attacker.name.Value} used {move.Name} on {target.name.Value} for {finalDamage} damage! {effectivenessMessage}");
+            if (!string.IsNullOrEmpty(move.StatusEffect))
+            {
+                AddStatus(clientId, targetSlot.SlotIndex, move.StatusEffect);
+            }
+
+            if (target.hp.Value <= 0)
+            {
+                HandleDingoFaint(clientId, target);
+            }
         }
+        catch (ArgumentException e)
+        {
+            Debug.LogError($"Error calculating type effectiveness: {e.Message}");
+            // Default to neutral effectiveness if there's an error
+            int finalDamage = Mathf.Max(1, Mathf.RoundToInt(move.Power * (1f + ((float)(attacker.attack.Value - target.defense.Value) / Mathf.Max(1, target.defense.Value)))));
+            target.hp.Value -= finalDamage;
+            Debug.Log($"{attacker.name.Value} used {move.Name} on {target.name.Value} for {finalDamage} damage!");
+        }
+    }
+    private static BattleSlot GetBattleSlotForDingo(ulong clientId, NetworkDingo dingo)
+    {
+        if (!BattleSlots.ContainsKey(clientId)) return null;
+
+        foreach (var slot in BattleSlots[clientId].Values)
+        {
+            if (slot.Dingo == dingo)
+            {
+                return slot;
+            }
+        }
+        return null;
     }
     private static void SpawnNewOpponent(ulong clientId, NetworkDingo oldOpponent, List<DingoID> dingoList)
     {
@@ -1107,26 +1435,6 @@ public static class BattleHandler
             }
         }
     }
-    private static void UseMove(NetworkDingo networkDingo, DingoMove move)
-    {
-        if (networkDingo == null || move == null)
-        {
-            Debug.LogError("UseMove: Invalid Dingo or Move!");
-            return;
-        }
-
-        Debug.Log($"{networkDingo.name.Value} selected move {move.Name}!");
-
-        // Set the move ID
-        networkDingo.battleMoveId.Value = move.MoveID;
-
-        // Get the host client ID for this battle
-        ulong hostClientId = GetHostClientIdForDingo(networkDingo);
-
-        // Get the correct battle prefab
-        AssignTargetButtons(hostClientId, networkDingo);
-
-    }
     public static void MarkCatchInProgress(ulong clientId, bool inProgress)
     {
         ulong hostClientId = GetHostClientIdIfApplicable(clientId, out _);
@@ -1150,7 +1458,6 @@ public static class BattleHandler
             }
         }
     }
-
     public static bool IsCatchInProgress(ulong hostClientId)
     {
         return ongoingCatches.ContainsKey(hostClientId) && ongoingCatches[hostClientId].Count > 0;
@@ -1285,39 +1592,6 @@ public static class BattleHandler
         // If no Dingo was found, log an error
         Debug.LogError($"Player's Dingo not found for client {clientId}.");
         return null;
-    }
-    public static void RegisterClientInBattle(ulong battleHostClientId, NetworkDingo[] dingos)
-    {
-        if (!BattleSlots.ContainsKey(battleHostClientId))
-        {
-            Debug.LogError($"RegisterClientInBattle: No battle exists for host {battleHostClientId}.");
-            return;
-        }
-
-        foreach (var dingo in dingos)
-        {
-            ulong dingoClientId = dingo.OwnerClientId;
-
-            if (!BattleSlots.ContainsKey(dingoClientId))
-            {
-                BattleSlots[dingoClientId] = new Dictionary<int, BattleSlot>();
-            }
-
-            // Ensure we're not reassigning an already placed Dingo
-            if (BattleSlots[dingoClientId].Values.Any(slot => slot.Dingo == dingo))
-            {
-                Debug.Log($"Dingo {dingo.name.Value} is already assigned to a slot.");
-                continue;
-            }
-
-            // Find the first available slot within expected range (0-1 for players)
-            int availableSlot = Enumerable.Range(0, 2).FirstOrDefault(slot => !BattleSlots[dingoClientId].ContainsKey(slot) || BattleSlots[dingoClientId][slot].Dingo == null);
-
-            BattleSlots[dingoClientId][availableSlot] = new BattleSlot(dingo, availableSlot, true);
-            dingo.slotNumber.Value = availableSlot;
-
-            Debug.Log($"RegisterClientInBattle: Assigned {dingo.name.Value} to slot {availableSlot} under Client {dingoClientId}.");
-        }
     }
     private static void SetBattlePosition(ulong clientId, int slotIndex)
     {
@@ -1494,6 +1768,15 @@ public static class BattleHandler
     public static void HandleDingoFaint(ulong clientId, NetworkDingo dingo)
     {
         Debug.Log($"{dingo.name.Value} has fainted!");
+        // Reset temp stats before despawning
+        foreach (var slot in BattleSlots[clientId].Values)
+        {
+            if (slot.Dingo == dingo)
+            {
+                slot.ResetTempStats();
+                break;
+            }
+        }
         if (dingo.TryGetComponent<NetworkObject>(out var netObj) && netObj.IsSpawned)
         {
             netObj.Despawn(true); // Destroy on all clients
@@ -1654,7 +1937,6 @@ public static class BattleHandler
             }
         }
     }
-
     public static void SavePlayerDingoData(
         int slotIndex,
         int dingoId,
@@ -1954,97 +2236,5 @@ public static class BattleHandler
         {
             BattleStarter.Instance.EndBattle(clientId);
         }
-    }
-    public static void SaveNetworkDingo(NetworkDingo networkDingo)
-    {
-        int slotIndex = 1; // Initialize slotIndex to 1
-
-        // Load existing Dingos data if it exists
-        JSONArray jsonDingos;
-        string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
-        if (File.Exists(filePath))
-        {
-            string existingData = File.ReadAllText(filePath);
-            jsonDingos = JSON.Parse(existingData) as JSONArray;
-            if (jsonDingos == null)
-            {
-                // If parsing fails, create a new JSONArray
-                Debug.LogWarning("Failed to parse existing Dingos data. Creating a new JSONArray.");
-                jsonDingos = new JSONArray();
-            }
-            else
-            {
-                // Iterate over existing Dingos to find the highest slot index
-                foreach (JSONNode dingoData in jsonDingos)
-                {
-                    JSONObject dingoObj = dingoData.AsObject;
-                    if (dingoObj.HasKey("ID"))
-                    {
-                        int id = dingoObj["ID"].AsInt;
-                        slotIndex = Mathf.Max(slotIndex, id); // Update slotIndex if higher ID found
-                    }
-                }
-                // Increment slotIndex by 1 to get the next available slot
-                slotIndex++;
-            }
-        }
-        else
-        {
-            // If file doesn't exist, create a new JSONArray
-            Debug.LogWarning("Dingos data file not found. Creating a new JSONArray.");
-            jsonDingos = new JSONArray();
-        }
-
-        // Debug information
-        Debug.Log("Loaded existing Dingos data from file: " + filePath);
-        Debug.Log("Number of existing Dingos: " + jsonDingos.Count);
-
-        // Create JSON object for the new Dingo
-        JSONObject jsonDingo = new JSONObject();
-
-        // Debug information
-        Debug.Log("New NetworkDingo being saved with ID: " + slotIndex);
-
-        // Add properties of the NetworkDingo to the JSON object
-        jsonDingo.Add("ID", slotIndex);
-        jsonDingo.Add("DingoID", networkDingo.id.Value);
-        jsonDingo.Add("Name", networkDingo.name.Value.ToString());
-        jsonDingo.Add("Type", networkDingo.type.Value.ToString());
-        jsonDingo.Add("Description", DingoDatabase.GetDingoDescriptionByID(networkDingo.id.Value));
-        jsonDingo.Add("CurrentHealth", networkDingo.hp.Value);
-        jsonDingo.Add("ATK", networkDingo.attack.Value);
-        jsonDingo.Add("DEF", networkDingo.defense.Value);
-        jsonDingo.Add("SPD", networkDingo.speed.Value);
-        jsonDingo.Add("Sprite", networkDingo.spritePath.Value.ToString());
-        jsonDingo.Add("MaxHealth", networkDingo.maxHP.Value);
-        jsonDingo.Add("XP", networkDingo.xp.Value);
-        jsonDingo.Add("MaxXP", networkDingo.maxXP.Value);
-        jsonDingo.Add("Level", networkDingo.level.Value);
-        jsonDingo.Add("Move1ID", networkDingo.move1.Value);
-        jsonDingo.Add("Move2ID", networkDingo.move2.Value);
-        jsonDingo.Add("Move3ID", networkDingo.move3.Value);
-        jsonDingo.Add("Move4ID", networkDingo.move4.Value);
-
-        // Add the current Dingo object to the JSON array
-        jsonDingos.Add(jsonDingo);
-
-        // Debug information
-        Debug.Log("NetworkDingo added to JSON array.");
-
-        // Convert the JSON array to a string
-        string jsonString = jsonDingos.ToString();
-
-        // Write the JSON data to the file
-        using (StreamWriter writer = new StreamWriter(filePath))
-        {
-            writer.Write(jsonString);
-        }
-
-        Debug.Log("NetworkDingo data saved to: " + filePath);
-    }
-
-    internal static void RequestSaveDingo(object localClientID, NetworkDingo dingo, bool v)
-    {
-        throw new NotImplementedException();
     }
 }

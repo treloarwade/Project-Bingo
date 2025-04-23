@@ -272,6 +272,33 @@ dingoData["Move4ID"]
         Debug.LogError("Failed to load moves: File not found or slot invalid.");
         return null;
     }
+    public static DingoMove[] LoadAgentBingoMoves()
+    {
+        string filePath = Path.Combine(Application.persistentDataPath, "playerinfo.json");
+
+        if (File.Exists(filePath))
+        {
+            string jsonData = File.ReadAllText(filePath);
+            JSONArray jsonDingos = JSON.Parse(jsonData) as JSONArray;
+
+            if (jsonDingos != null && jsonDingos.Count > 0)
+            {
+                JSONObject dingoData = jsonDingos[0].AsObject;
+                DingoID dingo = DingoDatabase.GetDingoByID(dingoData["DingoID"]);
+
+                return new DingoMove[]
+                {
+                DingoDatabase.GetMoveByID(dingoData["Move1ID"], dingo),
+                DingoDatabase.GetMoveByID(dingoData["Move2ID"], dingo),
+                DingoDatabase.GetMoveByID(dingoData["Move3ID"], dingo),
+                DingoDatabase.GetMoveByID(dingoData["Move4ID"], dingo)
+                };
+            }
+        }
+
+        Debug.LogError("Failed to load moves: File not found or slot invalid.");
+        return null;
+    }
     public static DingoMove[] LoadDingoMovesByID(int dingoID)
     {
         string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");

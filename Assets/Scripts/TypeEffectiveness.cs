@@ -149,14 +149,5 @@ public class DingoTypeEffectivenessCalculator
 
         return TypeChart[attacker][defender];
     }
-
-    public static void Main(string[] args)
-    {
-        DingoType attacker = DingoType.Lightning;
-        DingoType defender = DingoType.Water;
-
-        float effectiveness = GetEffectiveness(attacker, defender);
-        Console.WriteLine($"Effectiveness of {attacker} against {defender}: {effectiveness}");
-    }
 }
 

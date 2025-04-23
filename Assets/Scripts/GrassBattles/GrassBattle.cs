@@ -9,13 +9,11 @@ public class GrassBattle : NetworkBehaviour
     private bool isWiggling;
     private float wiggleDuration = 0.5f;
     private float maxWiggleAngle = 10f;
-    public List<DingoID> dingos = new List<DingoID>();
     private float lastActivationTime;
 
     private void Start()
     {
         lastActivationTime = Time.time;
-        dingos = new List<DingoID>(DingoDatabase.allDingos); // Assume DingoDatabase contains all available Dingos
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
