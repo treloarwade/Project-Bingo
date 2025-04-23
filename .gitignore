@@ -388,3 +388,5 @@ FodyWeavers.xsd
 /Assets/ParrelSync
 /ParrelSync.csproj
 /Assets/Plugins/ParrelSync/ScriptableObjects/ParrelSyncProjectSettings.asset
+/Assets/battleFlow.dot
+/Assets/battleFlowVertical.dot
