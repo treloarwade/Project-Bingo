@@ -11,6 +11,9 @@ using System;
 using System.Net.NetworkInformation;
 using UnityEditor.PackageManager;
 using Random = UnityEngine.Random;
+using Unity.Netcode.Components;
+using UnityEditor.Experimental.GraphView;
+using static UnityEngine.GraphicsBuffer;
 
 public static class BattleHandler
 {
@@ -351,6 +354,7 @@ public static class BattleHandler
 
         return null;
     }
+
     public static void AttemptCatchDingo(ulong clientId, NetworkDingo targetDingo)
     {
         if (targetDingo == null)
@@ -746,10 +750,11 @@ public static class BattleHandler
         foreach (var status in slot.StatusEffects.ToList()) // ToList() to avoid modification during iteration
         {
             BattleStarter.Instance.StartCoroutine(PlayStatusEffectAnimation(dingo, status.Name));
-
+            BattleStarter.Instance.MoveAnimationClientRPC(clientId, 0, 0, dingo.NetworkObjectId, 0, status.Name, 1);
             // Skip turn chance (like paralysis or sleep)
             if (status.SkipTurnChance > 0 && Random.value < status.SkipTurnChance)
             {
+                SendBattleMessage(clientId, $"{dingo.name.Value} is affected by {status.Name} and can't move!");
                 Debug.Log($"{dingo.name.Value} is affected by {status.Name} and can't move!");
                 skipTurn = true;
             }
@@ -814,7 +819,7 @@ public static class BattleHandler
             switch (statusName.ToLower())
             {
                 case "goo":
-                    yield return GooAnimation(target, renderer);
+                    yield return GooAnimation(target.transform);
                     break;
                 // Add more status effects as needed
                 default:
@@ -834,32 +839,64 @@ public static class BattleHandler
             target.transform.localRotation = originalRotation;
         }
     }
-    private static IEnumerator GooAnimation(NetworkDingo target, SpriteRenderer renderer)
+    public static IEnumerator GooAnimation(Transform target)
     {
-        // Goo makes the Dingo look sticky and green
-        float duration = 1f;
-        float startTime = Time.time;
+        GameObject goo = GameObject.Instantiate(Resources.Load<GameObject>("Prefabs/GooPrefab"), target.position, Quaternion.identity);
+        goo.transform.SetParent(target); // Optional: parent to target for positioning
 
-        while (Time.time - startTime < duration)
+        Vector3 originalScale = goo.transform.localScale;
+        Vector3 squishedScale = new Vector3(originalScale.x, 0.7f * originalScale.y, originalScale.z);
+
+        float duration = 0.2f;
+        float elapsed = 0f;
+
+        // Squish
+        while (elapsed < duration)
         {
-            if (renderer != null)
-            {
-                // Alternate between normal and greenish color
-                float t = (Time.time - startTime) * 2f;
-                renderer.color = Color.Lerp(Color.white, new Color(0.5f, 1f, 0.5f, 1f), Mathf.PingPong(t, 1f));
-
-                // Slight squish effect
-                float squishAmount = Mathf.Sin(t * Mathf.PI) * 0.1f;
-                target.transform.localScale = new Vector3(
-                    1f + squishAmount,
-                    1f - squishAmount,
-                    1f
-                );
-            }
+            goo.transform.localScale = Vector3.Lerp(originalScale, squishedScale, elapsed / duration);
+            elapsed += Time.deltaTime;
             yield return null;
         }
+        goo.transform.localScale = squishedScale;
+
+        // Unsquish
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            goo.transform.localScale = Vector3.Lerp(squishedScale, originalScale, elapsed / duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        goo.transform.localScale = originalScale;
+
+        GameObject.Destroy(goo, 0.5f); // Clean up
     }
-    private static IEnumerator PlayMoveAnimation(NetworkDingo attacker, NetworkDingo target, DingoMove move)
+    public static IEnumerator LocalAnimationFunction(ulong clientID, NetworkDingo attacker0, NetworkDingo target2, string movename, int animationtype)
+    {
+
+        switch (animationtype)
+        {
+            case 0:
+                if (attacker0 == null)
+                {
+                    Debug.LogError("Cannot play animation - Attacker is null");
+                    yield break;
+                }
+                yield return PlayMoveAnimation(attacker0, target2, movename);
+                break;
+            case 1:
+                yield return PlayStatusEffectAnimation(target2, movename);
+                break;
+            case 2:
+                yield return new WaitForSeconds(0.5f);
+                break;
+            default:
+                yield return new WaitForSeconds(0.5f);
+                break;
+        }
+
+    }
+    private static IEnumerator PlayMoveAnimation(NetworkDingo attacker, NetworkDingo target, string move)
     {
         if (attacker == null)
         {
@@ -867,7 +904,7 @@ public static class BattleHandler
             yield return new WaitForSeconds(0.5f);
             yield break;
         }
-
+        Unsync(attacker);
         SpriteRenderer renderer = attacker.GetComponent<SpriteRenderer>();
         Vector3 originalPosition = attacker.transform.localPosition;
         Vector3 originalScale = attacker.transform.localScale;
@@ -875,12 +912,12 @@ public static class BattleHandler
 
         try
         {
-            switch (move.Name)
+            switch (move)
             {
                 case "Squishy Frenzy":
                     if (target != null)
                     {
-                        yield return SquishyFrenzyAnimation(attacker, target, renderer);
+                        yield return SquishyFrenzyAnimation(attacker, target);
                     }
                     break;
 
@@ -898,16 +935,28 @@ public static class BattleHandler
             attacker.transform.localRotation = originalRotation;
             if (renderer != null) renderer.color = Color.white;
         }
+        Resync(attacker);
     }
-    private static IEnumerator SquishyFrenzyAnimation(NetworkDingo attacker, NetworkDingo target, SpriteRenderer renderer)
+    private static void Unsync(NetworkDingo dingo)
+    {
+        if (NetworkManager.Singleton.IsHost) return;
+        NetworkTransform netObj = dingo.GetComponent<NetworkTransform>();
+        netObj.enabled = false;
+    }
+    private static void Resync(NetworkDingo dingo)
+    {
+        if (NetworkManager.Singleton.IsHost) return;
+        NetworkTransform netObj = dingo.GetComponent<NetworkTransform>();
+        netObj.enabled = true;
+    }
+    private static IEnumerator SquishyFrenzyAnimation(NetworkDingo attacker, NetworkDingo target)
     {
         if (attacker == null || target == null) yield break;
 
-        const float moveSpeed = 0.15f; // Faster than default for snappier animation
+        const float moveSpeed = 1.15f; // Faster than default for snappier animation
         Vector3 originalPosition = attacker.transform.position;
         Vector3 originalScale = attacker.transform.localScale;
         Quaternion originalRotation = attacker.transform.rotation;
-
         try
         {
             // 1. Calculate key positions relative to combatants
@@ -1047,6 +1096,7 @@ public static class BattleHandler
 
             // Get modified speed from BattleSlot (which accounts for speed modifiers and status effects)
             int modifiedSpeed = slot.GetModifiedSpeed();
+            Debug.Log($"[GetTurnOrder] Slot: {slot}, MovePriority: {movePriority}, ModifiedSpeed: {modifiedSpeed}!");
 
             participants.Add((slot, movePriority, modifiedSpeed));
         }
@@ -1085,6 +1135,7 @@ public static class BattleHandler
         slot.StatusEffects.Add(effect);
         Debug.Log($"{slot.Dingo.name.Value} gained {status} status");
         BattleStarter.Instance.StartCoroutine(PlayStatusEffectAnimation(slot.Dingo, status));
+        BattleStarter.Instance.MoveAnimationClientRPC(clientId, 0, 0, slot.Dingo.NetworkObjectId, 0, status, 1);
 
     }
 
@@ -1155,8 +1206,6 @@ public static class BattleHandler
         // AI picks a random target
         NetworkDingo target = possibleTargets[UnityEngine.Random.Range(0, possibleTargets.Count)];
         Debug.Log($"AI selected target: {target.name.Value}");
-
-        // AI picks a random move
         int chosenMoveId = GetRandomMoveId(selectedDingo);
         DingoMove move = DingoDatabase.GetMoveByID(chosenMoveId, DingoDatabase.GetDingoByID(selectedDingo.id.Value));
 
@@ -1167,9 +1216,9 @@ public static class BattleHandler
         }
 
         Debug.Log($"{selectedDingo.name.Value} (Enemy) uses {move.Name} on {target.name.Value}!");
-
+        BattleStarter.Instance.MoveAnimationClientRPC(clientId, selectedDingo.NetworkObjectId, 0, target.NetworkObjectId, 0, move.Name, 0);
         // Play animation and wait for it to complete
-        yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, target, move));
+        yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, target, move.Name));
 
         ApplyMove(clientId, selectedDingo, target, move);
     }
@@ -1184,7 +1233,6 @@ public static class BattleHandler
             if (targetDingo == null) yield break;
 
             // Play catch animation and wait
-            yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, targetDingo, null));
             yield break;
         }
 
@@ -1207,8 +1255,9 @@ public static class BattleHandler
 
         Debug.Log($"{selectedDingo.name.Value} is using {move.Name}!");
         NetworkDingo targetDingo2 = GetOpponentDingo(clientId, selectedDingo.battleTargetId.Value);
+        BattleStarter.Instance.MoveAnimationClientRPC(clientId, selectedDingo.NetworkObjectId, 0, targetDingo2.NetworkObjectId, 0, move.Name, 0);
         // Play animation and wait for it to complete
-        yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, targetDingo2, move));
+        yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, targetDingo2, move.Name));
 
         ApplyMoveBasedOnTarget(clientId, selectedDingo, move);
     }
@@ -1341,6 +1390,7 @@ public static class BattleHandler
                 0f => "It had no effect!",
                 _ => ""
             };
+            SendBattleMessage(clientId, $"{attacker.name.Value} used {move.Name} on {target.name.Value} for {finalDamage} damage! {effectivenessMessage}");
 
             Debug.Log($"{attacker.name.Value} used {move.Name} on {target.name.Value} for {finalDamage} damage! {effectivenessMessage}");
             if (!string.IsNullOrEmpty(move.StatusEffect))
@@ -1361,6 +1411,24 @@ public static class BattleHandler
             target.hp.Value -= finalDamage;
             Debug.Log($"{attacker.name.Value} used {move.Name} on {target.name.Value} for {finalDamage} damage!");
         }
+    }
+    public static void SendBattleMessage(ulong clientId, string message)
+    {
+        // First determine if this is Player 2 checking in
+        bool isPlayer2 = playerToHostMap.ContainsKey(clientId);
+        ulong hostClientId = isPlayer2 ? GetHostForPlayer2(clientId) : clientId;
+
+        // Send to host player
+        BattleDialog.SendDialogToClient(hostClientId, message);
+
+        // Check if there's a Player 2 in this battle and send to them too
+        ulong? player2Id = GetPlayer2FromHost(hostClientId);
+        if (player2Id.HasValue)
+        {
+            BattleDialog.SendDialogToClient(player2Id.Value, message);
+        }
+
+        Debug.Log($"Battle message sent to participants: {message}");
     }
     private static BattleSlot GetBattleSlotForDingo(ulong clientId, NetworkDingo dingo)
     {
@@ -1879,7 +1947,7 @@ public static class BattleHandler
                     // Randomly spawn a new opponent
                     if (UnityEngine.Random.value < 0.5f)
                     {
-                        SpawnNewOpponent(clientId, dingo, cachedList);
+                        //SpawnNewOpponent(clientId, dingo, cachedList);
                     }
                     return;
                 }

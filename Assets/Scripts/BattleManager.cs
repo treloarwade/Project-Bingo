@@ -681,7 +681,7 @@ public class BattleManager : MonoBehaviour
         if (trainerbattle)
         {
             dialogBox2.gameObject.SetActive(true);
-            StartCoroutine(dialogBox2.TypeDialog("You cannot catch Dingos that belong to someone else"));
+            //StartCoroutine(dialogBox2.TypeDialog("You cannot catch Dingos that belong to someone else"));
             autoHider.Bingo();
             return; // Exit the method if input is blocked
         }
@@ -700,7 +700,7 @@ public class BattleManager : MonoBehaviour
         if (playerpreviousmoveID == moveNumber)
         {
             dialogBox2.gameObject.SetActive(true);
-            StartCoroutine(dialogBox2.TypeDialog("Using the same move consecutively causes any special effects to not work"));
+            //StartCoroutine(dialogBox2.TypeDialog("Using the same move consecutively causes any special effects to not work"));
             autoHider.Bingo();
         }
         else
@@ -870,16 +870,16 @@ public class BattleManager : MonoBehaviour
                     bingo = moveName + " did " + damageAmount + " with x" + effectiveness + " damage against " + defendertype;
                 }
 
-                yield return StartCoroutine(dialogBox.TypeDialog(bingo));
+                //yield return StartCoroutine(dialogBox.TypeDialog(bingo));
             }
             else
             {
-                yield return StartCoroutine(dialogBox.TypeDialog(moveName + " missed!"));
+                //yield return StartCoroutine(dialogBox.TypeDialog(moveName + " missed!"));
             }
         }
         else
         {
-            yield return StartCoroutine(dialogBox.TypeDialog(moveName + " used a special effect."));
+            //yield return StartCoroutine(dialogBox.TypeDialog(moveName + " used a special effect."));
         }
         yield return null;
     }
@@ -2093,9 +2093,9 @@ public class BattleManager : MonoBehaviour
             Status2.text = Status.text;
             float randomValue = Random.value;
             int randomPercentage = Mathf.RoundToInt(randomValue * 100);
-            string bingo = "Agent Bingo gained $1000 from cutting costs";
+            //string bingo = "Agent Bingo gained $1000 from cutting costs";
             StartCoroutine(Yapping());
-            yield return StartCoroutine(dialogBox.TypeDialog(bingo));
+            //yield return StartCoroutine(dialogBox.TypeDialog(bingo));
             startTime = Time.time;
             while (Time.time - startTime < (randomNumber * moveSpeed))
             {
@@ -2760,7 +2760,7 @@ public class BattleManager : MonoBehaviour
         float randomValue = Random.value;
         int randomPercentage = Mathf.RoundToInt(randomValue * 100);
         string bingo = "Agent Bingo rolled a " + randomPercentage + " you need 70 or higher.";
-        yield return StartCoroutine(dialogBox.TypeDialog(bingo));
+        //yield return StartCoroutine(dialogBox.TypeDialog(bingo));
         if (randomValue < 0.7f)
         {
             //Miss

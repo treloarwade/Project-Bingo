@@ -349,6 +349,38 @@ public class BattleStarter : NetworkBehaviour
             CatchResultServerRpc(clientId, targetDingoId, success);
         }, catchChance));
     }
+    [ClientRpc]
+    public void MoveAnimationClientRPC(
+        ulong clientId,
+        ulong slotNetworkID0,
+        ulong slotNetworkID1,
+        ulong slotNetworkID2,
+        ulong slotNetworkID3,
+        string movename,
+        int movetype)
+    {
+        if (NetworkManager.Singleton.IsHost) return;
+
+        // Retrieve all relevant network objects
+        var spawnManager = NetworkManager.Singleton.SpawnManager;
+        spawnManager.SpawnedObjects.TryGetValue(slotNetworkID0, out var netObj0);
+        spawnManager.SpawnedObjects.TryGetValue(slotNetworkID1, out var netObj1);
+        spawnManager.SpawnedObjects.TryGetValue(slotNetworkID2, out var netObj2);
+        spawnManager.SpawnedObjects.TryGetValue(slotNetworkID3, out var netObj3);
+
+        // Get NetworkDingo components, null-safe
+        NetworkDingo dingoSlot0 = netObj0?.GetComponent<NetworkDingo>();
+        NetworkDingo dingoSlot1 = netObj1?.GetComponent<NetworkDingo>();
+        NetworkDingo dingoSlot2 = netObj2?.GetComponent<NetworkDingo>();
+        NetworkDingo dingoSlot3 = netObj3?.GetComponent<NetworkDingo>();
+
+        Debug.Log($"LocalAnimationFunction starting with {dingoSlot0} {dingoSlot2} {movename} {movetype}");
+
+        // You can expand this later to include other slots if needed
+        StartCoroutine(BattleHandler.LocalAnimationFunction(clientId, dingoSlot0, dingoSlot2, movename, movetype));
+    }
+
+
     [ServerRpc(RequireOwnership = false)]
     private void CatchResultServerRpc(ulong clientId, ulong targetDingoId, bool success)
     {
@@ -753,6 +785,7 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
                 if (playerMovement != null)
                 {
                     playerMovement.movementEnabled = true;
+                    playerMovement.SetRigidbodyStatic(false);
                 }
             }
             else

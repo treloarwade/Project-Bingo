@@ -9,11 +9,13 @@ public enum DingoType
     Water,
     Fire,
     Ice,
-    Nature,
-    Ground,
+    Grass,
     Dark,
     Abnormal,
-    Spirit
+    Light,
+    Finance,
+    Physical,
+    Wind
 }
 
 public class DingoTypeEffectivenessCalculator
@@ -26,11 +28,14 @@ public class DingoTypeEffectivenessCalculator
             { DingoType.Water, 2 },
             { DingoType.Fire, 1 },
             { DingoType.Ice, 1 },
-            { DingoType.Nature, 1 },
-            { DingoType.Ground, 0.5f },
+            { DingoType.Grass, 1 },
             { DingoType.Dark, 1 },
             { DingoType.Abnormal, 1 },
-            { DingoType.Spirit, 1 }
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
+
         }
     },
     { DingoType.Water, new Dictionary<DingoType, float>
@@ -39,11 +44,13 @@ public class DingoTypeEffectivenessCalculator
             { DingoType.Water, 0.5f },
             { DingoType.Fire, 2 },
             { DingoType.Ice, 1 },
-            { DingoType.Nature, 1 },
-            { DingoType.Ground, 1 },
+            { DingoType.Grass, 1 },
             { DingoType.Dark, 1 },
             { DingoType.Abnormal, 1 },
-            { DingoType.Spirit, 1 }
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
         }
     },
     { DingoType.Fire, new Dictionary<DingoType, float>
@@ -52,11 +59,13 @@ public class DingoTypeEffectivenessCalculator
             { DingoType.Water, 0.5f },
             { DingoType.Fire, 0.5f },
             { DingoType.Ice, 2 },
-            { DingoType.Nature, 1 },
-            { DingoType.Ground, 1 },
+            { DingoType.Grass, 1 },
             { DingoType.Dark, 1 },
             { DingoType.Abnormal, 1 },
-            { DingoType.Spirit, 1 }
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
         }
     },
     { DingoType.Ice, new Dictionary<DingoType, float>
@@ -65,37 +74,28 @@ public class DingoTypeEffectivenessCalculator
             { DingoType.Water, 1 },
             { DingoType.Fire, 0.5f },
             { DingoType.Ice, 0.5f },
-            { DingoType.Nature, 2 },
-            { DingoType.Ground, 1 },
+            { DingoType.Grass, 2 },
             { DingoType.Dark, 1 },
             { DingoType.Abnormal, 1 },
-            { DingoType.Spirit, 1 }
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
         }
     },
-    { DingoType.Nature, new Dictionary<DingoType, float>
+    { DingoType.Grass, new Dictionary<DingoType, float>
         {
             { DingoType.Lightning, 1 },
             { DingoType.Water, 1 },
             { DingoType.Fire, 1 },
             { DingoType.Ice, 0.5f },
-            { DingoType.Nature, 0.5f },
-            { DingoType.Ground, 2 },
+            { DingoType.Grass, 0.5f },
             { DingoType.Dark, 1 },
             { DingoType.Abnormal, 1 },
-            { DingoType.Spirit, 1 }
-        }
-    },
-    { DingoType.Ground, new Dictionary<DingoType, float>
-        {
-            { DingoType.Lightning, 2 },
-            { DingoType.Water, 1 },
-            { DingoType.Fire, 1 },
-            { DingoType.Ice, 1 },
-            { DingoType.Nature, 0.5f },
-            { DingoType.Ground, 0.5f },
-            { DingoType.Dark, 1 },
-            { DingoType.Abnormal, 1 },
-            { DingoType.Spirit, 1 }
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
         }
     },
     { DingoType.Dark, new Dictionary<DingoType, float>
@@ -104,11 +104,13 @@ public class DingoTypeEffectivenessCalculator
             { DingoType.Water, 1 },
             { DingoType.Fire, 1 },
             { DingoType.Ice, 1 },
-            { DingoType.Nature, 1 },
-            { DingoType.Ground, 1 },
+            { DingoType.Grass, 1 },
             { DingoType.Dark, 0.5f },
             { DingoType.Abnormal, 0.5f },
-            { DingoType.Spirit, 2 }
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
         }
     },
     { DingoType.Abnormal, new Dictionary<DingoType, float>
@@ -117,27 +119,76 @@ public class DingoTypeEffectivenessCalculator
             { DingoType.Water, 1 },
             { DingoType.Fire, 1 },
             { DingoType.Ice, 1 },
-            { DingoType.Nature, 1 },
-            { DingoType.Ground, 1 },
+            { DingoType.Grass, 1 },
             { DingoType.Dark, 2 },
             { DingoType.Abnormal, 0.5f },
-            { DingoType.Spirit, 0.5f }
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
         }
     },
-    { DingoType.Spirit, new Dictionary<DingoType, float>
+    { DingoType.Physical, new Dictionary<DingoType, float>
         {
             { DingoType.Lightning, 1 },
             { DingoType.Water, 1 },
             { DingoType.Fire, 1 },
             { DingoType.Ice, 1 },
-            { DingoType.Nature, 1 },
-            { DingoType.Ground, 1 },
-            { DingoType.Dark, 0.5f },
-            { DingoType.Abnormal, 2 },
-            { DingoType.Spirit, 0.5f }
+            { DingoType.Grass, 1 },
+            { DingoType.Dark, 1 },
+            { DingoType.Abnormal, 1 },
+            { DingoType.Physical, 0.5f },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
+        }
+    },
+    { DingoType.Wind, new Dictionary<DingoType, float>
+        {
+            { DingoType.Lightning, 1 },
+            { DingoType.Water, 1 },
+            { DingoType.Fire, 1 },
+            { DingoType.Ice, 1 },
+            { DingoType.Grass, 1 },
+            { DingoType.Dark, 1 },
+            { DingoType.Abnormal, 1 },
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 0.5f }
+        }
+    },
+    { DingoType.Finance, new Dictionary<DingoType, float>
+        {
+            { DingoType.Lightning, 1 },
+            { DingoType.Water, 1 },
+            { DingoType.Fire, 1 },
+            { DingoType.Ice, 1 },
+            { DingoType.Grass, 1 },
+            { DingoType.Dark, 1 },
+            { DingoType.Abnormal, 1 },
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 1 },
+            { DingoType.Wind, 1 }
+        }
+    },
+
+    { DingoType.Light, new Dictionary<DingoType, float>
+        {
+            { DingoType.Lightning, 1 },
+            { DingoType.Water, 1 },
+            { DingoType.Fire, 1 },
+            { DingoType.Ice, 1 },
+            { DingoType.Grass, 1 },
+            { DingoType.Dark, 1 },
+            { DingoType.Abnormal, 1 },
+            { DingoType.Physical, 1 },
+            { DingoType.Finance, 1 },
+            { DingoType.Light, 0.5f },
+            { DingoType.Wind, 1 }
         }
     }
-        // Add other type interactions here...
     };
 
     public static float GetEffectiveness(DingoType attacker, DingoType defender)

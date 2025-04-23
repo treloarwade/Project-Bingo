@@ -9,7 +9,7 @@ public static class DingoDatabase
 {
     public static DingoID AgentBingo { get; } = new DingoID(0, "Agent Bingo", "Physical", "Agent Bingo is a skilled martial artist.", 2000, 84, 78, 100, "image1", 2000, 0, 50, 1);
     public static DingoID BingoStar { get; } = new DingoID(1, "BingoStar", "Light", "BingoStar flies around the sky in search of powerful opponents.", 200, 84, 78, 100, "star", 200, 0, 50, 1);
-    public static DingoID Bean { get; } = new DingoID(2, "Bean", "Nature", "Bean has a grudge against certain people.", 200, 84, 78, 100, "bean", 200, 0, 50, 1);
+    public static DingoID Bean { get; } = new DingoID(2, "Bean", "Grass", "Bean has a grudge against certain people.", 200, 84, 78, 100, "bean", 200, 0, 50, 1);
     public static DingoID Bird { get; } = new DingoID(3, "Bird", "Wind", "Bird is the word.", 200, 90, 58, 100, "bird", 200, 0, 50, 1);
     public static DingoID Pinkthing { get; } = new DingoID(4, "Pinkthing", "Abnormal", "Pink guy.", 200, 22, 156, 100, "pinkthing", 200, 0, 50, 1);
     public static DingoID Waterdino { get; } = new DingoID(5, "Waterdino", "Water", "Loch Ness monster.", 200, 122, 46, 100, "waterdino", 200, 0, 50, 1);
@@ -18,15 +18,15 @@ public static class DingoDatabase
     public static DingoID Marshmellow { get; } = new DingoID(8, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 84, 78, 100, "marshmellow", 200, 0, 50, 1);
     public static DingoID Robbersnail { get; } = new DingoID(9, "Robbersnail", "Dark", "Robbersnail moves slowly but strikes with surprising speed and cunning.", 200, 84, 78, 100, "robbersnail", 200, 0, 50, 1);
     public static DingoID Rock { get; } = new DingoID(10, "Rock", "Ground", "Rock is sturdy and unyielding, standing firm against all attacks.", 200, 84, 78, 100, "rock", 200, 0, 50, 1);
-    public static DingoID Seed { get; } = new DingoID(11, "Seed", "Nature", "Seed nurtures life, spreading seeds of hope across the land.", 200, 84, 78, 100, "seed", 200, 0, 50, 1);
-    public static DingoID Buggy { get; } = new DingoID(12, "Buggy", "Nature", "Buggy scurries around with its many legs, always searching for new adventures.", 200, 70, 60, 100, "buggy", 200, 0, 50, 1);
-    public static DingoID DancingPlant { get; } = new DingoID(13, "DancingPlant", "Nature", "DancingPlant sways gently in the breeze, spreading seeds of joy wherever it goes.", 200, 60, 70, 100, "dancingplant", 200, 0, 50, 1);
-    public static DingoID Shingy { get; } = new DingoID(14, "Shingy", "Spirit", "Shingy reflects the light with its metallic body, dazzling opponents in battle.", 200, 80, 75, 100, "shingy", 200, 0, 50, 1);
+    public static DingoID Seed { get; } = new DingoID(11, "Seed", "Grass", "Seed nurtures life, spreading seeds of hope across the land.", 200, 84, 78, 100, "seed", 200, 0, 50, 1);
+    public static DingoID Buggy { get; } = new DingoID(12, "Buggy", "Grass", "Buggy scurries around with its many legs, always searching for new adventures.", 200, 70, 60, 100, "buggy", 200, 0, 50, 1);
+    public static DingoID DancingPlant { get; } = new DingoID(13, "DancingPlant", "Grass", "DancingPlant sways gently in the breeze, spreading seeds of joy wherever it goes.", 200, 60, 70, 100, "dancingplant", 200, 0, 50, 1);
+    public static DingoID Shingy { get; } = new DingoID(14, "Shingy", "Dark", "Shingy reflects the light with its metallic body, dazzling opponents in battle.", 200, 80, 75, 100, "shingy", 200, 0, 50, 1);
     public static DingoID SadCloud { get; } = new DingoID(15, "SadCloud", "Wind", "SadCloud drifts through the sky, leaving raindrops of melancholy in its wake.", 200, 50, 65, 100, "sadcloud", 200, 0, 50, 1);
     public static DingoID Worm { get; } = new DingoID(16, "Worm", "Ground", "Worm burrows through the earth, emerging to surprise unsuspecting foes.", 200, 55, 50, 100, "worm", 200, 0, 50, 1);
     public static DingoID Pebble { get; } = new DingoID(17, "Pebble", "Dark", "Pebble may seem small, but its tough exterior can withstand powerful attacks.", 200, 40, 90, 100, "pebble", 200, 0, 50, 1);
-    public static DingoID Ghost { get; } = new DingoID(18, "Ghost", "Spirit", "Ghost haunts the shadows, striking fear into the hearts of its enemies.", 200, 70, 90, 100, "ghost", 200, 0, 50, 1);
-    public static DingoID Crick { get; } = new DingoID(19, "Crick", "Nature", "Crick is a nature type insect.", 200, 80, 60, 120, "crick", 200, 0, 50, 1);
+    public static DingoID Ghost { get; } = new DingoID(18, "Ghost", "Dark", "Ghost haunts the shadows, striking fear into the hearts of its enemies.", 200, 70, 90, 100, "ghost", 200, 0, 50, 1);
+    public static DingoID Crick { get; } = new DingoID(19, "Crick", "Grass", "Crick is a Grass type insect.", 200, 80, 60, 120, "crick", 200, 0, 50, 1);
     public static DingoID Firefly { get; } = new DingoID(20, "Firefly", "Fire", "Firefly is a fire type insect.", 200, 90, 50, 110, "firefly", 200, 0, 50, 1);
     public static DingoID Freddy { get; } = new DingoID(21, "Freddy", "Abnormal", "Freddy is an abnormal type Dingo.", 200, 70, 80, 100, "freddy", 200, 0, 50, 1);
     public static DingoID Fried { get; } = new DingoID(22, "Fried", "Abnormal", "Fried is another abnormal type Dingo.", 200, 75, 75, 95, "fried", 200, 0, 50, 1);
@@ -35,20 +35,20 @@ public static class DingoDatabase
     public static DingoID Bulb { get; } = new DingoID(25, "Bulb", "Lightning", "Bulb emits a sinister glow, harnessing the power of darkness and electricity.", 250, 50, 80, 120, "bulb", 250, 0, 60, 1);
     public static DingoID Tanktop { get; } = new DingoID(26, "Tanktop", "Abnormal", "Tanktop is an abnormal type Dingo with a tough exterior.", 200, 100, 90, 85, "tanktop", 200, 0, 50, 1);
     public static DingoID TrustFundBaby { get; } = new DingoID(27, "TrustFundBaby", "Finance", "TrustFundBaby is a finance type Dingo.", 200, 80, 70, 95, "trustfundbaby", 200, 0, 50, 1);
-    public static DingoID Plant { get; } = new DingoID(28, "Plant", "Nature", "Plant is a nature type Dingo.", 200, 75, 80, 90, "plant", 200, 0, 50, 1);
+    public static DingoID Plant { get; } = new DingoID(28, "Plant", "Grass", "Plant is a Grass type Dingo.", 200, 75, 80, 90, "plant", 200, 0, 50, 1);
     public static DingoID Waterslime { get; } = new DingoID(29, "Waterslime", "Water", "Waterslime is a water type Dingo.", 200, 82, 81, 90, "waterslime", 200, 0, 50, 1);
-    public static DingoID Terrortentacle { get; } = new DingoID(30, "Terrortentacle", "Ghost", "Terrortentacle is a ghost type Dingo.", 200, 110, 70, 80, "terrortentacle", 200, 0, 50, 1);
+    public static DingoID Terrortentacle { get; } = new DingoID(30, "Terrortentacle", "Dark", "Terrortentacle is a ghost type Dingo.", 200, 110, 70, 80, "terrortentacle", 200, 0, 50, 1);
     public static DingoID Ducky { get; } = new DingoID(31, "Ducky", "Wind", "Ducky gracefully glides through the air with its feather-like wings, harnessing the power of the wind.", 200, 75, 85, 90, "ducky", 200, 0, 50, 1);
     public static DingoID Forqwa { get; } = new DingoID(32, "Forqwa", "Physical", "Forqwa is a sturdy and muscular Dingo, known for its powerful physical attacks.", 200, 95, 80, 75, "forqwa", 200, 0, 50, 1);
     public static DingoID Mustache { get; } = new DingoID(33, "Mustache", "Abnormal", "Mustache is a mysterious Dingo with an unusual appearance, its mustache-like tendrils hiding its true intentions.", 200, 70, 70, 100, "mustache", 200, 0, 50, 1);
     public static DingoID Flame { get; } = new DingoID(34, "Flame", "Fire", "Flame is a flamer", 200, 70, 70, 100, "flame", 200, 0, 50, 1);
     public static DingoID Doggofire { get; } = new DingoID(35, "Doggo Fire", "Fire", "Doggo Fire is the fire type", 200, 70, 70, 100, "doggofire", 200, 0, 50, 1);
-    public static DingoID Doggoelectric { get; } = new DingoID(36, "Doggo Electric", "Electric", "Doggo electric is the electric type", 200, 70, 70, 100, "doggoelectric", 200, 0, 50, 1);
+    public static DingoID Doggoelectric { get; } = new DingoID(36, "Doggo Electric", "Lightning", "Doggo electric is the electric type", 200, 70, 70, 100, "doggoelectric", 200, 0, 50, 1);
     public static DingoID Doggoice { get; } = new DingoID(37, "Doggo Ice", "Ice", "Doggo Ice is the ice type", 200, 70, 70, 100, "doggoice", 200, 0, 50, 1);
     public static DingoID Doggograss { get; } = new DingoID(38, "Doggo Grass", "Grass", "Doggo Grass is the grass type", 200, 70, 70, 100, "doggograss", 200, 0, 50, 1);
     public static DingoID Doggowater { get; } = new DingoID(39, "Doggo Water", "Water", "Doggo Water is the water type", 200, 70, 70, 100, "doggowater", 200, 0, 50, 1);
-    public static DingoID BingoStar2 = new DingoID(1, "BingoStar", "Light", "BingoStar flies around the sky in search of powerful opponents.", 200, 1, 1, 1, "star", 200, 0, 50, 1);
-    public static DingoID Marshmellow2 = new DingoID(8, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 1, 1, 1, "marshmellow", 200, 0, 50, 1);
+    public static DingoID BingoStar2 { get; } = new DingoID(1000, "BingoStar", "Light", "BingoStar flies around the sky in search of powerful opponents.", 200, 1, 999, 1, "star", 200, 0, 50, 1);
+    public static DingoID Marshmellow2 { get; } = new DingoID(1001, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 1, 999, 1, "marshmellow", 200, 0, 50, 1);
     public static EnvironmentEffect Rain { get; } = new EnvironmentEffect(0, 3, "Rain");
     public static StatusEffect Goo { get; } = new StatusEffect(0, 3, "Goo");
 
@@ -80,16 +80,16 @@ public static class DingoDatabase
         BingoStar.AddMove(new DingoMove(8, "Nebula Nova", "Light", 0, 100, 90, null, null, "Creates a swirling nebula of energy around the opponent, dealing damage."));
         BingoStar.AddMove(new DingoMove(9, "Supernova Surge", "Light", 0, 120, 80, null, null, "Releases a massive surge of energy reminiscent of a dying star."));
 
-        Bean.AddMove(new DingoMove(0, "Vine Slash", "Nature", 0, 30, 100, null, null, "The target is struck with slender, whiplike vines to inflict damage."));
-        Bean.AddMove(new DingoMove(1, "Bean Throw", "Nature", 0, 40, 90, null, null, "The user picks up and throws a bean at the target to attack."));
+        Bean.AddMove(new DingoMove(0, "Vine Slash", "Grass", 0, 30, 100, null, null, "The target is struck with slender, whiplike vines to inflict damage."));
+        Bean.AddMove(new DingoMove(1, "Bean Throw", "Grass", 0, 40, 90, null, null, "The user picks up and throws a bean at the target to attack."));
         Bean.AddMove(new DingoMove(2, "Quake", "Physical", 0, 40, 100, null, null, "Causes a powerful earthquake that damages Dingos on the field."));
-        Bean.AddMove(new DingoMove(9, "Photosynthesis", "Nature", 0, 0, 100, null, null, "Absorbs sunlight to restore health."));
-        Bean.AddMove(new DingoMove(4, "Bean Bomb", "Nature", 0, 50, 100, null, null, "The user slams a barrage of beans down on the target from above."));
-        Bean.AddMove(new DingoMove(5, "Harmonic Growth", "Nature", 0, 0, 100, null, null, "The user's body grows all at once, raising the Attack and Defense stats."));
-        Bean.AddMove(new DingoMove(3, "Verdant Whirlwind", "Nature", 0, 30, 85, null, null, "The user creates a swirling vortex of leaves and wind, with a chance to hit the opponent multiple times."));
-        Bean.AddMove(new DingoMove(6, "Leaf Slash", "Nature", 0, 70, 100, null, null, "The user handles a sharp leaf like a sword and attacks by cutting its target."));
-        Bean.AddMove(new DingoMove(7, "Wild Growth", "Nature", 0, 85, 100, null, null, "The user causes wild vegetation to rapidly grow and entangle the opponent, dealing damage and potentially trapping them for a two turns."));
-        Bean.AddMove(new DingoMove(8, "Nature's Fury", "Nature", 0, 110, 85, null, null, "Calls upon the forces of nature to unleash a devastating storm."));
+        Bean.AddMove(new DingoMove(9, "Photosynthesis", "Grass", 0, 0, 100, null, null, "Absorbs sunlight to restore health."));
+        Bean.AddMove(new DingoMove(4, "Bean Bomb", "Grass", 0, 50, 100, null, null, "The user slams a barrage of beans down on the target from above."));
+        Bean.AddMove(new DingoMove(5, "Harmonic Growth", "Grass", 0, 0, 100, null, null, "The user's body grows all at once, raising the Attack and Defense stats."));
+        Bean.AddMove(new DingoMove(3, "Verdant Whirlwind", "Grass", 0, 30, 85, null, null, "The user creates a swirling vortex of leaves and wind, with a chance to hit the opponent multiple times."));
+        Bean.AddMove(new DingoMove(6, "Leaf Slash", "Grass", 0, 70, 100, null, null, "The user handles a sharp leaf like a sword and attacks by cutting its target."));
+        Bean.AddMove(new DingoMove(7, "Wild Growth", "Grass", 0, 85, 100, null, null, "The user causes wild vegetation to rapidly grow and entangle the opponent, dealing damage and potentially trapping them for a two turns."));
+        Bean.AddMove(new DingoMove(8, "Nature's Fury", "Grass", 0, 110, 85, null, null, "Calls upon the forces of nature to unleash a devastating storm."));
 
         Bird.AddMove(new DingoMove(0, "Air Strike", "Wind", 0, 30, 100, null, null, "A burst of high-speed air strikes the target with speed."));
         Bird.AddMove(new DingoMove(1, "Shadow Bind", "Dark", 0, 35, 100, null, null, "The user ensnares the opponent in tendrils of darkness, dealing damage."));
@@ -168,49 +168,49 @@ public static class DingoDatabase
         Robbersnail.AddMove(new DingoMove(8, "Sneaky Snail", "Dark", 0, 0, 100, null, null, "The user sneaks up on the opponent with stealth, surprising them."));
         Robbersnail.AddMove(new DingoMove(9, "Slimy Strike", "Abnormal", 0, 75, 100, null, null, "The user strikes the opponent with a slimy attack, causing damage."));
 
-        Rock.AddMove(new DingoMove(0, "Rock Throw", "Ground", 0, 50, 90, null, null, "The user picks up and throws a small rock at the target to attack."));
-        Rock.AddMove(new DingoMove(1, "Tectonic Slam", "Ground", 0, 120, 70, null, null, "Slams the ground with tremendous force, causing a massive shockwave."));
-        Rock.AddMove(new DingoMove(2, "Crystal Barrier", "Ground", 0, 0, 100, null, null, "Forms a barrier of hardened crystal that reflects incoming attacks."));
-        Rock.AddMove(new DingoMove(3, "Rock Slide", "Ground", 0, 75, 90, null, null, "Large boulders are hurled at the opposing Pokémon to inflict damage."));
-        Rock.AddMove(new DingoMove(4, "Quicksand Quake", "Ground", 0, 70, 95, null, null, "Triggers a sudden quake that turns the ground into quicksand, trapping the opponent."));
-        Rock.AddMove(new DingoMove(5, "Hard Shell", "Ground", 0, 0, 100, null, null, "The user hardens its body like rock, sharply raising its defense."));
-        Rock.AddMove(new DingoMove(6, "Rock Throw", "Ground", 0, 50, 90, null, null, "The user picks up and throws a small rock at the target to attack."));
-        Rock.AddMove(new DingoMove(7, "Rock Polish", "Ground", 0, 0, 100, null, null, "The user polishes its body to reduce drag, raising its Speed stat."));
-        Rock.AddMove(new DingoMove(8, "Rock Smash", "Ground", 0, 40, 100, null, null, "The user smashes into the target with its whole body, causing damage."));
+        Rock.AddMove(new DingoMove(0, "Rock Throw", "Physical", 0, 50, 90, null, null, "The user picks up and throws a small rock at the target to attack."));
+        Rock.AddMove(new DingoMove(1, "Tectonic Slam", "Physical", 0, 120, 70, null, null, "Slams the ground with tremendous force, causing a massive shockwave."));
+        Rock.AddMove(new DingoMove(2, "Crystal Barrier", "Physical", 0, 0, 100, null, null, "Forms a barrier of hardened crystal that reflects incoming attacks."));
+        Rock.AddMove(new DingoMove(3, "Rock Slide", "Physical", 0, 75, 90, null, null, "Large boulders are hurled at the opposing Pokémon to inflict damage."));
+        Rock.AddMove(new DingoMove(4, "Quicksand Quake", "Physical", 0, 70, 95, null, null, "Triggers a sudden quake that turns the ground into quicksand, trapping the opponent."));
+        Rock.AddMove(new DingoMove(5, "Hard Shell", "Physical", 0, 0, 100, null, null, "The user hardens its body like rock, sharply raising its defense."));
+        Rock.AddMove(new DingoMove(6, "Rock Throw", "Physical", 0, 50, 90, null, null, "The user picks up and throws a small rock at the target to attack."));
+        Rock.AddMove(new DingoMove(7, "Rock Polish", "Physical", 0, 0, 100, null, null, "The user polishes its body to reduce drag, raising its Speed stat."));
+        Rock.AddMove(new DingoMove(8, "Rock Smash", "Physical", 0, 40, 100, null, null, "The user smashes into the target with its whole body, causing damage."));
         Rock.AddMove(new DingoMove(9, "Molten Fissure", "Fire", 0, 100, 80, null, null, "Creates a fissure in the ground, releasing molten rock to scorch the opponent."));
 
-        Seed.AddMove(new DingoMove(0, "Seed Bomb", "Nature", 0, 80, 100, null, null, "The user slams a barrage of hard-shelled seeds down on the target from above."));
-        Seed.AddMove(new DingoMove(1, "Growth", "Nature", 0, 0, 100, null, null, "The user's body grows all at once, raising the Attack and Sp. Atk stats."));
-        Seed.AddMove(new DingoMove(2, "Leaf Blade", "Nature", 0, 90, 100, null, null, "The user handles a sharp leaf like a sword and attacks by cutting its target."));
-        Seed.AddMove(new DingoMove(3, "Synthesis", "Nature", 0, 0, 100, null, null, "The user restores its own HP. The amount of HP regained varies with the weather."));
-        Seed.AddMove(new DingoMove(4, "Solar Beam", "Nature", 0, 120, 100, null, null, "Gathers solar energy and unleashes it in a powerful beam."));
-        Seed.AddMove(new DingoMove(5, "Pollen Blast", "Nature", 0, 90, 95, null, null, "Launches a blast of pollen that inflicts damage and may induce sleep."));
-        Seed.AddMove(new DingoMove(6, "Blossom Shield", "Nature", 0, 0, 100, null, null, "Surrounds itself with a shield of blossoms, raising defense and restoring health."));
-        Seed.AddMove(new DingoMove(7, "Razor Leaf", "Nature", 0, 55, 95, null, null, "Sharp-edged leaves are launched to slash at the opposing Pokémon."));
-        Seed.AddMove(new DingoMove(8, "Grass Knot", "Nature", 0, 0, 100, null, null, "The user snares the target with grass and trips it. The heavier the target, the greater the move's power."));
-        Seed.AddMove(new DingoMove(9, "Magical Leaf", "Nature", 0, 60, 100, null, null, "The user scatters curious leaves that chase the target. This attack never misses."));
+        Seed.AddMove(new DingoMove(0, "Seed Bomb", "Grass", 0, 80, 100, null, null, "The user slams a barrage of hard-shelled seeds down on the target from above."));
+        Seed.AddMove(new DingoMove(1, "Growth", "Grass", 0, 0, 100, null, null, "The user's body grows all at once, raising the Attack and Sp. Atk stats."));
+        Seed.AddMove(new DingoMove(2, "Leaf Blade", "Grass", 0, 90, 100, null, null, "The user handles a sharp leaf like a sword and attacks by cutting its target."));
+        Seed.AddMove(new DingoMove(3, "Synthesis", "Grass", 0, 0, 100, null, null, "The user restores its own HP. The amount of HP regained varies with the weather."));
+        Seed.AddMove(new DingoMove(4, "Solar Beam", "Grass", 0, 120, 100, null, null, "Gathers solar energy and unleashes it in a powerful beam."));
+        Seed.AddMove(new DingoMove(5, "Pollen Blast", "Grass", 0, 90, 95, null, null, "Launches a blast of pollen that inflicts damage and may induce sleep."));
+        Seed.AddMove(new DingoMove(6, "Blossom Shield", "Grass", 0, 0, 100, null, null, "Surrounds itself with a shield of blossoms, raising defense and restoring health."));
+        Seed.AddMove(new DingoMove(7, "Razor Leaf", "Grass", 0, 55, 95, null, null, "Sharp-edged leaves are launched to slash at the opposing Pokémon."));
+        Seed.AddMove(new DingoMove(8, "Grass Knot", "Grass", 0, 0, 100, null, null, "The user snares the target with grass and trips it. The heavier the target, the greater the move's power."));
+        Seed.AddMove(new DingoMove(9, "Magical Leaf", "Grass", 0, 60, 100, null, null, "The user scatters curious leaves that chase the target. This attack never misses."));
 
-        Buggy.AddMove(new DingoMove(0, "Bug Swarm", "Nature", 0, 80, 100, null, null, "Summons a swarm of bugs to overwhelm the opponent."));
-        Buggy.AddMove(new DingoMove(1, "Sticky Web", "Nature", 0, 0, 100, null, null, "Weaves a sticky web that slows down and traps the opponent."));
-        Buggy.AddMove(new DingoMove(2, "Acid Spray", "Nature", 0, 70, 100, null, null, "Sprays a corrosive acid that melts through defenses."));
-        Buggy.AddMove(new DingoMove(3, "Poison Sting", "Nature", 0, 15, 100, null, null, "The user stabs the target with a poisonous stinger. This may also poison the target."));
-        Buggy.AddMove(new DingoMove(4, "Bug Bite", "Nature", 0, 60, 100, null, null, "The user bites the target. If the target is holding a Berry, the user eats it and gains its effect."));
-        Buggy.AddMove(new DingoMove(5, "String Shot", "Nature", 0, 0, 95, null, null, "The target is bound with silk blown from the user's mouth, reducing the target's Speed stat."));
-        Buggy.AddMove(new DingoMove(6, "Harden", "Nature", 0, 0, 100, null, null, "The user stiffens all the muscles in its body to raise its Defense stat."));
-        Buggy.AddMove(new DingoMove(7, "X-Scissor", "Nature", 0, 80, 100, null, null, "The user slashes at the target by crossing its scythes or claws as if they were a pair of scissors."));
-        Buggy.AddMove(new DingoMove(8, "Bug Buzz", "Nature", 0, 90, 100, null, null, "The user generates a damaging sound wave by vibration. This may also lower the target's Sp. Def stat."));
-        Buggy.AddMove(new DingoMove(9, "Bug Bite", "Nature", 0, 60, 100, null, null, "The user bites the target. If the target is holding a Berry, the user eats it and gains its effect."));
+        Buggy.AddMove(new DingoMove(0, "Bug Swarm", "Grass", 0, 80, 100, null, null, "Summons a swarm of bugs to overwhelm the opponent."));
+        Buggy.AddMove(new DingoMove(1, "Sticky Web", "Grass", 0, 0, 100, null, null, "Weaves a sticky web that slows down and traps the opponent."));
+        Buggy.AddMove(new DingoMove(2, "Acid Spray", "Grass", 0, 70, 100, null, null, "Sprays a corrosive acid that melts through defenses."));
+        Buggy.AddMove(new DingoMove(3, "Poison Sting", "Grass", 0, 15, 100, null, null, "The user stabs the target with a poisonous stinger. This may also poison the target."));
+        Buggy.AddMove(new DingoMove(4, "Bug Bite", "Grass", 0, 60, 100, null, null, "The user bites the target. If the target is holding a Berry, the user eats it and gains its effect."));
+        Buggy.AddMove(new DingoMove(5, "String Shot", "Grass", 0, 0, 95, null, null, "The target is bound with silk blown from the user's mouth, reducing the target's Speed stat."));
+        Buggy.AddMove(new DingoMove(6, "Harden", "Grass", 0, 0, 100, null, null, "The user stiffens all the muscles in its body to raise its Defense stat."));
+        Buggy.AddMove(new DingoMove(7, "X-Scissor", "Grass", 0, 80, 100, null, null, "The user slashes at the target by crossing its scythes or claws as if they were a pair of scissors."));
+        Buggy.AddMove(new DingoMove(8, "Bug Buzz", "Grass", 0, 90, 100, null, null, "The user generates a damaging sound wave by vibration. This may also lower the target's Sp. Def stat."));
+        Buggy.AddMove(new DingoMove(9, "Bug Bite", "Grass", 0, 60, 100, null, null, "The user bites the target. If the target is holding a Berry, the user eats it and gains its effect."));
 
-        DancingPlant.AddMove(new DingoMove(0, "Petal Dance", "Nature", 0, 120, 100, null, null, "Dances gracefully while scattering sharp petals that damage the opponent."));
-        DancingPlant.AddMove(new DingoMove(1, "Thorn Whip", "Nature", 0, 85, 95, null, null, "Whips the opponent with sharp thorns, causing damage and possible flinching."));
-        DancingPlant.AddMove(new DingoMove(2, "Meadow Melody", "Nature", 0, 0, 100, null, null, "Sings a soothing melody that restores health and removes status conditions."));
-        DancingPlant.AddMove(new DingoMove(3, "Sleep Powder", "Nature", 0, 0, 75, null, null, "The user scatters a big cloud of sleep-inducing dust around the target."));
-        DancingPlant.AddMove(new DingoMove(4, "Magical Leaf", "Nature", 0, 60, 100, null, null, "The user scatters curious leaves that chase the target. This attack never misses."));
-        DancingPlant.AddMove(new DingoMove(5, "Synthesis", "Nature", 0, 0, 100, null, null, "The user restores its own HP. The amount of HP regained varies with the weather."));
-        DancingPlant.AddMove(new DingoMove(6, "Pollen Blast", "Nature", 0, 90, 95, null, null, "Launches a blast of pollen that inflicts damage and may induce sleep."));
-        DancingPlant.AddMove(new DingoMove(7, "Leaf Blade", "Nature", 0, 90, 100, null, null, "The user handles a sharp leaf like a sword and attacks by cutting its target."));
-        DancingPlant.AddMove(new DingoMove(8, "Growth", "Nature", 0, 0, 100, null, null, "The user's body grows all at once, raising the Attack and Sp. Atk stats."));
-        DancingPlant.AddMove(new DingoMove(9, "Grassy Terrain", "Nature", 0, 0, 100, null, null, "The user covers the ground with grass and revitalizes all Pokémon on the ground for five turns."));
+        DancingPlant.AddMove(new DingoMove(0, "Petal Dance", "Grass", 0, 120, 100, null, null, "Dances gracefully while scattering sharp petals that damage the opponent."));
+        DancingPlant.AddMove(new DingoMove(1, "Thorn Whip", "Grass", 0, 85, 95, null, null, "Whips the opponent with sharp thorns, causing damage and possible flinching."));
+        DancingPlant.AddMove(new DingoMove(2, "Meadow Melody", "Grass", 0, 0, 100, null, null, "Sings a soothing melody that restores health and removes status conditions."));
+        DancingPlant.AddMove(new DingoMove(3, "Sleep Powder", "Grass", 0, 0, 75, null, null, "The user scatters a big cloud of sleep-inducing dust around the target."));
+        DancingPlant.AddMove(new DingoMove(4, "Magical Leaf", "Grass", 0, 60, 100, null, null, "The user scatters curious leaves that chase the target. This attack never misses."));
+        DancingPlant.AddMove(new DingoMove(5, "Synthesis", "Grass", 0, 0, 100, null, null, "The user restores its own HP. The amount of HP regained varies with the weather."));
+        DancingPlant.AddMove(new DingoMove(6, "Pollen Blast", "Grass", 0, 90, 95, null, null, "Launches a blast of pollen that inflicts damage and may induce sleep."));
+        DancingPlant.AddMove(new DingoMove(7, "Leaf Blade", "Grass", 0, 90, 100, null, null, "The user handles a sharp leaf like a sword and attacks by cutting its target."));
+        DancingPlant.AddMove(new DingoMove(8, "Growth", "Grass", 0, 0, 100, null, null, "The user's body grows all at once, raising the Attack and Sp. Atk stats."));
+        DancingPlant.AddMove(new DingoMove(9, "Grassy Terrain", "Grass", 0, 0, 100, null, null, "The user covers the ground with grass and revitalizes all Pokémon on the ground for five turns."));
 
         Shingy.AddMove(new DingoMove(0, "Shadow Ball", "Dark", 0, 80, 100, null, null, "The user hurls a shadowy blob at the target. This may also lower the target's Special Defense stat."));
         Shingy.AddMove(new DingoMove(1, "Sucker Punch", "Dark", 0, 70, 100, null, null, "This move enables the user to attack first. This move fails if the target is not readying an attack."));
@@ -234,38 +234,38 @@ public static class DingoDatabase
         SadCloud.AddMove(new DingoMove(8, "Whirlwind", "Wind", 0, 0, 100, null, null, "The target is blown away, to be replaced by another Pokémon in its party."));
         SadCloud.AddMove(new DingoMove(9, "Defog", "Wind", 0, 0, 100, null, null, "Removes entry hazards, light screens, and reflects on both sides of the field."));
 
-        Worm.AddMove(new DingoMove(0, "Tunnel Strike", "Ground", 0, 70, 100, null, null, "Emerges from underground to deliver a surprise strike to the opponent."));
-        Worm.AddMove(new DingoMove(1, "Sand Tomb", "Ground", 0, 35, 85, null, null, "Traps the target inside a harshly raging sandstorm for four to five turns."));
-        Worm.AddMove(new DingoMove(2, "Earthquake", "Ground", 0, 100, 100, null, null, "Causes a powerful earthquake that damages all Pokémon on the field."));
-        Worm.AddMove(new DingoMove(3, "Mud-Slap", "Ground", 0, 20, 100, null, null, "The user hurls mud in the target's face to inflict damage and lower its accuracy."));
-        Worm.AddMove(new DingoMove(4, "Dig", "Ground", 0, 80, 100, null, null, "The user burrows underground, then attacks on the next turn."));
-        Worm.AddMove(new DingoMove(5, "Bulldoze", "Ground", 0, 60, 100, null, null, "The user strikes everything around it by stomping down on the ground. This lowers the Speed stat of those hit."));
-        Worm.AddMove(new DingoMove(6, "Sand Attack", "Ground", 0, 0, 100, null, null, "Sand is hurled in the target's face, reducing its accuracy."));
-        Worm.AddMove(new DingoMove(7, "Spikes", "Ground", 0, 0, 100, null, null, "The user lays a trap of spikes at the opposing team's feet. The trap hurts Pokémon that switch into battle."));
-        Worm.AddMove(new DingoMove(8, "Mud Bomb", "Ground", 0, 65, 85, null, null, "The user launches a hard-packed mud ball to attack. This may also lower the target's accuracy."));
-        Worm.AddMove(new DingoMove(9, "Sandstorm", "Ground", 0, 0, 100, null, null, "Whips up a sandstorm that rages for four to five turns."));
+        Worm.AddMove(new DingoMove(0, "Tunnel Strike", "Physical", 0, 70, 100, null, null, "Emerges from underground to deliver a surprise strike to the opponent."));
+        Worm.AddMove(new DingoMove(1, "Sand Tomb", "Physical", 0, 35, 85, null, null, "Traps the target inside a harshly raging sandstorm for four to five turns."));
+        Worm.AddMove(new DingoMove(2, "Earthquake", "Physical", 0, 100, 100, null, null, "Causes a powerful earthquake that damages all Pokémon on the field."));
+        Worm.AddMove(new DingoMove(3, "Mud-Slap", "Physical", 0, 20, 100, null, null, "The user hurls mud in the target's face to inflict damage and lower its accuracy."));
+        Worm.AddMove(new DingoMove(4, "Dig", "Physical", 0, 80, 100, null, null, "The user burrows underground, then attacks on the next turn."));
+        Worm.AddMove(new DingoMove(5, "Bulldoze", "Physical", 0, 60, 100, null, null, "The user strikes everything around it by stomping down on the ground. This lowers the Speed stat of those hit."));
+        Worm.AddMove(new DingoMove(6, "Sand Attack", "Physical", 0, 0, 100, null, null, "Sand is hurled in the target's face, reducing its accuracy."));
+        Worm.AddMove(new DingoMove(7, "Spikes", "Physical", 0, 0, 100, null, null, "The user lays a trap of spikes at the opposing team's feet. The trap hurts Pokémon that switch into battle."));
+        Worm.AddMove(new DingoMove(8, "Mud Bomb", "Physical", 0, 65, 85, null, null, "The user launches a hard-packed mud ball to attack. This may also lower the target's accuracy."));
+        Worm.AddMove(new DingoMove(9, "Sandstorm", "Physical", 0, 0, 100, null, null, "Whips up a sandstorm that rages for four to five turns."));
 
-        Pebble.AddMove(new DingoMove(0, "Stone Barrage", "Ground", 0, 85, 90, null, null, "Launches a barrage of stones at the opponent with incredible speed."));
+        Pebble.AddMove(new DingoMove(0, "Stone Barrage", "Physical", 0, 85, 90, null, null, "Launches a barrage of stones at the opponent with incredible speed."));
         Pebble.AddMove(new DingoMove(1, "Dark Gravel", "Dark", 0, 80, 100, null, null, "Hurls sharp, darkened gravel at the opponent to inflict damage and lower accuracy."));
-        Pebble.AddMove(new DingoMove(2, "Shatter Shield", "Ground", 0, 0, 100, null, null, "Forms a shield of hardened rock that reduces incoming damage and reflects certain moves."));
+        Pebble.AddMove(new DingoMove(2, "Shatter Shield", "Physical", 0, 0, 100, null, null, "Forms a shield of hardened rock that reduces incoming damage and reflects certain moves."));
         Pebble.AddMove(new DingoMove(3, "Shadow Strike", "Dark", 0, 70, 100, null, null, "The user strikes the target with a shadowy force, sometimes causing the target to flinch."));
         Pebble.AddMove(new DingoMove(4, "Demon Wing Slash", "Dark", 0, 85, 90, null, null, "The user slashes the target with its demonic wings, leaving behind dark energy that may cause additional damage over time."));
         Pebble.AddMove(new DingoMove(5, "Nightfall", "Dark", 0, 0, 100, null, null, "The user shrouds the battlefield in darkness, reducing the accuracy of all non-Dark moves."));
-        Pebble.AddMove(new DingoMove(6, "Rock Polish", "Ground", 0, 0, 100, null, null, "The user polishes its body to reduce drag, raising its Speed stat."));
-        Pebble.AddMove(new DingoMove(7, "Stone Edge", "Ground", 0, 100, 80, null, null, "Hurls sharp stones at the opponent with incredible precision."));
-        Pebble.AddMove(new DingoMove(8, "Tectonic Slam", "Ground", 0, 120, 70, null, null, "Slams the ground with tremendous force, causing a massive shockwave."));
-        Pebble.AddMove(new DingoMove(9, "Crystal Barrier", "Ground", 0, 0, 100, null, null, "Creates a barrier of crystal that reflects incoming attacks."));
+        Pebble.AddMove(new DingoMove(6, "Rock Polish", "Physical", 0, 0, 100, null, null, "The user polishes its body to reduce drag, raising its Speed stat."));
+        Pebble.AddMove(new DingoMove(7, "Stone Edge", "Physical", 0, 100, 80, null, null, "Hurls sharp stones at the opponent with incredible precision."));
+        Pebble.AddMove(new DingoMove(8, "Tectonic Slam", "Physical", 0, 120, 70, null, null, "Slams the ground with tremendous force, causing a massive shockwave."));
+        Pebble.AddMove(new DingoMove(9, "Crystal Barrier", "Physical", 0, 0, 100, null, null, "Creates a barrier of crystal that reflects incoming attacks."));
 
-        Ghost.AddMove(new DingoMove(0, "Ethereal Slash", "Spirit", 0, 70, 100, null, null, "The user slashes the target with ethereal energy. Critical hits land more easily."));
-        Ghost.AddMove(new DingoMove(1, "Spectral Illusion", "Spirit", 0, 0, 100, null, null, "The user creates a frightening illusion to confuse the target. It inflicts damage matching the user's level."));
-        Ghost.AddMove(new DingoMove(2, "Haunting Hex", "Spirit", 0, 65, 100, null, null, "The user curses the target with a haunting hex. If the target is affected by a status condition, this move has double power."));
-        Ghost.AddMove(new DingoMove(3, "Wraithfire", "Spirit", 0, 0, 85, null, null, "The user unleashes a sinister, spectral flame at the target to inflict a burn."));
-        Ghost.AddMove(new DingoMove(4, "Phantom Bolt", "Spirit", 0, 80, 100, null, null, "The user hurls a ghostly bolt of energy at the target. This may also lower the target's Spirit Defense stat."));
-        Ghost.AddMove(new DingoMove(5, "Spirit Curse", "Spirit", 0, 0, 100, null, null, "A move that works differently for the Spirit type than for all other types."));
-        Ghost.AddMove(new DingoMove(6, "Nightmare Realm", "Spirit", 0, 0, 100, null, null, "A sleeping target is tormented by visions from the nightmare realm, inflicting damage every turn."));
-        Ghost.AddMove(new DingoMove(7, "Shadow Step", "Spirit", 0, 40, 100, null, null, "The user vanishes into the shadows and attacks the target from behind. This move always goes first."));
-        Ghost.AddMove(new DingoMove(8, "Soul Strike", "Spirit", 0, 60, 100, null, null, "The user delivers a powerful strike infused with spiritual energy. This attack never misses."));
-        Ghost.AddMove(new DingoMove(9, "Soul Drain", "Spirit", 0, 0, 100, null, null, "The user drains the target's spiritual energy, cutting 4 PP from the last move used by the target."));
+        Ghost.AddMove(new DingoMove(0, "Ethereal Slash", "Dark", 0, 70, 100, null, null, "The user slashes the target with ethereal energy. Critical hits land more easily."));
+        Ghost.AddMove(new DingoMove(1, "Spectral Illusion", "Dark", 0, 0, 100, null, null, "The user creates a frightening illusion to confuse the target. It inflicts damage matching the user's level."));
+        Ghost.AddMove(new DingoMove(2, "Haunting Hex", "Dark", 0, 65, 100, null, null, "The user curses the target with a haunting hex. If the target is affected by a status condition, this move has double power."));
+        Ghost.AddMove(new DingoMove(3, "Wraithfire", "Dark", 0, 0, 85, null, null, "The user unleashes a sinister, spectral flame at the target to inflict a burn."));
+        Ghost.AddMove(new DingoMove(4, "Phantom Bolt", "Dark", 0, 80, 100, null, null, "The user hurls a ghostly bolt of energy at the target. This may also lower the target's Defense stat."));
+        Ghost.AddMove(new DingoMove(5, "Dark Curse", "Dark", 0, 0, 100, null, null, "A move that works differently for the Dark type than for all other types."));
+        Ghost.AddMove(new DingoMove(6, "Nightmare Realm", "Dark", 0, 0, 100, null, null, "A sleeping target is tormented by visions from the nightmare realm, inflicting damage every turn."));
+        Ghost.AddMove(new DingoMove(7, "Shadow Step", "Dark", 0, 40, 100, null, null, "The user vanishes into the shadows and attacks the target from behind. This move always goes first."));
+        Ghost.AddMove(new DingoMove(8, "Soul Strike", "Dark", 0, 60, 100, null, null, "The user delivers a powerful strike infused with spiritual energy. This attack never misses."));
+        Ghost.AddMove(new DingoMove(9, "Soul Drain", "Dark", 0, 0, 100, null, null, "The user drains the target's spiritual energy, cutting 4 PP from the last move used by the target."));
 
         Bulb.AddMove(new DingoMove(0, "Dark Surge", "Dark", 0, 80, 100, null, null, "Unleashes a surge of dark energy to damage the opponent."));
         Bulb.AddMove(new DingoMove(1, "Shockwave", "Lightning", 0, 70, 100, null, null, "Emits a powerful shockwave of electricity to paralyze the opponent."));
@@ -279,16 +279,16 @@ public static class DingoDatabase
         Bulb.AddMove(new DingoMove(9, "Volt Switch", "Lightning", 0, 70, 100, null, null, "Attacks the opponent with electricity before switching out."));
 
         // Moves for Crick
-        Crick.AddMove(new DingoMove(0, "Bug Bite", "Nature", 0, 60, 100, null, null, "The user bites the target. If the target is holding a Berry, the user eats it and gains its effect."));
-        Crick.AddMove(new DingoMove(1, "String Shot", "Nature", 0, 0, 95, null, null, "The opposing Pokémon are bound with silk blown from the user's mouth that harshly lowers the Speed stat."));
-        Crick.AddMove(new DingoMove(2, "Leech Life", "Nature", 0, 80, 100, null, null, "The user drains the target's blood. The user's HP is restored by half the damage taken by the target."));
-        Crick.AddMove(new DingoMove(3, "Poison Sting", "Nature", 0, 15, 100, null, null, "The user stabs the target with a poisonous stinger. This may also poison the target."));
-        Crick.AddMove(new DingoMove(4, "Bug Buzz", "Nature", 0, 90, 100, null, null, "The user generates a damaging sound wave by vibration. This may also lower the target's Special Defense stat."));
-        Crick.AddMove(new DingoMove(5, "Sticky Web", "Nature", 0, 0, 100, null, null, "The user weaves a sticky net around the opposing team, which lowers their Speed stats upon switching into battle."));
-        Crick.AddMove(new DingoMove(6, "Pin Missile", "Nature", 0, 25, 95, null, null, "Sharp spikes are shot at the target in rapid succession. They hit two to five times in a row."));
-        Crick.AddMove(new DingoMove(7, "X-Scissor", "Nature", 0, 80, 100, null, null, "The user slashes at the target by crossing its scythes or claws as if they were a pair of scissors."));
-        Crick.AddMove(new DingoMove(8, "Infestation", "Nature", 0, 20, 100, null, null, "The target becomes trapped within a maelstrom of energy, damaging it every turn for four to five turns."));
-        Crick.AddMove(new DingoMove(9, "Quiver Dance", "Nature", 0, 0, 100, null, null, "The user lightly performs a beautiful, mystic dance. This boosts the user's Special Attack, Special Defense, and Speed stats."));
+        Crick.AddMove(new DingoMove(0, "Bug Bite", "Grass", 0, 60, 100, null, null, "The user bites the target. If the target is holding a Berry, the user eats it and gains its effect."));
+        Crick.AddMove(new DingoMove(1, "String Shot", "Grass", 0, 0, 95, null, null, "The opposing Pokémon are bound with silk blown from the user's mouth that harshly lowers the Speed stat."));
+        Crick.AddMove(new DingoMove(2, "Leech Life", "Grass", 0, 80, 100, null, null, "The user drains the target's blood. The user's HP is restored by half the damage taken by the target."));
+        Crick.AddMove(new DingoMove(3, "Poison Sting", "Grass", 0, 15, 100, null, null, "The user stabs the target with a poisonous stinger. This may also poison the target."));
+        Crick.AddMove(new DingoMove(4, "Bug Buzz", "Grass", 0, 90, 100, null, null, "The user generates a damaging sound wave by vibration. This may also lower the target's Special Defense stat."));
+        Crick.AddMove(new DingoMove(5, "Sticky Web", "Grass", 0, 0, 100, null, null, "The user weaves a sticky net around the opposing team, which lowers their Speed stats upon switching into battle."));
+        Crick.AddMove(new DingoMove(6, "Pin Missile", "Grass", 0, 25, 95, null, null, "Sharp spikes are shot at the target in rapid succession. They hit two to five times in a row."));
+        Crick.AddMove(new DingoMove(7, "X-Scissor", "Grass", 0, 80, 100, null, null, "The user slashes at the target by crossing its scythes or claws as if they were a pair of scissors."));
+        Crick.AddMove(new DingoMove(8, "Infestation", "Grass", 0, 20, 100, null, null, "The target becomes trapped within a maelstrom of energy, damaging it every turn for four to five turns."));
+        Crick.AddMove(new DingoMove(9, "Quiver Dance", "Grass", 0, 0, 100, null, null, "The user lightly performs a beautiful, mystic dance. This boosts the user's Special Attack, Special Defense, and Speed stats."));
 
         // Moves for Firefly
         Firefly.AddMove(new DingoMove(0, "Ember", "Fire", 0, 40, 100, null, null, "The target is attacked with small flames. This may also leave the target with a burn."));
@@ -374,16 +374,16 @@ public static class DingoDatabase
         TrustFundBaby.AddMove(new DingoMove(8, "Tax Haven", "Finance", 0, 0, 100, null, null, "Creates a financial shelter, reducing the damage it takes from the opponent's next attack."));
         TrustFundBaby.AddMove(new DingoMove(9, "Golden Parachute", "Finance", 0, 0, 100, null, null, "Secures a safety net, guaranteeing it won't faint from the next damaging move it receives."));
 
-        Plant.AddMove(new DingoMove(0, "Photosynthesis Beam", "Nature", 0, 90, 100, null, null, "Emits a beam of pure sunlight, nourishing itself and damaging the opponent."));
-        Plant.AddMove(new DingoMove(1, "Vine Whip Wrap", "Nature", 0, 80, 95, null, null, "Wraps the opponent tightly with supple vines, restraining them and dealing damage over time."));
-        Plant.AddMove(new DingoMove(2, "Rooted Resilience", "Nature", 0, 0, 100, null, null, "Imbues itself with the strength of the earth, increasing its Defense and Special Defense stats for a few turns."));
-        Plant.AddMove(new DingoMove(3, "Pollen Burst", "Nature", 0, 70, 100, null, null, "Bursts open with a cloud of pollen, causing irritation and damaging the opponent."));
-        Plant.AddMove(new DingoMove(4, "Blossom Shield", "Nature", 0, 0, 100, null, null, "Surrounds itself with a shield of vibrant blossoms, reducing incoming damage from physical attacks."));
-        Plant.AddMove(new DingoMove(5, "Fungal Spores", "Nature", 0, 75, 90, null, null, "Scatters spores that infect the opponent, causing gradual damage and reducing their Speed stat."));
-        Plant.AddMove(new DingoMove(6, "Thorned Trap", "Nature", 0, 85, 100, null, null, "Sets a hidden trap of sharp thorns, damaging the opponent when they attempt to attack."));
-        Plant.AddMove(new DingoMove(7, "Canopy Cover", "Nature", 0, 0, 100, null, null, "Creates a protective canopy of leaves, reducing incoming damage from special attacks."));
-        Plant.AddMove(new DingoMove(8, "Dewdrop Defense", "Nature", 0, 0, 100, null, null, "Covers itself in a refreshing dew, raising its evasion and reducing the accuracy of the opponent's next move."));
-        Plant.AddMove(new DingoMove(9, "Seedling Surge", "Nature", 0, 95, 100, null, null, "Channels the energy of nature into a powerful surge of growth, dealing massive damage to the opponent."));
+        Plant.AddMove(new DingoMove(0, "Photosynthesis Beam", "Grass", 0, 90, 100, null, null, "Emits a beam of pure sunlight, nourishing itself and damaging the opponent."));
+        Plant.AddMove(new DingoMove(1, "Vine Whip Wrap", "Grass", 0, 80, 95, null, null, "Wraps the opponent tightly with supple vines, restraining them and dealing damage over time."));
+        Plant.AddMove(new DingoMove(2, "Rooted Resilience", "Grass", 0, 0, 100, null, null, "Imbues itself with the strength of the earth, increasing its Defense and Special Defense stats for a few turns."));
+        Plant.AddMove(new DingoMove(3, "Pollen Burst", "Grass", 0, 70, 100, null, null, "Bursts open with a cloud of pollen, causing irritation and damaging the opponent."));
+        Plant.AddMove(new DingoMove(4, "Blossom Shield", "Grass", 0, 0, 100, null, null, "Surrounds itself with a shield of vibrant blossoms, reducing incoming damage from physical attacks."));
+        Plant.AddMove(new DingoMove(5, "Fungal Spores", "Grass", 0, 75, 90, null, null, "Scatters spores that infect the opponent, causing gradual damage and reducing their Speed stat."));
+        Plant.AddMove(new DingoMove(6, "Thorned Trap", "Grass", 0, 85, 100, null, null, "Sets a hidden trap of sharp thorns, damaging the opponent when they attempt to attack."));
+        Plant.AddMove(new DingoMove(7, "Canopy Cover", "Grass", 0, 0, 100, null, null, "Creates a protective canopy of leaves, reducing incoming damage from special attacks."));
+        Plant.AddMove(new DingoMove(8, "Dewdrop Defense", "Grass", 0, 0, 100, null, null, "Covers itself in a refreshing dew, raising its evasion and reducing the accuracy of the opponent's next move."));
+        Plant.AddMove(new DingoMove(9, "Seedling Surge", "Grass", 0, 95, 100, null, null, "Channels the energy of nature into a powerful surge of growth, dealing massive damage to the opponent."));
 
         Waterslime.AddMove(new DingoMove(0, "Water Cannon", "Water", 0, 30, 100, null, null, "The target is blasted with a forceful shot of water."));
         Waterslime.AddMove(new DingoMove(1, "Hydro Slice", "Water", 0, 40, 90, null, null, ""));
@@ -439,16 +439,16 @@ public static class DingoDatabase
         Doggofire.AddMove(new DingoMove(8, "Overheat", "Fire", 0, 130, 90, null, null, "Powerful fire attack, but harshly lowers the user's Sp. Atk."));
         Doggofire.AddMove(new DingoMove(9, "Blast Burn", "Fire", 0, 150, 90, null, null, "A massive explosion. The user must rest next turn."));
 
-        Doggoelectric.AddMove(new DingoMove(0, "Thunder Shock", "Electric", 0, 40, 100, null, null, "A jolt of electricity that may paralyze the target."));
-        Doggoelectric.AddMove(new DingoMove(1, "Spark", "Electric", 0, 65, 100, null, null, "An electric charge that may paralyze the target."));
-        Doggoelectric.AddMove(new DingoMove(2, "Thunder Fang", "Electric", 0, 65, 95, null, null, "Bites with electrified fangs. May paralyze or flinch."));
-        Doggoelectric.AddMove(new DingoMove(3, "Discharge", "Electric", 0, 80, 100, null, null, "A shockwave that may paralyze all nearby foes."));
-        Doggoelectric.AddMove(new DingoMove(4, "Thunderbolt", "Electric", 0, 90, 100, null, null, "A strong electric blast. May paralyze the target."));
-        Doggoelectric.AddMove(new DingoMove(5, "Volt Switch", "Electric", 0, 70, 100, null, null, "Attacks, then switches out to another Dingo."));
-        Doggoelectric.AddMove(new DingoMove(6, "Wild Charge", "Electric", 0, 90, 100, null, null, "A reckless electric tackle. The user also takes recoil."));
-        Doggoelectric.AddMove(new DingoMove(7, "Thunder Wave", "Electric", 0, 0, 90, null, null, "Paralyzes the target, reducing its Speed."));
-        Doggoelectric.AddMove(new DingoMove(8, "Zap Cannon", "Electric", 0, 120, 50, null, null, "A powerful electric blast that always paralyzes."));
-        Doggoelectric.AddMove(new DingoMove(9, "Thunder", "Electric", 0, 110, 70, null, null, "A devastating thunderbolt. Hits even in rain."));
+        Doggoelectric.AddMove(new DingoMove(0, "Thunder Shock", "Lightning", 0, 40, 100, null, null, "A jolt of electricity that may paralyze the target."));
+        Doggoelectric.AddMove(new DingoMove(1, "Spark", "Lightning", 0, 65, 100, null, null, "An electric charge that may paralyze the target."));
+        Doggoelectric.AddMove(new DingoMove(2, "Thunder Fang", "Lightning", 0, 65, 95, null, null, "Bites with electrified fangs. May paralyze or flinch."));
+        Doggoelectric.AddMove(new DingoMove(3, "Discharge", "Lightning", 0, 80, 100, null, null, "A shockwave that may paralyze all nearby foes."));
+        Doggoelectric.AddMove(new DingoMove(4, "Thunderbolt", "Lightning", 0, 90, 100, null, null, "A strong electric blast. May paralyze the target."));
+        Doggoelectric.AddMove(new DingoMove(5, "Volt Switch", "Lightning", 0, 70, 100, null, null, "Attacks, then switches out to another Dingo."));
+        Doggoelectric.AddMove(new DingoMove(6, "Wild Charge", "Lightning", 0, 90, 100, null, null, "A reckless electric tackle. The user also takes recoil."));
+        Doggoelectric.AddMove(new DingoMove(7, "Thunder Wave", "Lightning", 0, 0, 90, null, null, "Paralyzes the target, reducing its Speed."));
+        Doggoelectric.AddMove(new DingoMove(8, "Zap Cannon", "Lightning", 0, 120, 50, null, null, "A powerful electric blast that always paralyzes."));
+        Doggoelectric.AddMove(new DingoMove(9, "Thunder", "Lightning", 0, 110, 70, null, null, "A devastating thunderbolt. Hits even in rain."));
 
         Doggoice.AddMove(new DingoMove(0, "Powder Snow", "Ice", 0, 40, 100, null, null, "Blows a chilling snowstorm. May freeze the target."));
         Doggoice.AddMove(new DingoMove(1, "Ice Shard", "Ice", 0, 40, 100, null, null, "Flash-freezes ice chunks to hurl. Always goes first."));
@@ -461,16 +461,16 @@ public static class DingoDatabase
         Doggoice.AddMove(new DingoMove(8, "Icicle Crash", "Ice", 0, 85, 90, null, null, "Drops large icicles. May cause flinching."));
         Doggoice.AddMove(new DingoMove(9, "Sheer Cold", "Ice", 0, 0, 30, null, null, "A one-hit KO move if it hits."));
 
-        Doggograss.AddMove(new DingoMove(0, "Vine Whip", "Nature", 0, 45, 100, null, null, "Strikes the target with slender vines."));
-        Doggograss.AddMove(new DingoMove(1, "Razor Leaf", "Nature", 0, 55, 95, null, null, "Sharp-edged leaves slash the target. High crit ratio."));
-        Doggograss.AddMove(new DingoMove(2, "Seed Bomb", "Nature", 0, 80, 100, null, null, "Slams a barrage of seeds down on the target."));
-        Doggograss.AddMove(new DingoMove(3, "Synthesis", "Nature", 0, 0, 100, null, null, "Restores HP. Effectiveness varies with weather."));
-        Doggograss.AddMove(new DingoMove(4, "Energy Ball", "Nature", 0, 90, 100, null, null, "A ball of nature energy. May lower Sp. Def."));
-        Doggograss.AddMove(new DingoMove(5, "Leaf Blade", "Nature", 0, 90, 100, null, null, "A sharp leaf slash. High crit ratio."));
-        Doggograss.AddMove(new DingoMove(6, "Leech Seed", "Nature", 0, 0, 90, null, null, "Plants seeds that drain HP from the target."));
-        Doggograss.AddMove(new DingoMove(7, "Wood Hammer", "Nature", 0, 120, 100, null, null, "A powerful tackle. The user also takes recoil."));
-        Doggograss.AddMove(new DingoMove(8, "Solar Beam", "Nature", 0, 120, 100, null, null, "Charges sunlight, then fires a beam next turn."));
-        Doggograss.AddMove(new DingoMove(9, "Petal Dance", "Nature", 0, 120, 100, null, null, "A frenzied dance. Confuses the user afterward."));
+        Doggograss.AddMove(new DingoMove(0, "Vine Whip", "Grass", 0, 45, 100, null, null, "Strikes the target with slender vines."));
+        Doggograss.AddMove(new DingoMove(1, "Razor Leaf", "Grass", 0, 55, 95, null, null, "Sharp-edged leaves slash the target. High crit ratio."));
+        Doggograss.AddMove(new DingoMove(2, "Seed Bomb", "Grass", 0, 80, 100, null, null, "Slams a barrage of seeds down on the target."));
+        Doggograss.AddMove(new DingoMove(3, "Synthesis", "Grass", 0, 0, 100, null, null, "Restores HP. Effectiveness varies with weather."));
+        Doggograss.AddMove(new DingoMove(4, "Energy Ball", "Grass", 0, 90, 100, null, null, "A ball of Grass energy. May lower Sp. Def."));
+        Doggograss.AddMove(new DingoMove(5, "Leaf Blade", "Grass", 0, 90, 100, null, null, "A sharp leaf slash. High crit ratio."));
+        Doggograss.AddMove(new DingoMove(6, "Leech Seed", "Grass", 0, 0, 90, null, null, "Plants seeds that drain HP from the target."));
+        Doggograss.AddMove(new DingoMove(7, "Wood Hammer", "Grass", 0, 120, 100, null, null, "A powerful tackle. The user also takes recoil."));
+        Doggograss.AddMove(new DingoMove(8, "Solar Beam", "Grass", 0, 120, 100, null, null, "Charges sunlight, then fires a beam next turn."));
+        Doggograss.AddMove(new DingoMove(9, "Petal Dance", "Grass", 0, 120, 100, null, null, "A frenzied dance. Confuses the user afterward."));
 
         Doggowater.AddMove(new DingoMove(0, "Water Gun", "Water", 0, 40, 100, null, null, "Blasts the target with a forceful shot of water."));
         Doggowater.AddMove(new DingoMove(1, "Bubble Beam", "Water", 0, 65, 100, null, null, "A spray of bubbles. May lower Speed."));
@@ -488,10 +488,16 @@ public static class DingoDatabase
         BingoStar2.AddMove(new DingoMove(2, "Eclipse", "Light", 0, 0, 100, null, null, "Conjures a temporary eclipse that shrouds the battlefield, increases light attack moves."));
         BingoStar2.AddMove(new DingoMove(3, "Cosmic Shield", "Light", 0, 0, 100, null, null, "Creates a protective shield using cosmic energy, raising defense sharply."));
 
-        Marshmellow2.AddMove(new DingoMove(0, "Sugar Slam", "Abnormal", 0, 35, 100, null, null, "The user slams into the opponent with sweet force, causing damage."));
-        Marshmellow2.AddMove(new DingoMove(1, "Sweet Shield", "Abnormal", 0, 0, 100, null, null, "The user forms a shield of sweetness, raising defense sharply."));
-        Marshmellow2.AddMove(new DingoMove(2, "Toasted Toss", "Fire", 0, 20, 100, null, null, "The user throws a toasted marshmallow at the opponent, dealing damage."));
-        Marshmellow2.AddMove(new DingoMove(3, "Gooey Glare", "Abnormal", 0, 0, 100, null, null, "The user gives the opponent a gooey glare, lowering their attack and defense."));
+        Marshmellow2.AddMove(new DingoMove(0, "Squishy Frenzy", "Abnormal", 0, 35, 100, null, null, "The user slams into the opponent with sweet force, causing damage."));
+        Marshmellow2.AddMove(new DingoMove(1, "Squishy Frenzy", "Abnormal", 0, 0, 100, null, null, "The user forms a shield of sweetness, raising defense sharply."));
+        Marshmellow2.AddMove(new DingoMove(2, "Squishy Frenzy", "Fire", 0, 20, 100, null, null, "The user throws a toasted marshmallow at the opponent, dealing damage."));
+        Marshmellow2.AddMove(new DingoMove(3, "Squishy Frenzy", "Abnormal", 0, 0, 100, null, null, "The user gives the opponent a gooey glare, lowering their attack and defense."));
+        Marshmellow2.AddMove(new DingoMove(4, "Squishy Frenzy", "Abnormal", 0, 35, 100, null, null, "The user slams into the opponent with sweet force, causing damage."));
+        Marshmellow2.AddMove(new DingoMove(5, "Squishy Frenzy", "Abnormal", 0, 0, 100, null, null, "The user forms a shield of sweetness, raising defense sharply."));
+        Marshmellow2.AddMove(new DingoMove(6, "Squishy Frenzy", "Fire", 0, 20, 100, null, null, "The user throws a toasted marshmallow at the opponent, dealing damage."));
+        Marshmellow2.AddMove(new DingoMove(7, "Squishy Frenzy", "Abnormal", 0, 0, 100, null, null, "The user gives the opponent a gooey glare, lowering their attack and defense."));
+        Marshmellow2.AddMove(new DingoMove(8, "Squishy Frenzy", "Abnormal", 0, 35, 100, null, null, "The user slams into the opponent with sweet force, causing damage."));
+        Marshmellow2.AddMove(new DingoMove(9, "Squishy Frenzy", "Abnormal", 0, 0, 100, null, null, "The user forms a shield of sweetness, raising defense sharply."));
     }
 
     private static List<EnvironmentEffect> allEnvironemntEffects = new List<EnvironmentEffect>{
@@ -583,7 +589,13 @@ public static class DingoDatabase
         Waterslime,
         Ducky,
         Forqwa,
-        Flame
+        Flame,
+        Doggoelectric,
+        Doggofire,
+        Doggoice,
+        Doggograss,
+        Doggowater
+
         // Add more Dingos as needed
     };
     public static List<DingoID> newDingos = new List<DingoID>
@@ -602,7 +614,7 @@ public static class DingoDatabase
     };
     public static List<DingoID> marshmellow = new List<DingoID>
     {
-        Marshmellow
+        Marshmellow2
     };
     public static List<DingoID> agentBingo = new List<DingoID>
     {
