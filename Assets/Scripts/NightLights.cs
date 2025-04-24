@@ -22,6 +22,14 @@ public class NightLights : MonoBehaviour
     public SpriteRenderer[] skyscraperlower3;
 
     public Sprite[] sprites;
+    public static NightLights Instance;
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
+    private Color light = new Color(255, 255, 129 / 255f, 1);
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
     public void SwapSprite(SpriteRenderer[] houses, int id)
     {
         Sprite newSprite = sprites[id];
@@ -160,7 +168,7 @@ public class NightLights : MonoBehaviour
     {
         foreach (SpriteRenderer house in houses)
         {
-            house.color = new Color(amount, amount, amount, 1);
+            house.color = new Color(amount, amount, amount, house.color.a);
         }
     }
     public void ChangeColor(float amount)
@@ -186,6 +194,9 @@ public class NightLights : MonoBehaviour
         foreach (Transform child in parentRenderer.transform)
         {
             child.gameObject.SetActive(true);
+            SpriteRenderer sprite = child.GetComponent<SpriteRenderer>();
+            Color color = new Color(light.r, light.g, light.b, sprite.color.a);
+            sprite.color = color;
         }
     }
 

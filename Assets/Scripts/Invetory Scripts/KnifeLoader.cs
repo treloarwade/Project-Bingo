@@ -19,13 +19,6 @@ public class KnifeLoader : MonoBehaviour
         originalPosition = Knife.transform.localPosition;
         originalRotation = Knife.transform.rotation;
     }
-    // Toggle between equipping and unequipping the knife
-    public void ToggleKnife(int ID)
-    {
-        EquipKnife(ID);
-        FoodScript foodScript = FindObjectOfType<FoodScript>();
-        foodScript.UnequipFood();
-    }
     public void Inspect()
     {
         StartCoroutine(InspectAnimation());
@@ -73,32 +66,33 @@ public class KnifeLoader : MonoBehaviour
         }
         yield return null;
     }
-    private void EquipKnife(int ID)
+    public void EquipKnife(int ID)
     {
-        if (Knife.activeSelf)
+        SpriteRenderer renderer = Knife.GetComponent<SpriteRenderer>();
+        if (renderer.enabled)
         {
             if (currentlyEquipped == ID)
             {
                 movement.DecreaseRunSpeed();
-                Knife.SetActive(false);
+                renderer.enabled = false;
             }
         }
         else
         {
-            Knife.SetActive(true);
+            renderer.enabled = true;
             movement.IncreaseRunSpeed();
         }
-        SpriteRenderer renderer = Knife.GetComponent<SpriteRenderer>();
         renderer.sprite = Color[ID];
         currentlyEquipped = ID;
     }
 
     public void UnequipKnife()
     {
-        if (Knife.activeSelf)
+        SpriteRenderer renderer = Knife.GetComponent<SpriteRenderer>();
+        if (renderer.enabled)
         {
             movement.DecreaseRunSpeed();
-            Knife.SetActive(false);
+            renderer.enabled = false;
         }
     }
 }

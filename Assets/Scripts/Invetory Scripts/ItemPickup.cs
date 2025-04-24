@@ -34,7 +34,7 @@ public class ItemPickup : MonoBehaviour
                 KnifeLoader knifeLoader = FindObjectOfType<KnifeLoader>(); // Find the KnifeLoader script
                 if (knifeLoader != null)
                 {
-                    knifeLoader.ToggleKnife(Item.ID); // Call the ToggleKnife method
+                    knifeLoader.EquipKnife(Item.ID); // Call the ToggleKnife method
                 }
                 else
                 {
@@ -45,7 +45,7 @@ public class ItemPickup : MonoBehaviour
                 KnifeLoader knifeLoader1 = FindObjectOfType<KnifeLoader>(); // Find the KnifeLoader script
                 if (knifeLoader1 != null)
                 {
-                    knifeLoader1.ToggleKnife(Item.ID); // Call the ToggleKnife method
+                    knifeLoader1.EquipKnife(Item.ID); // Call the ToggleKnife method
                 }
                 else
                 {
@@ -56,7 +56,7 @@ public class ItemPickup : MonoBehaviour
                 KnifeLoader knifeLoader2 = FindObjectOfType<KnifeLoader>(); // Find the KnifeLoader script
                 if (knifeLoader2 != null)
                 {
-                    knifeLoader2.ToggleKnife(Item.ID); // Call the ToggleKnife method
+                    knifeLoader2.EquipKnife(Item.ID); // Call the ToggleKnife method
                 }
                 else
                 {

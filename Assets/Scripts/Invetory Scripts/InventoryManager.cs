@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
+using Unity.Netcode;
+using UnityEditor.PackageManager;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 
 [System.Serializable]
 public class ItemData
@@ -9,7 +12,7 @@ public class ItemData
     public int ID;
 }
 
-public class InventoryManager : MonoBehaviour
+public class InventoryManager : NetworkBehaviour
 {
     public static InventoryManager Instance;
     public List<Item> Items = new List<Item>();
@@ -85,19 +88,23 @@ public class InventoryManager : MonoBehaviour
             // ...
         }
     }
-
-    // Method to handle item click
-    private void OnInventoryItemClick(int itemId)
+    public void SetItem(int itemId, int playerNumber)
     {
-        // Switch statement to handle different item interactions based on item ID
+        GameObject playerObject = GameObject.Find($"Player{playerNumber}");
+        KnifeLoader knifeLoader = playerObject.GetComponent<KnifeLoader>();
+        FoodScript foodscript = playerObject.GetComponent<FoodScript>();
+        foodscript.UnequipFood();
+        knifeLoader.UnequipKnife();
         switch (itemId)
         {
+            case -1:
+                Debug.Log("Unequipping");
+                break;
             case 0: // Example: Equip Knife
                 Debug.Log("Equipping Knife");
-                KnifeLoader knifeLoader = FindObjectOfType<KnifeLoader>(); // Assuming KnifeLoader is attached to a GameObject in the scene
                 if (knifeLoader != null)
                 {
-                    knifeLoader.ToggleKnife(0);
+                    knifeLoader.EquipKnife(0);
                 }
                 else
                 {
@@ -106,10 +113,9 @@ public class InventoryManager : MonoBehaviour
                 break;
             case 1: // Example: Equip Knife
                 Debug.Log("Equipping Knife");
-                KnifeLoader knifeLoader1 = FindObjectOfType<KnifeLoader>(); // Assuming KnifeLoader is attached to a GameObject in the scene
-                if (knifeLoader1 != null)
+                if (knifeLoader != null)
                 {
-                    knifeLoader1.ToggleKnife(1);
+                    knifeLoader.EquipKnife(1);
                 }
                 else
                 {
@@ -118,10 +124,9 @@ public class InventoryManager : MonoBehaviour
                 break;
             case 2: // Example: Equip Knife
                 Debug.Log("Equipping Knife");
-                KnifeLoader knifeLoader2 = FindObjectOfType<KnifeLoader>(); // Assuming KnifeLoader is attached to a GameObject in the scene
-                if (knifeLoader2 != null)
+                if (knifeLoader != null)
                 {
-                    knifeLoader2.ToggleKnife(2);
+                    knifeLoader.EquipKnife(2);
                 }
                 else
                 {
@@ -129,30 +134,102 @@ public class InventoryManager : MonoBehaviour
                 }
                 break;
             case 3:
-                FoodScript foodscript3 = FindObjectOfType<FoodScript>(); // Assuming KnifeLoader is attached to a GameObject in the scene
-                if (foodscript3 != null)
+                if (foodscript != null)
                 {
-                    foodscript3.EquipFood(1);
+                    foodscript.EquipFood(1);
                 }
                 break;
             case 4:
-                FoodScript foodscript4 = FindObjectOfType<FoodScript>(); // Assuming KnifeLoader is attached to a GameObject in the scene
-                if (foodscript4 != null)
+                if (foodscript != null)
                 {
-                    foodscript4.EquipFood(0);
+                    foodscript.EquipFood(0);
                 }
                 break;
             case 5:
-                FoodScript foodscript5 = FindObjectOfType<FoodScript>(); // Assuming KnifeLoader is attached to a GameObject in the scene
-                if (foodscript5 != null)
+                if (foodscript != null)
                 {
-                    foodscript5.EquipFood(2);
+                    foodscript.EquipFood(2);
                 }
                 break;
             // Add more cases for other items
             default:
                 Debug.LogWarning("Unknown item ID: " + itemId);
                 break;
+        }
+        DayAndNight.Instance.SyncVisuals();
+
+    }
+    // Method to handle item click
+    private void OnInventoryItemClick(int itemId)
+    {
+        SwitchItemsServerRpc(itemId, NetworkManager.Singleton.LocalClientId);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void SwitchItemsServerRpc(int itemId, ulong clientId)
+    {
+        // Get the local player's NetworkObject
+        NetworkObject localPlayerObject = NetworkManager.Singleton.SpawnManager
+            .GetPlayerNetworkObject(clientId);
+
+        // Null check for safety
+        if (localPlayerObject != null)
+        {
+            // Get the Player component
+            Player localPlayer = localPlayerObject.GetComponent<Player>();
+
+            if (localPlayer != null)
+            {
+                if (itemId == localPlayer.itemEquipped.Value)
+                {
+                    localPlayer.itemEquipped.Value = -1;
+                }
+                else
+                {
+                    localPlayer.itemEquipped.Value = itemId;
+                }
+            }
+            else
+            {
+                Debug.LogError("Player component not found on local player object");
+            }
+        }
+        else
+        {
+            Debug.LogError("Local player NetworkObject not found");
+        }
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void InspectServerRpc(int itemId, ulong clientId)
+    {
+        // Get the local player's NetworkObject
+        NetworkObject localPlayerObject = NetworkManager.Singleton.SpawnManager
+            .GetPlayerNetworkObject(clientId);
+
+        // Null check for safety
+        if (localPlayerObject != null)
+        {
+            // Get the Player component
+            Player localPlayer = localPlayerObject.GetComponent<Player>();
+
+            if (localPlayer != null)
+            {
+                if (itemId == localPlayer.itemEquipped.Value)
+                {
+                    localPlayer.itemEquipped.Value = -1;
+                }
+                else
+                {
+                    localPlayer.itemEquipped.Value = itemId;
+                }
+            }
+            else
+            {
+                Debug.LogError("Player component not found on local player object");
+            }
+        }
+        else
+        {
+            Debug.LogError("Local player NetworkObject not found");
         }
     }
     private void SaveInventory()

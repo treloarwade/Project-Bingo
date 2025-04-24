@@ -89,28 +89,4 @@ public class MusicManager : MonoBehaviour
         musicSource.clip = songs[index];
         musicSource.Play();
     }
-    public void PlaySongDayNNite()
-    {
-        // Check if the song at index 1 is already playing
-        if (musicSource.clip == songs[1] && musicSource.isPlaying)
-        {
-            Debug.Log("Song is already playing.");
-            return; // Exit if the song is already playing
-        }
-
-        // Find the DayAndNight component in the scene
-        dayandnight = FindObjectOfType<DayAndNight>();
-
-        if (dayandnight != null)
-        {
-            // Check the isNight boolean value
-            if (dayandnight.isNight)
-            {
-                musicSource.Stop();
-                musicSource.clip = songs[1];
-                musicSource.Play();
-            }
-        }
-    }
-
 }

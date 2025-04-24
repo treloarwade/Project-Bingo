@@ -14,8 +14,6 @@ public class FoodScript : MonoBehaviour
     }
     public void EquipFood(int ID)
     {
-        KnifeLoader knifeLoader = FindObjectOfType<KnifeLoader>();
-        knifeLoader.UnequipKnife();
         if (FoodSpot.activeSelf)
         {
             if (currentlyEquipped == ID)

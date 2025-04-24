@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Netcode;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -11,6 +12,17 @@ public class PlayerManager : NetworkBehaviour
 
     // NetworkVariable to store player number (synced across the network)
     public NetworkVariable<int> PlayerNumber = new NetworkVariable<int>();
+    // Day/Night synchronization
+    public static PlayerManager Instance;
+    private Dictionary<ulong, SpriteRenderer> playerSprites = new Dictionary<ulong, SpriteRenderer>();
+    private NetworkList<ulong> connectedPlayers;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        connectedPlayers = new NetworkList<ulong>();
+
+    }
 
     public override void OnNetworkSpawn()
     {
@@ -18,29 +30,80 @@ public class PlayerManager : NetworkBehaviour
 
         if (IsServer)
         {
-            // Assign a unique player number when the player spawns
+            // Player number assignment
             playerCount++;
             PlayerNumber.Value = playerCount;
 
-            // Store the player number and initialize battle status
             playerMapping[OwnerClientId] = PlayerNumber.Value;
-            playerInBattle[OwnerClientId] = false; // Initialize battle status to false
+            playerInBattle[OwnerClientId] = false;
+
+            connectedPlayers.Add(OwnerClientId);
 
             Debug.Log($"Assigned Player {PlayerNumber.Value} to client {OwnerClientId}");
-
-            // Notify the client of their player number
-            NotifyPlayerNumberClientRpc(PlayerNumber.Value, OwnerClientId);
+            UpdatePlayerListServer(connectedPlayers);
         }
+
+        // Register player for day/night sync
+        RegisterPlayer(OwnerClientId, GetComponent<SpriteRenderer>());
+        // Sync immediately with current state
+        if (DayAndNight.Instance != null)
+        {
+            DayAndNight.Instance.SyncPlayer();
+        }
+    }
+
+    public void RegisterPlayer(ulong clientId, SpriteRenderer spriteRenderer)
+    {
+        if (!playerSprites.ContainsKey(clientId))
+        {
+            playerSprites.Add(clientId, spriteRenderer);
+        }
+    }
+
+    public void UnregisterPlayer(ulong clientId)
+    {
+        if (playerSprites.ContainsKey(clientId))
+        {
+            playerSprites.Remove(clientId);
+        }
+    }
+    public void UpdateAllPlayerSprites(Color color)
+    {
+        foreach (var playerSprite in playerSprites.Values)
+        {
+            if (playerSprite != null)
+            {
+                playerSprite.color = color;
+            }
+        }
+    }
+    private void UpdatePlayerListServer(NetworkList<ulong> players)
+    {
+        foreach (ulong clientId in players)
+        {
+            int player = GetPlayerNumberByClientId(clientId);
+            NotifyPlayerNumberClientRpc(player, clientId);
+        }
+    }
+    public override void OnNetworkDespawn()
+    {
+        if (IsServer)
+        {
+            connectedPlayers.Remove(OwnerClientId);
+        }
+        UnregisterPlayer(OwnerClientId);
+        base.OnNetworkDespawn();
     }
 
     [ClientRpc]
     private void NotifyPlayerNumberClientRpc(int playerNumber, ulong clientId)
     {
         Debug.Log($"Client {clientId} is Player {playerNumber}");
-        GameObject playerObject = NetworkManager.Singleton.SpawnManager.GetPlayerNetworkObject(clientId).gameObject;
-        playerObject.name = $"Player{playerNumber}";
         playerMapping[clientId] = playerNumber;
-
+        if (DayAndNight.Instance != null)
+        {
+            DayAndNight.Instance.SyncPlayer();
+        }
     }
 
     // Method to get player number by clientId

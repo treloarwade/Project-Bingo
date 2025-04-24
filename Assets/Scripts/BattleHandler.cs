@@ -8,12 +8,9 @@ using SimpleJSON;
 using System.IO;
 using System.Collections;
 using System;
-using System.Net.NetworkInformation;
-using UnityEditor.PackageManager;
 using Random = UnityEngine.Random;
 using Unity.Netcode.Components;
-using UnityEditor.Experimental.GraphView;
-using static UnityEngine.GraphicsBuffer;
+
 
 public static class BattleHandler
 {
@@ -27,7 +24,6 @@ public static class BattleHandler
     private static Dictionary<ulong, HashSet<ulong>> ongoingCatches = new Dictionary<ulong, HashSet<ulong>>();
     public static Dictionary<ulong, Dictionary<int, StatusEffect>> statusEffects = new Dictionary<ulong, Dictionary<int, StatusEffect>>();
     public static Dictionary<ulong, EnvironmentEffect> environmentEffects = new Dictionary<ulong, EnvironmentEffect>();
-    public const string STATUS_GOO = "goo";
 
     public static GameObject GetBattlePrefab(ulong clientId)
     {
