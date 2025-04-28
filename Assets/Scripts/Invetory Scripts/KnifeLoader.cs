@@ -86,6 +86,7 @@ public class KnifeLoader : MonoBehaviour
         currentlyEquipped = ID;
     }
 
+
     public void UnequipKnife()
     {
         SpriteRenderer renderer = Knife.GetComponent<SpriteRenderer>();

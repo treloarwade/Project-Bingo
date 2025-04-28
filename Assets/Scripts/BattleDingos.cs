@@ -18,7 +18,6 @@ public class BattleDingos : MonoBehaviour
     }
     public void ListDingos()
     {
-        dingosUI.SetActive(true);
 
         // Clear existing Dingo items before populating the list
         foreach (Transform child in PlayerDingoContent)
@@ -36,6 +35,7 @@ public class BattleDingos : MonoBehaviour
 
                 if (jsonDingos != null)
                 {
+                    bool allFainted = true;
                     foreach (JSONNode dingoData in jsonDingos)
                     {
                         JSONObject dingo = dingoData.AsObject;
@@ -89,6 +89,10 @@ public class BattleDingos : MonoBehaviour
                                 dingoName.text += " (Fainted)";
                             }
                         }
+                        else
+                        {
+                            allFainted = false;
+                        }
 
                         // Add click handler only for healthy Dingos
                         if (currentHP > 0)
@@ -108,6 +112,15 @@ public class BattleDingos : MonoBehaviour
                         dingoCount++;
                     }
                     AdjustContentWindowSize(dingoCount);
+                    if (allFainted)
+                    {
+                        Debug.Log("All Dingos have fainted. Triggering Agent Bingo.");
+                        BattleStarter.Instance.UseAgentBingo();
+                    }
+                    else
+                    {
+                        dingosUI.SetActive(true);
+                    }
 
                 }
                 else

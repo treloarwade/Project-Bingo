@@ -63,6 +63,7 @@ public class Movement : NetworkBehaviour
     void Start()
     {
         body = GetComponent<Rigidbody2D>();
+        dialogManager = FindObjectOfType<DialogManager>();
         originalBodyType = body.bodyType;
         originalDrag = body.drag;
         originalAngularDrag = body.angularDrag;
@@ -82,7 +83,7 @@ public class Movement : NetworkBehaviour
             body.angularVelocity = 0f;
         }
 
-        movementEnabled = !inBattle;
+        dialogManager.movementEnabled = !inBattle;
     }
     public void SetRigidbodyStatic(bool makeStatic)
     {
@@ -113,11 +114,10 @@ public class Movement : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
-        if (!movementEnabled)
+        if (!dialogManager.movementEnabled)
         {
             horizontal = 0f;
             vertical = 0f;
-            UpdateMovement(); // Ensure movement is updated immediately
             return;
         }
         // Check if the dialog box is active, if yes, disable movement
@@ -125,7 +125,7 @@ public class Movement : NetworkBehaviour
         {
             horizontal = 0f;
             vertical = 0f;
-            UpdateMovement(); // Ensure movement is updated immediately
+            dialogManager.movementEnabled = false;
             return; // Exit Update function to prevent further processing
         }
 
@@ -139,7 +139,7 @@ public class Movement : NetworkBehaviour
     private void FixedUpdate()
     {
         // Skip physics updates if Rigidbody is static or kinematic
-        if (body.bodyType != RigidbodyType2D.Dynamic || !movementEnabled)
+        if (body.bodyType != RigidbodyType2D.Dynamic || !dialogManager.movementEnabled)
         {
             return;
         }
@@ -173,12 +173,6 @@ public class Movement : NetworkBehaviour
 
     void UpdateMovement()
     {
-        // Enable or disable player movement based on movementEnabled flag
-        Movement movementScript = GetComponent<Movement>();
-        if (movementScript != null)
-        {
-            //movementScript.enabled = !dialogManager.IsDialogActive();
-        }
     }
     public void IncreaseRunSpeed()
     {

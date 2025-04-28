@@ -8,6 +8,7 @@ using SimpleJSON;
 using System.Collections;
 using System;
 using UnityEditor.PackageManager;
+using Unity.VisualScripting;
 
 public class BattleStarter : NetworkBehaviour
 {
@@ -292,12 +293,174 @@ public class BattleStarter : NetworkBehaviour
         string file = DingoLoader.LoadPlayerDingoFromFileToSend();
         SwitchPlayerDingosServerRPC(slot, file, NetworkManager.Singleton.LocalClientId);
     }
+    public void UseAgentBingo()
+    {
+        string file = DingoLoader.LoadPlayerDataFromFileToSend();
+        UseAgentBingoServerRpc(file, NetworkManager.Singleton.LocalClientId);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void UseAgentBingoServerRpc(string file, ulong clientId)
+    {
+        BattleHandler.SwitchAgentBingo(file, clientId);
+    }
     [ServerRpc(RequireOwnership = false)]
     public void SwitchPlayerDingosServerRPC(int slot, string file, ulong clientId)
     {
         StoreClientSlot(clientId, slot);
         BattleHandler.SwitchDingos(slot, file, clientId);
         AssignMoveButtonsSlotClientRPC(clientId, slot);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestFeedDingoServerRpc(ulong clientId, int targetId, int foodItemId, ServerRpcParams rpcParams = default)
+    {
+        // Get the player's Dingo
+        NetworkDingo playerDingo = BattleHandler.GetPlayer2Dingo(clientId);
+        if (playerDingo == null) return;
+
+        // Check if player has already made their move this turn
+        if (playerDingo.battleMoveId.Value != -1)
+        {
+            Debug.Log($"Client {clientId} already made their move this turn");
+            return;
+        }
+
+        NetworkDingo targetDingo = BattleHandler.GetPlayerDingo(clientId);
+        if (targetDingo == null) return;
+
+        // Mark the player's turn as complete (-3 = feed attempt)
+        playerDingo.hasAttemptedCatch.Value = true;
+        playerDingo.battleMoveId.Value = -2;
+        playerDingo.battleTargetId.Value = targetId;
+
+        // Trigger animation on the client who owns the player Dingo
+        PlayFeedAnimationClientRpc(clientId, targetDingo.NetworkObjectId, foodItemId);
+    }
+
+    [ClientRpc]
+    public void PlayFeedAnimationClientRpc(ulong clientId, ulong targetDingoId, int foodItemId)
+    {
+        // Only the feeding client should process this
+        if (NetworkManager.Singleton.LocalClientId != clientId) return;
+
+        NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetDingoId, out NetworkObject netObj);
+        if (netObj == null) return;
+
+        NetworkDingo targetDingo = netObj.GetComponent<NetworkDingo>();
+        if (targetDingo == null) return;
+
+        // Start the animation coroutine on this client
+        StartCoroutine(FeedAnimation(targetDingoId, foodItemId, clientId, targetDingo, success => {
+            // Send result back to server
+            FeedResultServerRpc(clientId, targetDingoId, success, foodItemId);
+        }));
+    }
+
+    public IEnumerator FeedAnimation(ulong targetDingoId, int foodItemId, ulong clientId, NetworkDingo targetDingo, Action<bool> onComplete)
+    {
+        if (targetDingo == null)
+        {
+            onComplete?.Invoke(false);
+            yield break;
+        }
+
+        Transform bingoTransform = null;
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
+        {
+            if (player.GetComponent<NetworkObject>().IsOwner)
+            {
+                bingoTransform = player.transform;
+                break;
+            }
+        }
+
+        if (bingoTransform == null)
+        {
+            Debug.LogWarning("FeedAnimation: Could not find local player.");
+            onComplete?.Invoke(false);
+            yield break;
+        }
+
+        // Store original position and rotation
+        Vector3 originalPosition = bingoTransform.position;
+        Quaternion originalRotation = bingoTransform.rotation;
+
+        // Dynamic positions
+        Vector3 targetPosition = targetDingo.transform.position;
+
+        // Midpoints with vertical offset
+        Vector3 mid1 = Vector3.Lerp(originalPosition, targetPosition, 0.5f) + Vector3.up * 1f;
+        Vector3 mid2 = Vector3.Lerp(targetPosition, originalPosition, 0.5f) + Vector3.up * 1f;
+
+        float speed = 0.5f;
+
+        // Approach the target
+        float start = Time.time;
+        while (Time.time - start < 1f * speed)
+        {
+            float t = (Time.time - start) / (1f * speed);
+            bingoTransform.position = BezierCurve(originalPosition, mid1, targetPosition, t);
+            yield return null;
+        }
+
+        // Play feed effects (could add particle effects here)
+        yield return new WaitForSeconds(0.5f);
+        InventoryManager.Instance.UnequipServerRpc(clientId);
+        FeedDingoServerRpc(clientId, targetDingoId, foodItemId);
+        InventoryManager.Instance.RemoveItemServerRpc(foodItemId, NetworkManager.Singleton.LocalClientId);
+        // Return to original position
+        start = Time.time;
+        while (Time.time - start < 1f * speed)
+        {
+            float t = (Time.time - start) / (1f * speed);
+            bingoTransform.position = BezierCurve(targetPosition, mid2, originalPosition, t);
+            yield return null;
+        }
+
+        // Ensure exact final position
+        bingoTransform.position = originalPosition;
+        bingoTransform.rotation = originalRotation;
+
+        onComplete?.Invoke(true);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void FeedDingoServerRpc(ulong clientId, ulong targetDingoId, int foodItemId)
+    {
+        NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetDingoId, out NetworkObject netObj);
+        if (netObj == null) return;
+
+        NetworkDingo dingo = netObj.GetComponent<NetworkDingo>();
+        if (dingo == null) return;
+        BattleHandler.ApplyFoodEffects(clientId, dingo, foodItemId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void FeedResultServerRpc(ulong clientId, ulong targetDingoId, bool success, int foodItemId)
+    {
+        NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetDingoId, out NetworkObject netObj);
+        if (netObj == null) return;
+
+        NetworkDingo targetDingo = netObj.GetComponent<NetworkDingo>();
+        if (targetDingo == null) return;
+
+        // Mark feed attempt as complete for this player
+        BattleHandler.MarkCatchInProgress(clientId, false);
+
+        if (success)
+        {
+            Debug.Log($"Player {clientId} successfully fed {targetDingo.name.Value} with item {foodItemId}!");
+            // Apply food effects here
+
+        }
+        else
+        {
+            Debug.Log($"Player {clientId} failed to feed {targetDingo.name.Value}!");
+        }
+
+        // Only proceed if there are no more ongoing feed attempts in this battle
+        if (!BattleHandler.IsCatchInProgress(clientId))
+        {
+            BattleHandler.CheckIfPlayersReady(clientId);
+        }
     }
     [ServerRpc(RequireOwnership = false)]
     public void RequestCatchDingoServerRpc(ulong clientId, int targetId, ServerRpcParams rpcParams = default)
@@ -412,6 +575,7 @@ public class BattleStarter : NetworkBehaviour
             BattleHandler.CheckIfPlayersReady(hostClientId);
         }
     }
+
     public IEnumerator CatchAnimation(NetworkDingo targetDingo, Action<bool> onComplete, float catchChance)
     {
         if (targetDingo == null)
@@ -769,6 +933,7 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
         {
             return;
         }
+
         // Only update position if it's the client's turn to move
         if (NetworkManager.Singleton.IsClient)
         {

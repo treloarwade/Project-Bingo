@@ -29,6 +29,13 @@ public class FoodScript : MonoBehaviour
         renderer.sprite = Food[ID];
         currentlyEquipped = ID;
     }
+    public void ForceFoodActive(int ID)
+    {
+        FoodSpot.SetActive(true);
+        SpriteRenderer renderer = FoodSpot.GetComponent<SpriteRenderer>();
+        renderer.sprite = Food[ID];
+        currentlyEquipped = ID;
+    }
     public void UnequipFood()
     {
         FoodSpot.SetActive(false);

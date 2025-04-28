@@ -5,13 +5,16 @@ using UnityEngine.UI;
 
 public class DialogManager : MonoBehaviour
 {
-    public GameObject dialogBox;
-    public Text dialogText;
+    private GameObject dialogBox;
     public bool movementEnabled = true;
 
     public bool IsDialogActive()
     {
         return dialogBox.activeSelf;
+    }
+    private void Start()
+    {
+        dialogBox = GameObject.Find("Canvas/NonBattle/DialogBox");
     }
 
     void Update()

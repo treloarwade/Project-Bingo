@@ -7,10 +7,11 @@ using System.Collections;
 
 public class Player : NetworkBehaviour
 {
-    private int playerNumber;
+    public int playerNumber;
     private GameObject buttonGameObject;
     public NetworkVariable<int> itemEquipped = new NetworkVariable<int>();
     private KnifeLoader knifeLoader;
+    private bool inBattle = false;
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -53,9 +54,10 @@ public class Player : NetworkBehaviour
         }
         knifeLoader.Inspect();
     }
+
     private void OnItemEquippedChanged(int oldValue, int newValue)
     {
-        InventoryManager.Instance.SetItem(newValue, playerNumber);
+        InventoryManager.Instance.SetItemClientRpc(newValue, playerNumber);
     }
 
     private void OnPlayerNumberChanged(int oldValue, int newValue)

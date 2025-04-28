@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.GridBrushBase;
 
 public class BingoStarFollow : MonoBehaviour
 {
@@ -11,29 +8,47 @@ public class BingoStarFollow : MonoBehaviour
     public float smoothTime = 0.5f;
     private Vector3 velocity = Vector3.zero;
     private int smoothTimeIndex = 0;
-    private float[] smoothTimeValues = { 5.0f, 4.5f, 4.0f, 3.5f, 3.0f, 2.5f, 2.0f, 1.5f, 1.0f }; // Array of smoothTime values to cycle through
+    private float[] smoothTimeValues = { 5.0f, 4.5f, 4.0f, 3.5f, 3.0f, 2.5f, 2.0f, 1.5f, 1.0f };
     private float maxRotation = 5f;
-    private float rotationSpeed = 0.3f;
+    private float minRotationSpeed = 0.3f;
+    private float maxRotationSpeed = 5f;
     private float currentRotation = 0f;
     private float rotationDirection = 1f;
     public Rigidbody2D body;
     public Text Speed;
+    private SpriteRenderer spriteRenderer;
+    private bool facingRight = true;
+    private float maxVelocityForSpeed = 3f; // Velocity at which we reach max rotation speed
 
+    void Start()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        }
+    }
 
     void LateUpdate()
     {
         if (target != null)
         {
-            // Calculate the direction from the target to the BingoStar
             Vector3 directionToTarget = transform.position - target.position;
-            directionToTarget.z = 0f; // Ignore the Z-axis for 2D movement
-
-            // Normalize the direction and multiply by the desired distance
+            directionToTarget.z = 0f;
             Vector3 targetPosition = target.position + directionToTarget.normalized * distance;
-
-            // Smoothly interpolate towards the target position
             transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
+
+            // Flip sprite based on X velocity
+            if (velocity.x > 0.1f && !facingRight)
+            {
+                Flip();
+            }
+            else if (velocity.x < -0.1f && facingRight)
+            {
+                Flip();
+            }
         }
+
         if (velocity.magnitude > 0)
         {
             RotateSprite();
@@ -44,20 +59,37 @@ public class BingoStarFollow : MonoBehaviour
             body.SetRotation(currentRotation);
         }
     }
+
+    private void Flip()
+    {
+        facingRight = !facingRight;
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.flipX = !spriteRenderer.flipX;
+        }
+        else
+        {
+            Vector3 theScale = transform.localScale;
+            theScale.x *= -1;
+            transform.localScale = theScale;
+        }
+    }
+
     public void OnClick()
     {
-        // Increment the smoothTime index
         smoothTimeIndex = (smoothTimeIndex + 1) % smoothTimeValues.Length;
-
-        // Update smoothTime to the value at the current index
         smoothTime = smoothTimeValues[smoothTimeIndex];
-
         Debug.Log("smoothTime toggled to: " + smoothTime);
         Speed.text = "Speed: " + smoothTime.ToString();
     }
+
     private void RotateSprite()
     {
-        currentRotation += rotationDirection * rotationSpeed * Time.fixedDeltaTime;
+        // Calculate rotation speed based on velocity magnitude (clamped between min and max)
+        float velocityRatio = Mathf.Clamp01(velocity.magnitude / maxVelocityForSpeed);
+        float currentRotationSpeed = Mathf.Lerp(minRotationSpeed, maxRotationSpeed, velocityRatio);
+
+        currentRotation += rotationDirection * currentRotationSpeed * Time.fixedDeltaTime;
 
         if (Mathf.Abs(currentRotation) >= maxRotation)
         {
