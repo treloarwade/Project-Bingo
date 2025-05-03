@@ -12,6 +12,10 @@ using Random = UnityEngine.Random;
 using Unity.Netcode.Components;
 using UnityEditor.PackageManager;
 using Unity.VisualScripting.FullSerializer;
+using static UnityEngine.GraphicsBuffer;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor;
+using System.Net.NetworkInformation;
 
 
 public static class BattleHandler
@@ -66,7 +70,7 @@ public static class BattleHandler
             Debug.LogError($"Player{playerNumber} not found in the scene!");
             return;
         }
-
+        
         // Instantiate battle prefab for this client
         GameObject battlePrefab = Resources.Load<GameObject>("Prefabs/BattlePrefab");
         if (battlePrefab != null)
@@ -267,6 +271,10 @@ public static class BattleHandler
                 break;
             case 5:
                 dingo.hp.Value = Mathf.Min(dingo.hp.Value + 500, dingo.maxHP.Value);
+
+                break;
+            case 6:
+                dingo.hp.Value = Mathf.Min(dingo.hp.Value + 999, dingo.maxHP.Value);
 
                 break;
         }
@@ -831,48 +839,7 @@ public static class BattleHandler
 
         Debug.Log($"Player 2 with clientId {player2ClientId} has joined the battle hosted by {hostClientId}.");
     }
-    public static bool ProcessStatusEffects(ulong clientId, int slotIndex)
-    {
-        if (!BattleSlots.TryGetValue(clientId, out var slots) ||
-            !slots.TryGetValue(slotIndex, out var slot) ||
-            slot.Dingo == null)
-            return false;
 
-        var dingo = slot.Dingo;
-        bool skipTurn = false;
-
-        // Process all status effects from the slot
-        foreach (var status in slot.StatusEffects.ToList()) // ToList() to avoid modification during iteration
-        {
-            BattleStarter.Instance.StartCoroutine(PlayStatusEffectAnimation(dingo, status.Name));
-            BattleStarter.Instance.MoveAnimationClientRPC(clientId, 0, 0, dingo.NetworkObjectId, 0, status.Name, 1);
-            // Skip turn chance (like paralysis or sleep)
-            if (status.SkipTurnChance > 0 && Random.value < status.SkipTurnChance)
-            {
-                SendBattleMessage(clientId, $"{dingo.name.Value} is affected by {status.Name} and can't move!");
-                Debug.Log($"{dingo.name.Value} is affected by {status.Name} and can't move!");
-                skipTurn = true;
-            }
-
-            // Damage over time
-            if (status.DamagePerTurn > 0)
-            {
-                int damage = Math.Max(1, (int)(dingo.maxHP.Value * (status.DamagePerTurn / 100f)));
-                dingo.hp.Value -= damage;
-                Debug.Log($"{dingo.name.Value} is hurt by {status.Name}!");
-            }
-
-            // Reduce duration and remove if expired
-            status.Duration--;
-            if (status.Duration <= 0)
-            {
-                slot.StatusEffects.Remove(status);
-                Debug.Log($"{dingo.name.Value} is no longer affected by {status.Name}!");
-            }
-        }
-
-        return skipTurn;
-    }
     public static void ProceedWithBattle(ulong clientId)
     {
         Debug.Log($"Proceeding with battle logic for client {clientId}...");
@@ -1224,6 +1191,7 @@ public static class BattleHandler
             "goo" => StatusEffect.CreateGooEffect(duration > 0 ? duration : 3),
             "sadlook" => StatusEffect.CreateSadLookEffect(duration > 0 ? duration : 3),
             "throwball" => StatusEffect.CreateSadLookEffect(duration > 0 ? duration : 3),
+            "marketanalysis" => StatusEffect.CreateMarketAnalysisEffect(),
             _ => new StatusEffect(999, duration, status) // Default fallback
         };
 
@@ -1262,7 +1230,7 @@ public static class BattleHandler
 
             Debug.Log($"[ProcessBattleTurns] Processing turn for {currentDingo.name.Value}");
 
-            bool skipTurn = ProcessStatusEffects(clientId, battleSlot.SlotIndex);
+            bool skipTurn = ProcessSkipTurnStatusEffects(clientId, battleSlot.SlotIndex);
             if (skipTurn) continue;
             if (!battleSlot.IsPlayer) // AI turn
             {
@@ -1354,8 +1322,103 @@ public static class BattleHandler
         // Play animation and wait for it to complete
         yield return BattleStarter.Instance.StartCoroutine(PlayMoveAnimation(selectedDingo, targetDingo2, move.Name));
 
-        ApplyMoveBasedOnTarget(clientId, selectedDingo, move);
+        EvaluateMoveEffectsAndPerform(clientId, selectedDingo, move);
     }
+    private static void EvaluateMoveEffectsAndPerform(ulong clientId, NetworkDingo selectedDingo, DingoMove move)
+    {
+        switch (move.Name)
+        {
+            case "Market Analysis":
+                SelfBuff(clientId, selectedDingo, move);
+                break;
+            case "ATM Withdrawal":
+                CalculateCash(clientId, selectedDingo, move);
+                break;
+            default:
+                ApplyMoveBasedOnTarget(clientId, selectedDingo, move);
+                break;
+        }
+    }
+    private static void SelfBuff(ulong clientId, NetworkDingo selectedDingo, DingoMove move)
+    {
+        AddStatus(clientId, selectedDingo.slotNumber.Value, move.StatusEffect);
+        SendBattleMessage(clientId, $"{selectedDingo.name.Value} used {move.Name}");
+    }
+    public static float ProcessMoneyMultiplierStatusEffects(ulong clientId, int slotIndex)
+    {
+        if (!BattleSlots.TryGetValue(clientId, out var slots) ||
+        !slots.TryGetValue(slotIndex, out var slot) ||
+        slot.Dingo == null)
+            return 1f;
+
+        var dingo = slot.Dingo;
+        float multiplier = 1f;
+        foreach (var status in slot.StatusEffects.ToList()) // ToList() to avoid modification during iteration
+        {
+            switch (status.Name)
+            {
+                case "marketanalysis":
+                    multiplier = multiplier * 2;
+                    break;
+                default:
+                    break;
+            }
+        }
+        return multiplier;
+    }
+
+    private static void CalculateCash(ulong clientId, NetworkDingo selectedDingo, DingoMove move)
+    {
+        int attackStat = BattleSlots[clientId][selectedDingo.slotNumber.Value].GetModifiedAttack();
+        float multiplier = ProcessMoneyMultiplierStatusEffects(clientId, selectedDingo.slotNumber.Value);
+        int cashgained = Mathf.RoundToInt((selectedDingo.level.Value + attackStat) * ProcessMoneyMultiplierStatusEffects(clientId, selectedDingo.slotNumber.Value));
+        InventoryManager.Instance.AwardBattleEarningsClientRpc(cashgained, clientId);
+        SendBattleMessage(clientId, $"{selectedDingo.name.Value} used {move.Name} and gained ${cashgained} multiplier was {multiplier}");
+    }
+    public static bool ProcessSkipTurnStatusEffects(ulong clientId, int slotIndex)
+    {
+        if (!BattleSlots.TryGetValue(clientId, out var slots) ||
+            !slots.TryGetValue(slotIndex, out var slot) ||
+            slot.Dingo == null)
+            return false;
+
+        var dingo = slot.Dingo;
+        bool skipTurn = false;
+
+        // Process all status effects from the slot
+        foreach (var status in slot.StatusEffects.ToList()) // ToList() to avoid modification during iteration
+        {
+            BattleStarter.Instance.StartCoroutine(PlayStatusEffectAnimation(dingo, status.Name));
+            BattleStarter.Instance.MoveAnimationClientRPC(clientId, 0, 0, dingo.NetworkObjectId, 0, status.Name, 1);
+            // Skip turn chance (like paralysis or sleep)
+            if (status.SkipTurnChance > 0 && Random.value < status.SkipTurnChance)
+            {
+                SendBattleMessage(clientId, $"{dingo.name.Value} is affected by {status.Name} and can't move!");
+                Debug.Log($"{dingo.name.Value} is affected by {status.Name} and can't move!");
+                skipTurn = true;
+            }
+
+            // Damage over time
+            if (status.DamagePerTurn > 0)
+            {
+                int damage = Math.Max(1, (int)(dingo.maxHP.Value * (status.DamagePerTurn / 100f)));
+                dingo.hp.Value -= damage;
+                Debug.Log($"{dingo.name.Value} is hurt by {status.Name}!");
+            }
+
+            // Reduce duration and remove if expired
+            status.Duration--;
+            if (status.Duration <= 0)
+            {
+                slot.StatusEffects.Remove(status);
+                Debug.Log($"{dingo.name.Value} is no longer affected by {status.Name}!");
+            }
+        }
+
+        return skipTurn;
+    }
+
+
     private static void ApplyMoveBasedOnTarget(ulong clientId, NetworkDingo selectedDingo, DingoMove move)
     {
         switch (selectedDingo.battleTargetId.Value)
@@ -2334,7 +2397,7 @@ public static class BattleHandler
     }
 
 
-    private static void EndBattle(ulong hostClientId)
+    public static void EndBattle(ulong hostClientId)
     {
         Debug.Log($"Ending battle hosted by client {hostClientId}...");
         SavePlayerDingosAtBattleEnd(hostClientId);

@@ -77,6 +77,10 @@ namespace DingoSystem
             return new StatusEffect(100, duration, "goo", 0.2f)
                 .WithStatModifier(StatType.Speed, 0.8f);
         }
+        public static StatusEffect CreateMarketAnalysisEffect()
+        {
+            return new StatusEffect(300, 999, "marketanalysis");
+        }
 
         // Helper method to get a modifier (returns 1f if not found)
         public float GetStatModifier(StatType stat)

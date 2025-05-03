@@ -21,14 +21,12 @@ public class Player : NetworkBehaviour
 
             Debug.Log($"I am Player {playerNumber}");
             SetupKnife();
-
         }
         itemEquipped.Value = -1;
         GetComponent<PlayerManager>().PlayerNumber.OnValueChanged += OnPlayerNumberChanged;
         itemEquipped.OnValueChanged += OnItemEquippedChanged;
         playerNumber = GetComponent<PlayerManager>().PlayerNumber.Value;
         RenamePlayerObject();
-
     }
     private void SetupKnife()
     {
@@ -80,17 +78,6 @@ public class Player : NetworkBehaviour
         else
         {
             Debug.LogWarning("No transform found to rename.");
-        }
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        base.OnNetworkDespawn();
-
-        if (IsOwner)
-        {
-            // Unsubscribe from PlayerNumber changes
-            GetComponent<PlayerManager>().PlayerNumber.OnValueChanged -= OnPlayerNumberChanged;
         }
     }
 }

@@ -1,18 +1,14 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class RainbowGuyDialog : MonoBehaviour
+
+public class CopDialog : MonoBehaviour
 {
-    public GameObject dialogBox;
-    public Text dialogText;
     public Interactor interactor;
-    public Button shopButton;
-    public List<int> items;
+    public NpcMovementScript npcMovement;
     public void Bingo2()
     {
-        if (!dialogBox.activeSelf)
+        if (!DialogManager.Instance.IsDialogActive())
         {
             StartCoroutine(Bingo());
         }
@@ -20,24 +16,26 @@ public class RainbowGuyDialog : MonoBehaviour
     IEnumerator Bingo()
     {
         // Check if the dialog box is not active
-        if (!dialogBox.activeSelf)
+        if (!DialogManager.Instance.IsDialogActive())
         {
             yield return new WaitForSeconds(0.1f);
             string dialog;
             if (Random.value < 0.5f)
             {
-                dialog = "dudes will play rainbow six but havent stopped and admired a rainbow since they were six. Siege";
+                dialog = "Everyone catches the high level Bingomon, so all the ones here are low level.";
             }
             else
             {
-                dialog = "they buy skins but haven’t shed theirs in years. no evolution.";
+                dialog = "So far, no crimes today.";
             }
             DialogManager.Instance.DisplayDialogIsExitable(false, dialog);
             DialogManager.Instance.ClearDialogButtons();
             DialogManager.Instance.DisplayDialogButton("Cool");
-            DialogManager.Instance.DisplayShopButton(items);
+            DialogManager.Instance.DisplayDialogButton("Nice");
+            npcMovement.conversation = true;
         }
         interactor.TurnOff();
-        yield return null;
+        yield return new WaitForSeconds(10f);
+        npcMovement.conversation = false;
     }
 }

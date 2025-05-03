@@ -363,8 +363,8 @@ public static class DingoDatabase
         Tanktop.AddMove(new DingoMove(9, "Disorienting Strike", "Abnormal", 0, 75, 100, null, null, "Strikes the target in a disorienting manner, potentially confusing or stunning it."));
 
         // Moves for TrustFundBaby
-        TrustFundBaby.AddMove(new DingoMove(0, "Lay Offs", "Finance", 0, 0, 90, null, null, "Initiates layoffs, reducing the opponent's Defense stat."));
-        TrustFundBaby.AddMove(new DingoMove(1, "Market Analysis", "Finance", 0, 0, 100, null, null, "Analyzes the opponent's strengths and weaknesses, revealing their stats or type advantages for a few turns."));
+        TrustFundBaby.AddMove(new DingoMove(0, "Lay Offs", "Finance", 0, 0, 100, null, null, "Permanently removes a fainted or low-level Bingomon from your party for a large one-time cash payout."));
+        TrustFundBaby.AddMove(new DingoMove(1, "Market Analysis", "Finance", 0, 0, 100, "marketanalysis", null, "Double cash gained for the rest of the battle."));
         TrustFundBaby.AddMove(new DingoMove(2, "ATM Withdrawal", "Finance", 0, 0, 100, null, null, "Pull some money out of your savings."));
         TrustFundBaby.AddMove(new DingoMove(3, "Bear Market", "Finance", 0, 0, 100, null, null, "Creates an unfavorable market condition, lowering the opponent's Attack and Special Attack stats."));
         TrustFundBaby.AddMove(new DingoMove(4, "Stock Buyback", "Finance", 0, 0, 100, null, null, "Repurchases its own HP, restoring a portion of its health."));
@@ -710,12 +710,14 @@ public static class DingoDatabase
     }
     public static DingoMove GetMoveByID(int id, DingoID dingo)
     {
+        Debug.Log($"Getting move ID {id} for {dingo.Name}");
         // Iterate through each move in the BingoStar object
-        foreach (var move in dingo.Moves)
+        foreach (DingoMove move in dingo.Moves)
         {
             // Check if the ID of the move matches the provided ID
             if (move.MoveID == id)
             {
+                Debug.Log($"Getting move ID {id} was {move.Name}");
                 // Return the move
                 return move;
             }

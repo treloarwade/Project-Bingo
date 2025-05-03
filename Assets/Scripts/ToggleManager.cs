@@ -76,6 +76,10 @@ public class ToggleManager : MonoBehaviour
                     Debug.Log("JSON updated and saved to file: " + filePath);
                     //This doesn't work because it didn't write it to the json yet
                     int dingoID = dingo["DingoID"];
+                    if(PlayerDingos.Instance.agentBingo)
+                    {
+                        dingoID = 0;
+                    }
                     DingoID dingom = DingoDatabase.GetDingoByID(dingoID);
                     DingoMove activemove1 = DingoDatabase.GetMoveByID(checkedIndices[0], dingom);
                     DingoMove activemove2 = DingoDatabase.GetMoveByID(checkedIndices[1], dingom);

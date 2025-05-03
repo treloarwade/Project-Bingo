@@ -17,7 +17,7 @@ public class CameraFollow : MonoBehaviour
     private int smoothTimeIndex = 0;
     private float[] smoothTimeValues = { 1f, 0.5f, 0f }; // Array of smoothTime values to cycle through
     public Camera mainCamera; // Reference to the main camera
-    public float[] zoomLevels = { 1f, 2f, 5f, 10f, 15f }; // Orthographic sizes for each zoom level
+    public float[] zoomLevels = { 4f, 1f, 2f, 5f, 10f, 15f }; // Orthographic sizes for each zoom level
     private int zoomLevelIndex = 0;
     private Vector3 savedPosition;
 

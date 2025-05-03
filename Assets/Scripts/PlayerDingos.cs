@@ -49,67 +49,12 @@ public class PlayerDingos : MonoBehaviour
     public Text ActiveMove4;
     public bool move1toggle = false;
 
-    public Text MoveName1;
-    public Text MovePower1;
-    public Text MoveAccuracy1;
-    public Text MoveDescription1;
-    public Text MoveType1;
-
-    public Text MoveName2;
-    public Text MovePower2;
-    public Text MoveAccuracy2;
-    public Text MoveDescription2;
-    public Text MoveType2;
-
-    public Text MoveName3;
-    public Text MovePower3;
-    public Text MoveAccuracy3;
-    public Text MoveDescription3;
-    public Text MoveType3;
-
-    public Text MoveName4;
-    public Text MovePower4;
-    public Text MoveAccuracy4;
-    public Text MoveDescription4;
-    public Text MoveType4;
-
-    public Text MoveName5;
-    public Text MovePower5;
-    public Text MoveAccuracy5;
-    public Text MoveDescription5;
-    public Text MoveType5;
-
-    public Text MoveName6;
-    public Text MovePower6;
-    public Text MoveAccuracy6;
-    public Text MoveDescription6;
-    public Text MoveType6;
-
-    public Text MoveName7;
-    public Text MovePower7;
-    public Text MoveAccuracy7;
-    public Text MoveDescription7;
-    public Text MoveType7;
-
-    public Text MoveName8;
-    public Text MovePower8;
-    public Text MoveAccuracy8;
-    public Text MoveDescription8;
-    public Text MoveType8;
-
-    public Text MoveName9;
-    public Text MovePower9;
-    public Text MoveAccuracy9;
-    public Text MoveDescription9;
-    public Text MoveType9;
-
-    public Text MoveName10;
-    public Text MovePower10;
-    public Text MoveAccuracy10;
-    public Text MoveDescription10;
-    public Text MoveType10;
-
-
+    public Text[] MoveNames;
+    public Text[] MovePowers;
+    public Text[] MoveAccuracies;
+    public Text[] MoveDescriptions;
+    public Text[] MoveTypes;
+    public bool agentBingo = false;
     private void Awake()
     {
         Instance = this;
@@ -240,6 +185,58 @@ public class PlayerDingos : MonoBehaviour
         }
 
     }
+    public void AddHealth()
+    {
+        filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
+        if (File.Exists(filePath))
+        {
+            jsonData = File.ReadAllText(filePath);
+            jsonDingos = JSON.Parse(jsonData) as JSONArray;
+            if (jsonDingos != null && jsonDingos.Count > 0)
+            {
+                JSONObject dingo = jsonDingos[pagenumber].AsObject;
+                attack = dingo["ATK"];
+                defense = dingo["DEF"];
+                speed = dingo["SPD"];
+                int currentHp = dingo["CurrentHealth"];
+                int maxHp = dingo["MaxHealth"];
+                currentHp = currentHp + 100;
+                maxHp = maxHp + 100;
+                while (jsonDingos.Count <= pagenumber)
+                {
+                    jsonDingos.Add(new JSONObject());
+                }
+
+                JSONObject jsonDingo = new JSONObject();
+                jsonDingo.Add("ID", pagenumber);
+                jsonDingo.Add("DingoID", dingo["DingoID"]);
+                jsonDingo.Add("Name", dingo["Name"]);
+                jsonDingo.Add("Type", dingo["Type"]);
+                jsonDingo.Add("Description", dingo["Description"]);
+                jsonDingo.Add("CurrentHealth", currentHp);
+                jsonDingo.Add("ATK", attack);
+                jsonDingo.Add("DEF", defense);
+                jsonDingo.Add("SPD", speed);
+                jsonDingo.Add("Sprite", dingo["Sprite"]);
+                jsonDingo.Add("MaxHealth", maxHp);
+                jsonDingo.Add("XP", dingo["XP"]);
+                jsonDingo.Add("MaxXP", dingo["MaxXP"]);
+                jsonDingo.Add("Level", dingo["Level"]);
+                jsonDingo.Add("Move1ID", dingo["Move1ID"]);
+                jsonDingo.Add("Move2ID", dingo["Move2ID"]);
+                jsonDingo.Add("Move3ID", dingo["Move3ID"]);
+                jsonDingo.Add("Move4ID", dingo["Move4ID"]);
+                jsonDingos[pagenumber] = jsonDingo;
+                HPstat.text = "HP " + currentHp + "/" + maxHp;
+                healthBar.SetMaxHealth(maxHp);
+                healthBar.SetHealth(currentHp);
+                // Save the updated data back to the file
+                File.WriteAllText(filePath, jsonDingos.ToString());
+            }
+        }
+
+    }
+
     public void AddAttack()
     {
         filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
@@ -378,7 +375,124 @@ public class PlayerDingos : MonoBehaviour
         }
         SPDstat.text = "Speed " + speed;
     }
+    private void UpdateAllMoves(List<DingoMove> moves)
+    {
+        for (int i = 0; i < moves.Count && i < 10; i++)
+        {
+            DingoMove move = moves[i];
+            MoveNames[i].text = move.Name;
+            MovePowers[i].text = move.Power.ToString();
+            MoveAccuracies[i].text = move.Accuracy.ToString();
+            MoveTypes[i].text = move.Type.ToString();
+            MoveDescriptions[i].text = move.Description;
+        }
 
+        // If there are fewer than 10 moves, clear the remaining slots
+        for (int i = moves.Count; i < 10; i++)
+        {
+            MoveNames[i].text = "";
+            MovePowers[i].text = "";
+            MoveAccuracies[i].text = "";
+            MoveTypes[i].text = "";
+            MoveDescriptions[i].text = "";
+        }
+    }
+    public void ShowAgentBingoStatScreens()
+    {
+        string filePath;
+        filePath = Path.Combine(Application.persistentDataPath, "playerinfo.json");
+        jsonData = File.ReadAllText(filePath);
+        jsonDingos = JSON.Parse(jsonData) as JSONArray;
+
+        Debug.Log("File path: " + filePath);
+
+        // Check if file exists
+        if (File.Exists(filePath))
+        {
+            try
+            {
+                // Read JSON data from file
+                string jsonData = File.ReadAllText(filePath);
+                Debug.Log("JSON data: " + jsonData);
+
+                // Parse JSON data
+                JSONArray jsonDingos = JSON.Parse(jsonData) as JSONArray;
+                if (jsonDingos != null)
+                {
+                    // Instantiate the stat screen prefab for the first Dingo
+                    JSONNode firstDingoData = jsonDingos[0];
+                    JSONObject firstDingo = firstDingoData.AsObject;
+                    pagenumber = 0;
+
+                    xpBar.SetMaxHealth(firstDingo["MaxXP"]);
+                    xpBar.SetHealth(firstDingo["XP"]);
+                    healthBar.SetMaxHealth(firstDingo["MaxHealth"]);
+                    healthBar.SetHealth(firstDingo["CurrentHealth"]);
+                    // Create a new DingoID object based on the ID from the JSON data
+                    int dingoID = firstDingo["DingoID"];
+                    int move1id = firstDingo["Move1ID"];
+                    int move2id = firstDingo["Move2ID"];
+                    int move3id = firstDingo["Move3ID"];
+                    int move4id = firstDingo["Move4ID"];
+                    DingoID dingo = DingoDatabase.GetDingoByID(dingoID);
+                    DingoMove activemove1 = DingoDatabase.GetMoveByID(move1id, dingo);
+                    DingoMove activemove2 = DingoDatabase.GetMoveByID(move2id, dingo);
+                    DingoMove activemove3 = DingoDatabase.GetMoveByID(move3id, dingo);
+                    DingoMove activemove4 = DingoDatabase.GetMoveByID(move4id, dingo);
+                    ActiveMove1.text = activemove1.Name;
+                    ActiveMove2.text = activemove2.Name;
+                    ActiveMove3.text = activemove3.Name;
+                    ActiveMove4.text = activemove4.Name;
+                    UpdateAllMoves(dingo.Moves);
+
+                    // You can then use the dingo object as needed
+                    Debug.Log("Loaded Dingo: " + dingo.Name);
+
+
+
+                    // Populate the stat screen with the first Dingo's information
+                    DESCstat.text = firstDingo["Description"];
+                    NAMEstat.text = firstDingo["Name"];
+                    TYPEstat.text = firstDingo["Type"];
+                    IDstat.text = firstDingo["ID"];
+                    ATKstat.text = "Attack " + firstDingo["ATK"];
+                    DEFstat.text = "Defense " + firstDingo["DEF"];
+                    SPDstat.text = "Speed " + firstDingo["SPD"];
+                    LVLstat.text = "Level " + firstDingo["Level"];
+                    HPstat.text = "HP " + firstDingo["CurrentHealth"] + "/" + firstDingo["MaxHealth"];
+                    XPstat.text = "XP " + firstDingo["XP"] + "/" + firstDingo["MaxXP"];
+                    // Load Dingo icon sprite from Resources folder based on the icon path in JSON data
+                    Sprite dingoSprite = Resources.Load<Sprite>(firstDingo["Sprite"]);
+                    SPRITEstat.sprite = dingoSprite;
+                    agentBingo = true;
+                }
+                else
+                {
+                    Debug.LogWarning("Failed to parse JSON data.");
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Error reading JSON file: " + e.Message);
+                // Print full stack trace if available
+                Debug.LogException(e);
+            }
+        }
+        else
+        {
+            if (healthBar != null)
+            {
+                // Call the HideHealthBar method
+                healthBar.HideHealthBar();
+            }
+            else
+            {
+                Debug.LogError("HealthBar reference is null.");
+            }
+            Warning.enabled = true;
+            Debug.LogWarning("Dingo JSON file not found at path: " + filePath);
+        }
+    }
     public void ShowAllDingoStatScreens()
     {
         string filePath;
@@ -425,88 +539,7 @@ public class PlayerDingos : MonoBehaviour
                     ActiveMove2.text = activemove2.Name;
                     ActiveMove3.text = activemove3.Name;
                     ActiveMove4.text = activemove4.Name;
-                    DingoMove dingomove1 = dingo.Moves[0];
-                    DingoMove dingomove2 = dingo.Moves[1];
-                    DingoMove dingomove3 = dingo.Moves[2];
-                    DingoMove dingomove4 = dingo.Moves[3];
-                    DingoMove dingomove5 = dingo.Moves[4];
-                    DingoMove dingomove6 = dingo.Moves[5];
-                    DingoMove dingomove7 = dingo.Moves[6];
-                    DingoMove dingomove8 = dingo.Moves[7];
-                    DingoMove dingomove9 = dingo.Moves[8];
-                    DingoMove dingomove10 = dingo.Moves[9];
-
-
-                    // For Move 1
-                    MoveName1.text = dingomove1.Name;
-                    MovePower1.text = dingomove1.Power.ToString();
-                    MoveAccuracy1.text = dingomove1.Accuracy.ToString();
-                    MoveType1.text = dingomove1.Type.ToString();
-                    MoveDescription1.text = dingomove1.Description;
-
-                    // For Move 2
-                    MoveName2.text = dingomove2.Name;
-                    MovePower2.text = dingomove2.Power.ToString();
-                    MoveAccuracy2.text = dingomove2.Accuracy.ToString();
-                    MoveType2.text = dingomove2.Type.ToString();
-                    MoveDescription2.text = dingomove2.Description;
-
-                    // For Move 3
-                    MoveName3.text = dingomove3.Name;
-                    MovePower3.text = dingomove3.Power.ToString();
-                    MoveAccuracy3.text = dingomove3.Accuracy.ToString();
-                    MoveType3.text = dingomove3.Type.ToString();
-                    MoveDescription3.text = dingomove3.Description;
-
-                    // For Move 4
-                    MoveName4.text = dingomove4.Name;
-                    MovePower4.text = dingomove4.Power.ToString();
-                    MoveAccuracy4.text = dingomove4.Accuracy.ToString();
-                    MoveType4.text = dingomove4.Type.ToString();
-                    MoveDescription4.text = dingomove4.Description;
-
-                    // For Move 5
-                    MoveName5.text = dingomove5.Name;
-                    MovePower5.text = dingomove5.Power.ToString();
-                    MoveAccuracy5.text = dingomove5.Accuracy.ToString();
-                    MoveType5.text = dingomove5.Type.ToString();
-                    MoveDescription5.text = dingomove5.Description;
-
-                    // For Move 6
-                    MoveName6.text = dingomove6.Name;
-                    MovePower6.text = dingomove6.Power.ToString();
-                    MoveAccuracy6.text = dingomove6.Accuracy.ToString();
-                    MoveType6.text = dingomove6.Type.ToString();
-                    MoveDescription6.text = dingomove6.Description;
-
-                    // For Move 7
-                    MoveName7.text = dingomove7.Name;
-                    MovePower7.text = dingomove7.Power.ToString();
-                    MoveAccuracy7.text = dingomove7.Accuracy.ToString();
-                    MoveType7.text = dingomove7.Type.ToString();
-                    MoveDescription7.text = dingomove7.Description;
-
-                    // For Move 8
-                    MoveName8.text = dingomove8.Name;
-                    MovePower8.text = dingomove8.Power.ToString();
-                    MoveAccuracy8.text = dingomove8.Accuracy.ToString();
-                    MoveType8.text = dingomove8.Type.ToString();
-                    MoveDescription8.text = dingomove8.Description;
-
-                    // For Move 9
-                    MoveName9.text = dingomove9.Name;
-                    MovePower9.text = dingomove9.Power.ToString();
-                    MoveAccuracy9.text = dingomove9.Accuracy.ToString();
-                    MoveType9.text = dingomove9.Type.ToString();
-                    MoveDescription9.text = dingomove9.Description;
-
-                    // For Move 10
-                    MoveName10.text = dingomove10.Name;
-                    MovePower10.text = dingomove10.Power.ToString();
-                    MoveAccuracy10.text = dingomove10.Accuracy.ToString();
-                    MoveType10.text = dingomove10.Type.ToString();
-                    MoveDescription10.text = dingomove10.Description;
-
+                    UpdateAllMoves(dingo.Moves);
 
 
                     // You can then use the dingo object as needed
@@ -528,6 +561,8 @@ public class PlayerDingos : MonoBehaviour
                     // Load Dingo icon sprite from Resources folder based on the icon path in JSON data
                     Sprite dingoSprite = Resources.Load<Sprite>(firstDingo["Sprite"]);
                     SPRITEstat.sprite = dingoSprite;
+                    agentBingo = false;
+
                 }
                 else
                 {
@@ -620,93 +655,12 @@ public class PlayerDingos : MonoBehaviour
                 ActiveMove2.text = activemove2.Name;
                 ActiveMove3.text = activemove3.Name;
                 ActiveMove4.text = activemove4.Name;
-                DingoMove dingomove1 = nextdingo.Moves[0];
-                DingoMove dingomove2 = nextdingo.Moves[1];
-                DingoMove dingomove3 = nextdingo.Moves[2];
-                DingoMove dingomove4 = nextdingo.Moves[3];
-                DingoMove dingomove5 = nextdingo.Moves[4];
-                DingoMove dingomove6 = nextdingo.Moves[5];
-                DingoMove dingomove7 = nextdingo.Moves[6];
-                DingoMove dingomove8 = nextdingo.Moves[7];
-                DingoMove dingomove9 = nextdingo.Moves[8];
-                DingoMove dingomove10 = nextdingo.Moves[9];
-
-
-
-                // For Move 1
-                MoveName1.text = dingomove1.Name;
-                MovePower1.text = dingomove1.Power.ToString();
-                MoveAccuracy1.text = dingomove1.Accuracy.ToString();
-                MoveType1.text = dingomove1.Type.ToString();
-                MoveDescription1.text = dingomove1.Description;
-
-                // For Move 2
-                MoveName2.text = dingomove2.Name;
-                MovePower2.text = dingomove2.Power.ToString();
-                MoveAccuracy2.text = dingomove2.Accuracy.ToString();
-                MoveType2.text = dingomove2.Type.ToString();
-                MoveDescription2.text = dingomove2.Description;
-
-                // For Move 3
-                MoveName3.text = dingomove3.Name;
-                MovePower3.text = dingomove3.Power.ToString();
-                MoveAccuracy3.text = dingomove3.Accuracy.ToString();
-                MoveType3.text = dingomove3.Type.ToString();
-                MoveDescription3.text = dingomove3.Description;
-
-                // For Move 4
-                MoveName4.text = dingomove4.Name;
-                MovePower4.text = dingomove4.Power.ToString();
-                MoveAccuracy4.text = dingomove4.Accuracy.ToString();
-                MoveType4.text = dingomove4.Type.ToString();
-                MoveDescription4.text = dingomove4.Description;
-
-                // For Move 5
-                MoveName5.text = dingomove5.Name;
-                MovePower5.text = dingomove5.Power.ToString();
-                MoveAccuracy5.text = dingomove5.Accuracy.ToString();
-                MoveType5.text = dingomove5.Type.ToString();
-                MoveDescription5.text = dingomove5.Description;
-
-                // For Move 6
-                MoveName6.text = dingomove6.Name;
-                MovePower6.text = dingomove6.Power.ToString();
-                MoveAccuracy6.text = dingomove6.Accuracy.ToString();
-                MoveType6.text = dingomove6.Type.ToString();
-                MoveDescription6.text = dingomove6.Description;
-
-                // For Move 7
-                MoveName7.text = dingomove7.Name;
-                MovePower7.text = dingomove7.Power.ToString();
-                MoveAccuracy7.text = dingomove7.Accuracy.ToString();
-                MoveType7.text = dingomove7.Type.ToString();
-                MoveDescription7.text = dingomove7.Description;
-
-                // For Move 8
-                MoveName8.text = dingomove8.Name;
-                MovePower8.text = dingomove8.Power.ToString();
-                MoveAccuracy8.text = dingomove8.Accuracy.ToString();
-                MoveType8.text = dingomove8.Type.ToString();
-                MoveDescription8.text = dingomove8.Description;
-
-                // For Move 9
-                MoveName9.text = dingomove9.Name;
-                MovePower9.text = dingomove9.Power.ToString();
-                MoveAccuracy9.text = dingomove9.Accuracy.ToString();
-                MoveType9.text = dingomove9.Type.ToString();
-                MoveDescription9.text = dingomove9.Description;
-
-                // For Move 10
-                MoveName10.text = dingomove10.Name;
-                MovePower10.text = dingomove10.Power.ToString();
-                MoveAccuracy10.text = dingomove10.Accuracy.ToString();
-                MoveType10.text = dingomove10.Type.ToString();
-                MoveDescription10.text = dingomove10.Description;
-
-
+                UpdateAllMoves(nextdingo.Moves);
 
 
                 pagenumber++;
+                agentBingo = false;
+
             }
         }
         catch (System.Exception e)
@@ -777,89 +731,9 @@ public class PlayerDingos : MonoBehaviour
             ActiveMove2.text = activemove2.Name;
             ActiveMove3.text = activemove3.Name;
             ActiveMove4.text = activemove4.Name;
-            DingoMove dingomove1 = nextdingo.Moves[0];
-            DingoMove dingomove2 = nextdingo.Moves[1];
-            DingoMove dingomove3 = nextdingo.Moves[2];
-            DingoMove dingomove4 = nextdingo.Moves[3];
-            DingoMove dingomove5 = nextdingo.Moves[4];
-            DingoMove dingomove6 = nextdingo.Moves[5];
-            DingoMove dingomove7 = nextdingo.Moves[6];
-            DingoMove dingomove8 = nextdingo.Moves[7];
-            DingoMove dingomove9 = nextdingo.Moves[8];
-            DingoMove dingomove10 = nextdingo.Moves[9];
+            UpdateAllMoves(nextdingo.Moves);
 
-
-
-            // For Move 1
-            MoveName1.text = dingomove1.Name;
-            MovePower1.text = dingomove1.Power.ToString();
-            MoveAccuracy1.text = dingomove1.Accuracy.ToString();
-            MoveType1.text = dingomove1.Type.ToString();
-            MoveDescription1.text = dingomove1.Description;
-
-            // For Move 2
-            MoveName2.text = dingomove2.Name;
-            MovePower2.text = dingomove2.Power.ToString();
-            MoveAccuracy2.text = dingomove2.Accuracy.ToString();
-            MoveType2.text = dingomove2.Type.ToString();
-            MoveDescription2.text = dingomove2.Description;
-
-            // For Move 3
-            MoveName3.text = dingomove3.Name;
-            MovePower3.text = dingomove3.Power.ToString();
-            MoveAccuracy3.text = dingomove3.Accuracy.ToString();
-            MoveType3.text = dingomove3.Type.ToString();
-            MoveDescription3.text = dingomove3.Description;
-
-            // For Move 4
-            MoveName4.text = dingomove4.Name;
-            MovePower4.text = dingomove4.Power.ToString();
-            MoveAccuracy4.text = dingomove4.Accuracy.ToString();
-            MoveType4.text = dingomove4.Type.ToString();
-            MoveDescription4.text = dingomove4.Description;
-
-            // For Move 5
-            MoveName5.text = dingomove5.Name;
-            MovePower5.text = dingomove5.Power.ToString();
-            MoveAccuracy5.text = dingomove5.Accuracy.ToString();
-            MoveType5.text = dingomove5.Type.ToString();
-            MoveDescription5.text = dingomove5.Description;
-
-            // For Move 6
-            MoveName6.text = dingomove6.Name;
-            MovePower6.text = dingomove6.Power.ToString();
-            MoveAccuracy6.text = dingomove6.Accuracy.ToString();
-            MoveType6.text = dingomove6.Type.ToString();
-            MoveDescription6.text = dingomove6.Description;
-
-            // For Move 7
-            MoveName7.text = dingomove7.Name;
-            MovePower7.text = dingomove7.Power.ToString();
-            MoveAccuracy7.text = dingomove7.Accuracy.ToString();
-            MoveType7.text = dingomove7.Type.ToString();
-            MoveDescription7.text = dingomove7.Description;
-
-            // For Move 8
-            MoveName8.text = dingomove8.Name;
-            MovePower8.text = dingomove8.Power.ToString();
-            MoveAccuracy8.text = dingomove8.Accuracy.ToString();
-            MoveType8.text = dingomove8.Type.ToString();
-            MoveDescription8.text = dingomove8.Description;
-
-            // For Move 9
-            MoveName9.text = dingomove9.Name;
-            MovePower9.text = dingomove9.Power.ToString();
-            MoveAccuracy9.text = dingomove9.Accuracy.ToString();
-            MoveType9.text = dingomove9.Type.ToString();
-            MoveDescription9.text = dingomove9.Description;
-
-            // For Move 10
-            MoveName10.text = dingomove10.Name;
-            MovePower10.text = dingomove10.Power.ToString();
-            MoveAccuracy10.text = dingomove10.Accuracy.ToString();
-            MoveType10.text = dingomove10.Type.ToString();
-            MoveDescription10.text = dingomove10.Description;
-
+            agentBingo = false;
 
             pagenumber--;
         }
@@ -872,6 +746,10 @@ public class PlayerDingos : MonoBehaviour
     }
     public void SetActiveDingo()
     {
+        if (agentBingo)
+        {
+            return;
+        }
         string filePath = Path.Combine(Application.persistentDataPath, "dingos.json");
         Debug.Log("File path: " + filePath);
 

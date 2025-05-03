@@ -3,9 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 using Unity.Netcode;
-using UnityEditor.PackageManager;
-using UnityEditorInternal.Profiling.Memory.Experimental;
-using static UnityEditor.Progress;
+using Unity.VisualScripting;
+
 
 [System.Serializable]
 public class ItemData
@@ -20,7 +19,13 @@ public class InventoryManager : NetworkBehaviour
     public ItemDatabase itemDatabase;
     public GameObject inventoryScreen;
     public Transform ItemContent;
+    public Transform miniItemContent;
     public GameObject InventoryItem;
+    public Text mouneyAmountText1;
+    public Text mouneyAmountText2;
+
+    private int _money = 100;
+    public int Money => _money; // Public read-only access
 
     private void Awake()
     {
@@ -47,47 +52,66 @@ public class InventoryManager : NetworkBehaviour
         SaveInventory();
     }
 
-    public void ListItems()
+    public void ListItems(bool buttonBool)
     {
         LoadInventory();
-        foreach (Transform item in ItemContent)
+        if (buttonBool)
         {
-            Destroy(item.gameObject);
+            foreach (Transform item in ItemContent)
+            {
+                Destroy(item.gameObject);
+            }
         }
+        else
+        {
+            foreach (Transform item in miniItemContent)
+            {
+                Destroy(item.gameObject);
+            }
+        }
+
 
         foreach (var item in Items)
         {
-            GameObject obj = Instantiate(InventoryItem, ItemContent);
-            var itemName = obj.transform.Find("ItemName").GetComponent<Text>();
-            var itemIcon = obj.transform.Find("ItemIcon").GetComponent<Image>();
 
-            itemName.text = item.Name;
-            itemIcon.sprite = item.Icon;
+            if (buttonBool)
+            {
+                GameObject inventoryItem = Instantiate(InventoryItem, ItemContent);
+                Button button = inventoryItem.GetComponent<Button>();
+                int itemId = item.ID; // Store item ID in a local variable to avoid closure issues
+
+                // Add an event listener to the button's onClick event
+                button.onClick.AddListener(() => OnInventoryItemClick(itemId));
+                var itemName = inventoryItem.transform.Find("ItemName").GetComponent<Text>();
+                var itemIcon = inventoryItem.transform.Find("ItemIcon").GetComponent<Image>();
+
+                itemName.text = item.Name;
+                itemIcon.sprite = item.Icon;
+
+            }
+            else
+            {
+                GameObject inventoryItem = Instantiate(InventoryItem, miniItemContent);
+                Button button = inventoryItem.GetComponent<Button>();
+                int itemId = item.ID; // Store item ID in a local variable to avoid closure issues
+
+                // Add an event listener to the button's onClick event
+                button.onClick.AddListener(() => BuyMenuManager.Instance.OnSellItemClick(itemId));
+                var itemName = inventoryItem.transform.Find("ItemName").GetComponent<Text>();
+                var itemIcon = inventoryItem.transform.Find("ItemIcon").GetComponent<Image>();
+                var itemPrice = inventoryItem.transform.Find("ItemPrice").GetComponent<Text>();
+
+                RectTransform iconRect = itemIcon.GetComponent<RectTransform>();
+                iconRect.sizeDelta *= 0.75f; // 100% - 25% = 75% (0.75)
+                itemName.text = item.Name;
+                itemIcon.sprite = item.Icon;
+                itemPrice.text = "Price: $" + item.Price;
+            }
         }
     }
     public void InstantiateInventoryItems()
     {
-        LoadInventory();
-        foreach (Transform item in ItemContent)
-        {
-            Destroy(item.gameObject);
-        }
-        foreach (var item in Items)
-        {
-            GameObject inventoryItem = Instantiate(InventoryItem, ItemContent);
-            Button button = inventoryItem.GetComponent<Button>();
-            int itemId = item.ID; // Store item ID in a local variable to avoid closure issues
-
-            // Add an event listener to the button's onClick event
-            button.onClick.AddListener(() => OnInventoryItemClick(itemId));
-            var itemName = inventoryItem.transform.Find("ItemName").GetComponent<Text>();
-            var itemIcon = inventoryItem.transform.Find("ItemIcon").GetComponent<Image>();
-
-            itemName.text = item.Name;
-            itemIcon.sprite = item.Icon;
-            // Customize the inventory item UI element (e.g., set text and icon)
-            // ...
-        }
+        ListItems(true);
     }
     public void InstantiateBattleInventoryItems()
     {
@@ -340,6 +364,15 @@ public class InventoryManager : NetworkBehaviour
                     foodscript.ForceFoodActive(2);
                 }
                 break;
+            case 6:
+                BattleStarter.Instance.RequestFeedDingoServerRpc(NetworkManager.Singleton.LocalClientId, PlayerManager.Instance.PlayerNumber.Value, 6);
+                SetFoodClientRpc(itemId, playerNumber);
+
+                if (foodscript != null)
+                {
+                    foodscript.ForceFoodActive(2);
+                }
+                break;
             // Add more cases for other items
             default:
                 Debug.LogWarning("Unknown item ID: " + itemId);
@@ -470,7 +503,7 @@ public class InventoryManager : NetworkBehaviour
             Debug.LogError("Local player NetworkObject not found");
         }
     }
-    private void SaveInventory()
+    public void SaveInventory()
     {
         List<ItemData> itemDataList = new List<ItemData>();
         foreach (var item in Items)
@@ -480,9 +513,10 @@ public class InventoryManager : NetworkBehaviour
 
         string json = JsonUtility.ToJson(new ItemListWrapper { Items = itemDataList });
         File.WriteAllText(Application.persistentDataPath + "/inventory.json", json);
+        SaveMoney();
     }
 
-    private void LoadInventory()
+    public void LoadInventory()
     {
         string path = Application.persistentDataPath + "/inventory.json";
         if (File.Exists(path))
@@ -500,8 +534,63 @@ public class InventoryManager : NetworkBehaviour
                 }
             }
         }
+        LoadMoney();
+    }
+    // Add money locally
+    public void AddMoney(int amount)
+    {
+        _money += amount;
+        SaveMoney();
     }
 
+    // Try to remove money if player has enough
+    public bool TryRemoveMoney(int amount)
+    {
+        if (_money >= amount)
+        {
+            _money -= amount;
+            SaveMoney();
+            return true;
+        }
+        return false;
+    }
+
+    // ClientRpc for host to award battle earnings
+    [ClientRpc]
+    public void AwardBattleEarningsClientRpc(int amount, ulong clientId)
+    {
+        if (IsClient && NetworkManager.Singleton.LocalClientId == clientId)
+        {
+            AddMoney(amount);
+            Debug.Log($"Awarded {amount} money from battle");
+        }
+    }
+
+    private void SaveMoney()
+    {
+        PlayerPrefs.SetInt("PlayerMoney", _money);
+        PlayerPrefs.Save();
+    }
+
+    private void LoadMoney()
+    {
+        if (PlayerPrefs.HasKey("PlayerMoney"))
+        {
+            _money = PlayerPrefs.GetInt("PlayerMoney");
+            mouneyAmountText1.text = "Money: $" + Money.ToString();
+            mouneyAmountText2.text = "Money: $" + Money.ToString();
+
+        }
+        else
+        {
+            _money = 0;
+            mouneyAmountText2.text = "Money: $" + Money.ToString();
+        }
+    }
+    public void ImmediatelyEndBattle()
+    {
+        BattleHandler.EndBattle(NetworkManager.Singleton.LocalClientId);
+    }
     [System.Serializable]
     private class ItemListWrapper
     {

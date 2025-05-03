@@ -1,6 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Net.NetworkInformation;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -15,7 +13,6 @@ public class Interactor : MonoBehaviour
         {
             if (Input.GetButtonDown("Fire1"))
             {
-                Debug.Log("shingo2");
                 interactAction.Invoke();
             }
         }
@@ -27,15 +24,16 @@ public class Interactor : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(collision.gameObject.CompareTag("Player"))
+        if (collision.CompareTag("Player") && collision.TryGetComponent(out NetworkBehaviour nb) && nb.IsLocalPlayer)
         {
             isInRange = true;
             text.SetActive(true);
         }
     }
+
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (collision.CompareTag("Player") && collision.TryGetComponent(out NetworkBehaviour nb) && nb.IsLocalPlayer)
         {
             TurnOff();
         }

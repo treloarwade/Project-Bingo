@@ -45,6 +45,7 @@ public class JoinButton : MonoBehaviour
         if (cameraFollow != null)
         {
             StartCoroutine(cameraFollow.FindAndFollowLocalPlayer());
+            LayerSwitcherManager.Instance?.OnLocalPlayerReady();
         }
     }
 }
