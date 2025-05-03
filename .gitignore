@@ -390,3 +390,5 @@ FodyWeavers.xsd
 /Assets/Plugins/ParrelSync/ScriptableObjects/ParrelSyncProjectSettings.asset
 /Assets/battleFlow.dot
 /Assets/battleFlowVertical.dot
+/Assets/RedBlueGames/MulliganRenamer
+*.csproj
