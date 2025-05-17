@@ -17,13 +17,13 @@ public static class DingoDatabase
     public static DingoID Magicfishy { get; } = new DingoID(7, "Magicfishy", "Dark", "Magicfishy roams the night with mysterious powers.", 200, 84, 78, 100, "Magicfishy", 200, 0, 50, 1);
     public static DingoID Marshmellow { get; } = new DingoID(8, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 84, 78, 100, "marshmellow", 200, 0, 50, 1);
     public static DingoID Robbersnail { get; } = new DingoID(9, "Robbersnail", "Dark", "Robbersnail moves slowly but strikes with surprising speed and cunning.", 200, 84, 78, 100, "robbersnail", 200, 0, 50, 1);
-    public static DingoID Rock { get; } = new DingoID(10, "Rock", "Ground", "Rock is sturdy and unyielding, standing firm against all attacks.", 200, 84, 78, 100, "rock", 200, 0, 50, 1);
+    public static DingoID Rock { get; } = new DingoID(10, "Rock", "Physical", "Rock is sturdy and unyielding, standing firm against all attacks.", 200, 84, 78, 100, "rock", 200, 0, 50, 1);
     public static DingoID Seed { get; } = new DingoID(11, "Seed", "Grass", "Seed nurtures life, spreading seeds of hope across the land.", 200, 84, 78, 100, "seed", 200, 0, 50, 1);
     public static DingoID Buggy { get; } = new DingoID(12, "Buggy", "Grass", "Buggy scurries around with its many legs, always searching for new adventures.", 200, 70, 60, 100, "buggy", 200, 0, 50, 1);
     public static DingoID DancingPlant { get; } = new DingoID(13, "DancingPlant", "Grass", "DancingPlant sways gently in the breeze, spreading seeds of joy wherever it goes.", 200, 60, 70, 100, "dancingplant", 200, 0, 50, 1);
     public static DingoID Shingy { get; } = new DingoID(14, "Shingy", "Dark", "Shingy reflects the light with its metallic body, dazzling opponents in battle.", 200, 80, 75, 100, "shingy", 200, 0, 50, 1);
     public static DingoID SadCloud { get; } = new DingoID(15, "SadCloud", "Wind", "SadCloud drifts through the sky, leaving raindrops of melancholy in its wake.", 200, 50, 65, 100, "sadcloud", 200, 0, 50, 1);
-    public static DingoID Worm { get; } = new DingoID(16, "Worm", "Ground", "Worm burrows through the earth, emerging to surprise unsuspecting foes.", 200, 55, 50, 100, "worm", 200, 0, 50, 1);
+    public static DingoID Worm { get; } = new DingoID(16, "Worm", "Physical", "Worm burrows through the earth, emerging to surprise unsuspecting foes.", 200, 55, 50, 100, "worm", 200, 0, 50, 1);
     public static DingoID Pebble { get; } = new DingoID(17, "Pebble", "Dark", "Pebble may seem small, but its tough exterior can withstand powerful attacks.", 200, 40, 90, 100, "pebble", 200, 0, 50, 1);
     public static DingoID Ghost { get; } = new DingoID(18, "Ghost", "Dark", "Ghost haunts the shadows, striking fear into the hearts of its enemies.", 200, 70, 90, 100, "ghost", 200, 0, 50, 1);
     public static DingoID Crick { get; } = new DingoID(19, "Crick", "Grass", "Crick is a Grass type insect.", 200, 80, 60, 120, "crick", 200, 0, 50, 1);
@@ -47,8 +47,8 @@ public static class DingoDatabase
     public static DingoID Doggoice { get; } = new DingoID(37, "Doggo Ice", "Ice", "Doggo Ice is the ice type", 200, 70, 70, 100, "doggoice", 200, 0, 50, 1);
     public static DingoID Doggograss { get; } = new DingoID(38, "Doggo Grass", "Grass", "Doggo Grass is the grass type", 200, 70, 70, 100, "doggograss", 200, 0, 50, 1);
     public static DingoID Doggowater { get; } = new DingoID(39, "Doggo Water", "Water", "Doggo Water is the water type", 200, 70, 70, 100, "doggowater", 200, 0, 50, 1);
-    public static DingoID BingoStar2 { get; } = new DingoID(1000, "BingoStar", "Light", "BingoStar flies around the sky in search of powerful opponents.", 200, 1, 999, 1, "star", 200, 0, 50, 1);
-    public static DingoID Marshmellow2 { get; } = new DingoID(1001, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 1, 999, 1, "marshmellow", 200, 0, 50, 1);
+    public static DingoID BingoStar2 { get; } = new DingoID(1000, "BingoStar", "Light", "BingoStar flies around the sky in search of powerful opponents.", 200, 1, 1, 1, "star", 200, 0, 50, 1);
+    public static DingoID Marshmellow2 { get; } = new DingoID(1001, "Marshmellow", "Fire", "Marshmellow is sweet and fluffy, spreading joy wherever it goes.", 200, 1, 1, 1, "marshmellow", 200, 0, 50, 1);
     public static EnvironmentEffect Rain { get; } = new EnvironmentEffect(0, 3, "Rain");
     public static StatusEffect Goo { get; } = new StatusEffect(0, 3, "Goo");
 
@@ -216,12 +216,12 @@ public static class DingoDatabase
         Shingy.AddMove(new DingoMove(1, "Sucker Punch", "Dark", 0, 70, 100, null, null, "This move enables the user to attack first. This move fails if the target is not readying an attack."));
         Shingy.AddMove(new DingoMove(2, "Shadow Claw", "Dark", 0, 70, 100, null, null, "The user slashes with a sharp claw made from shadows. Critical hits land more easily."));
         Shingy.AddMove(new DingoMove(3, "Night Shade", "Dark", 0, 0, 100, null, null, "The user makes the target see a frightening mirage. It inflicts damage matching the user’s level."));
-        Shingy.AddMove(new DingoMove(4, "Spirit Bomb", "Spirit", 0, 90, 100, null, null, "The user gathers spiritual energy and releases it at once. This may also lower the target's Special Defense stat."));
+        Shingy.AddMove(new DingoMove(4, "Spirit Bomb", "Light", 0, 90, 100, null, null, "The user gathers spiritual energy and releases it at once. This may also lower the target's Special Defense stat."));
         Shingy.AddMove(new DingoMove(5, "Shadow Sneak", "Dark", 0, 40, 100, null, null, "The user extends its shadow and attacks the target from behind. This move always goes first."));
         Shingy.AddMove(new DingoMove(6, "Hex", "Dark", 0, 65, 100, null, null, "This relentless attack does massive damage to a target affected by status conditions."));
-        Shingy.AddMove(new DingoMove(7, "Curse", "Spirit", 0, 0, 100, null, null, "A move that works differently for the Ghost type than for all other types."));
+        Shingy.AddMove(new DingoMove(7, "Curse", "Dark", 0, 0, 100, null, null, "A move that works differently for the Ghost type than for all other types."));
         Shingy.AddMove(new DingoMove(8, "Shadow Punch", "Dark", 0, 60, 100, null, null, "The user throws a punch from the shadows. The punch lands without fail."));
-        Shingy.AddMove(new DingoMove(9, "Dream Eater", "Spirit", 0, 100, 100, null, null, "The user eats the dreams of a sleeping target. It absorbs half the damage caused to heal the user's HP."));
+        Shingy.AddMove(new DingoMove(9, "Dream Eater", "Dark", 0, 100, 100, null, null, "The user eats the dreams of a sleeping target. It absorbs half the damage caused to heal the user's HP."));
 
         SadCloud.AddMove(new DingoMove(0, "Misty Veil", "Wind", 0, 0, 100, null, null, "Surrounds itself with a veil of mist that reduces incoming damage."));
         SadCloud.AddMove(new DingoMove(1, "Cloud Burst", "Wind", 0, 100, 90, null, null, "Gathers moisture from the air to create a powerful burst of cloud energy."));
@@ -528,27 +528,46 @@ public static class DingoDatabase
     {
         try
         {
+            List<DingoID> result;
+
             switch (listType)
             {
                 case DingoDatabase.AllDingos:
-                    return allDingos;
+                    result = allDingos;
+                    break;
                 case DingoDatabase.NewDingos:
-                    return newDingos;
+                    result = newDingos;
+                    break;
                 case DingoDatabase.FinanceDingos:
-                    return financeDingos;
+                    result = financeDingos;
+                    break;
                 case DingoDatabase.SecretDingos:
-                    return secretDingos;
+                    result = secretDingos;
+                    break;
                 case DingoDatabase.FireDingos:
-                    return fireDingos;
+                    result = fireDingos;
+                    break;
                 case DingoDatabase.WaterDingos:
-                    return waterDingos;
+                    result = waterDingos;
+                    break;
                 case DingoDatabase.TrainerDingos:
-                    return trainerDingos;
+                    result = trainerDingos;
+                    break;
                 case DingoDatabase.MarshmellowDingos:
-                    return marshmellow;
+                    result = marshmellow;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(listType), listType, "Invalid Dingo list type.");
             }
+
+            // Debug each Dingo name
+            Debug.Log($"[DingoDatabase] Retrieved list for type {listType} with {result.Count} Dingos:");
+            foreach (var dingo in result)
+            {
+                Debug.Log($"- {dingo.Name}");
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -642,8 +661,7 @@ public static class DingoDatabase
     public static List<DingoID> trainerDingos = new List<DingoID>
     {
         BingoStar2,
-        Marshmellow2,
-        Octi
+        Marshmellow2
     };
     public static int GetTotalDingos()
     {

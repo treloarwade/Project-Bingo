@@ -1,58 +1,74 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class SpriteLayerSwitch3 : MonoBehaviour
 {
-    public GameObject bingo;
+    public Transform bingo;
     public Collider2D above;
     public Collider2D above2;
     public Collider2D below;
     public Collider2D below2;
     public float height;
-    void Update()
+
+    private Coroutine searchCoroutine;
+
+    private void Awake()
     {
-        // Check if the bingo GameObject's Y position is below a certain threshold
-        if (bingo.transform.position.y < height)
-        {
-            // Switch to the background sorting layer
-            SwitchSortingLayer("background");
+        FindLocalPlayer();
+        height = transform.position.y;
+    }
 
-            // Enable the "below" collider and disable the "above" collider
-            if (below != null)
-                below.enabled = true;
-            if (below2 != null)
-                below2.enabled = true;
-            if (above != null)
-                above.enabled = false;
-            if (above2 != null)
-                above2.enabled = false;
-        }
-        else
+    private void OnDestroy()
+    {
+        if (searchCoroutine != null)
         {
-            // Switch to the default sorting layer
-            SwitchSortingLayer("Default");
-
-            // Enable the "above" collider and disable the "below" collider
-            if (above != null)
-                above.enabled = true;
-            if (above2 != null)
-                above2.enabled = true;
-            if (below != null)
-                below.enabled = false;
-            if (below2 != null)
-                below2.enabled = false;
+            StopCoroutine(searchCoroutine);
         }
     }
-    public void SwitchSortingLayer(string sortingLayerName)
+
+    public void FindLocalPlayer()
     {
-        Renderer renderer = GetComponent<Renderer>();
-        if (renderer == null)
+        if (searchCoroutine != null)
         {
-            Debug.LogWarning("Renderer component not found.");
-            return;
+            StopCoroutine(searchCoroutine);
+        }
+        searchCoroutine = StartCoroutine(FindLocalPlayerRoutine());
+    }
+
+    private IEnumerator FindLocalPlayerRoutine()
+    {
+        yield return new WaitForSeconds(Random.Range(0.1f, 0.3f)); // Stagger searches
+
+        // First try local player manager if available
+        if (LocalPlayerManager.Instance != null && LocalPlayerManager.Instance.LocalPlayer != null)
+        {
+            bingo = LocalPlayerManager.Instance.LocalPlayer.transform;
+            yield break;
         }
 
-        renderer.sortingLayerName = sortingLayerName;
+        // Fallback to tag search
+        var players = GameObject.FindGameObjectsWithTag("Player");
+        foreach (var player in players)
+        {
+            if (player.GetComponent<NetworkObject>()?.IsOwner ?? false)
+            {
+                bingo = player.transform;
+                break;
+            }
+        }
+    }
+
+    void Update()
+    {
+        if (bingo == null) return;
+
+        bool isBelow = bingo.position.y < height;
+
+        if (below != null) below.enabled = isBelow;
+        if (above != null) above.enabled = !isBelow;
+        if (below != null) below2.enabled = isBelow;
+        if (above != null) above2.enabled = !isBelow;
     }
 }

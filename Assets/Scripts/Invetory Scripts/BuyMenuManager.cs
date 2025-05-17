@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
-using static UnityEditor.Progress;
 
 public class BuyMenuManager : NetworkBehaviour
 {

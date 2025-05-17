@@ -10,12 +10,8 @@ using System.Collections;
 using System;
 using Random = UnityEngine.Random;
 using Unity.Netcode.Components;
-using UnityEditor.PackageManager;
-using Unity.VisualScripting.FullSerializer;
-using static UnityEngine.GraphicsBuffer;
-using UnityEditor.Experimental.GraphView;
 using UnityEditor;
-using System.Net.NetworkInformation;
+using UnityEditor.PackageManager;
 
 
 public static class BattleHandler
@@ -30,6 +26,9 @@ public static class BattleHandler
     private static Dictionary<ulong, HashSet<ulong>> ongoingCatches = new Dictionary<ulong, HashSet<ulong>>();
     public static Dictionary<ulong, Dictionary<int, StatusEffect>> statusEffects = new Dictionary<ulong, Dictionary<int, StatusEffect>>();
     public static Dictionary<ulong, EnvironmentEffect> environmentEffects = new Dictionary<ulong, EnvironmentEffect>();
+    private static Dictionary<ulong, NetworkTrainer> _trainerInstances = new Dictionary<ulong, NetworkTrainer>();
+    private static Dictionary<ulong, bool> _battleOutcomes = new Dictionary<ulong, bool>();
+
 
     public static GameObject GetBattlePrefab(ulong clientId)
     {
@@ -40,10 +39,10 @@ public static class BattleHandler
         }
         return prefab;
     }
-    public static void StartBattle(ulong clientId, int dingoListInt, Vector3 spawnPosition, string filePath, string agentBingoPath)
+    public static void StartBattle(ulong clientId, int dingoListInt, Vector3 spawnPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
     {
         BattleStarter.Instance.SetBattleUIVisibilityClientRPC(true, clientId);
-        List<DingoID> dingoList = DingoDatabase.GetDingoList(dingoListInt);
+        List<DingoID> dingoList = new List<DingoID>(DingoDatabase.GetDingoList(dingoListInt));
 
         // Check if the player is already in a battle
         if (IsPlayerInBattle(clientId))
@@ -110,9 +109,19 @@ public static class BattleHandler
         {
             playerDingos.Add(playerDingo2);
         }
+        NetworkDingo opponentDingo1 = null;
+        NetworkDingo opponentDingo2 = null;
+        if (isTrainer)
+        {
+            opponentDingo1 = DingoLoader.LoadAndRemoveDingoFromList(cachedList);
+            opponentDingo2 = DingoLoader.LoadAndRemoveDingoFromList(cachedList);
+        }
+        else
+        {
+            opponentDingo1 = DingoLoader.LoadRandomDingoFromList(cachedList);
+            opponentDingo2 = DingoLoader.LoadRandomDingoFromList(cachedList);
+        }
 
-        NetworkDingo opponentDingo1 = DingoLoader.LoadRandomDingoFromList(dingoList);
-        NetworkDingo opponentDingo2 = DingoLoader.LoadRandomDingoFromList(dingoList);
 
         if (opponentDingo1 == null || opponentDingo2 == null)
         {
@@ -126,11 +135,19 @@ public static class BattleHandler
         NetworkDingo[] opponentDingos = { opponentDingo1, opponentDingo2 };
 
         AssignDingos(clientId, playerDingos.ToArray(), opponentDingos);
-        SetBattlePositions(clientId);
+
+        SetBattlePositions(clientId, isTrainer, trainerSprite);
 
         Debug.Log($"Battle started successfully for client {clientId}!");
     }
+    public static bool IsTrainerBattle(ulong clientId)
+    {
+        // First determine if this is Player 2 checking in
+        bool isPlayer2 = playerToHostMap.ContainsKey(clientId);
+        ulong hostClientId = isPlayer2 ? GetHostForPlayer2(clientId) : clientId;
 
+        return _trainerInstances.ContainsKey(hostClientId);
+    }
     // New helper method to find first healthy Dingo
     private static NetworkDingo FindFirstHealthyDingo(ulong clientId, string filePath, string agentBingoPath)
     {
@@ -200,16 +217,23 @@ public static class BattleHandler
     {
         if (dingo == null) return;
 
-        // Properly clean up the Dingo instance
-        if (dingo.gameObject != null)
+        // Reset any battle-specific properties
+        dingo.battleMoveId.Value = -1;
+        dingo.battleTargetId.Value = -1;
+        dingo.gameObject.SetActive(false);
+
+        // Proper network cleanup
+        if (dingo.TryGetComponent<NetworkObject>(out var netObj))
         {
-            if (dingo.GetComponent<NetworkObject>().IsSpawned)
+            if (netObj.IsSpawned)
             {
-                dingo.GetComponent<NetworkObject>().Despawn();
+                netObj.Despawn(true);
             }
-            GameObject.Destroy(dingo.gameObject);
         }
-        Debug.Log($"Cleaned up unused Dingo: {dingo.name.Value}");
+
+        // Destroy the game object
+        GameObject.Destroy(dingo.gameObject);
+        Debug.Log($"Cleaned up Dingo: {dingo.name.Value}");
     }
     public static void AssignDingos(ulong clientId, NetworkDingo[] playerDingos, NetworkDingo[] opponentDingos)
     {
@@ -293,19 +317,6 @@ public static class BattleHandler
             BattleSlots[clientId] = new Dictionary<int, BattleSlot>();
         }
 
-        // Clean up existing Dingo in this slot
-        if (BattleSlots[clientId].ContainsKey(slotNumber))
-        {
-            NetworkDingo existingDingo = BattleSlots[clientId][slotNumber].Dingo;
-            if (existingDingo != null && existingDingo != dingo)
-            {
-                if (existingDingo.GetComponent<NetworkObject>().IsSpawned)
-                {
-                    existingDingo.GetComponent<NetworkObject>().Despawn();
-                }
-                GameObject.Destroy(dingo.gameObject);
-            }
-        }
 
         // Assign the new Dingo
         BattleSlots[clientId][slotNumber] = new BattleSlot(dingo, slotNumber, isPlayer);
@@ -552,7 +563,7 @@ public static class BattleHandler
         }
 
         // Assign the new Dingo to the fixed battle slot
-        AssignDingoToSlot(adjustedClientId, newDingo, battleSlot, true);
+        AssignDingoToSlot(adjustedClientId, newDingo, battleSlot, false);
 
         // Update battle position
         SetBattlePosition(adjustedClientId, battleSlot);
@@ -1938,7 +1949,7 @@ public static class BattleHandler
             // Handle Agent Bingo (ID 0) for both player slots
             if (dingo.id.Value == 0 && (slotIndex == 0 || slotIndex == 1))
             {
-                // Disable the Dingo's sprite renderer
+                Debug.Log($"Value was {dingo.id.Value}");
                 SpriteRenderer dingoRenderer = dingo.GetComponent<SpriteRenderer>();
                 if (dingoRenderer != null)
                 {
@@ -1973,7 +1984,7 @@ public static class BattleHandler
             {
                 // Regular player Dingo positioning
                 Transform playerPosition = battlePrefab.transform.Find(
-                    slotIndex == 0 ? "Players/Slot1" : "Players/Slot2");
+                    slotIndex == 0 ? "Players/TrainerPosition1" : "Players/TrainerPosition2");
 
                 if (playerPosition != null)
                 {
@@ -1991,14 +2002,34 @@ public static class BattleHandler
         }
 
     }
-    private static void SetBattlePositions(ulong clientId)
+    private static void SetBattlePositions(ulong clientId, bool isTrainer, string trainerSprite)
     {
         if (!_battlePrefabInstances.TryGetValue(clientId, out var battlePrefabInstance) || battlePrefabInstance == null)
         {
             Debug.LogError("Battle prefab instance is null for client: " + clientId);
             return;
         }
-
+        if (isTrainer)
+        {
+            NetworkTrainer trainer = DingoLoader.TrainerSprite(trainerSprite);
+            if (trainer != null)
+            {
+                _trainerInstances[clientId] = trainer; // Store the trainer instance
+                Transform opponentTrainer1 = battlePrefabInstance.transform.Find("Opponents/OpponentTrainerPosition1");
+                if (opponentTrainer1 != null)
+                {
+                    trainer.transform.localPosition = opponentTrainer1.position;
+                }
+                else
+                {
+                    Debug.LogError("OpponentTrainerPosition1 not found in battle prefab!");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to load trainer sprite!");
+            }
+        }
         // Find the battle slots (child objects)
         Transform playerSlot1 = battlePrefabInstance.transform.Find("Players/Slot1");
         Transform playerSlot2 = battlePrefabInstance.transform.Find("Players/Slot2");
@@ -2399,54 +2430,66 @@ public static class BattleHandler
 
     public static void EndBattle(ulong hostClientId)
     {
-        Debug.Log($"Ending battle hosted by client {hostClientId}...");
-        SavePlayerDingosAtBattleEnd(hostClientId);
-
-        // Clean up battle slots
-        if (BattleSlots.ContainsKey(hostClientId))
+        bool playerWon = CheckPlayerWinCondition(hostClientId);
+        _battleOutcomes[hostClientId] = playerWon;
+        // Clean up all Dingos in this battle
+        if (BattleSlots.TryGetValue(hostClientId, out var slots))
         {
-            foreach (var slot in BattleSlots[hostClientId])
+            foreach (var slot in slots.Values)
             {
-                if (slot.Value.Dingo != null)
+                if (slot.Dingo != null)
                 {
-                    slot.Value.Dingo.gameObject.SetActive(false);
+                    CleanupDingo(slot.Dingo);
                 }
             }
             BattleSlots.Remove(hostClientId);
         }
 
-        // Clean up the battle prefab for this host
-        if (_battlePrefabInstances.TryGetValue(hostClientId, out var prefab))
+        // Clean up trainer if exists
+        if (_trainerInstances.TryGetValue(hostClientId, out var trainer))
         {
-            GameObject.Destroy(prefab);
-            _battlePrefabInstances.Remove(hostClientId);
-            Debug.Log($"Destroyed battle prefab for host {hostClientId}");
-        }
-        BattleStarter.Instance.SetBattleUIVisibilityClientRPC(false, hostClientId);
-        RestorePlayerPositions(hostClientId);
-
-        // Clean up Player 2 association if exists
-        var player2ClientId = GetPlayer2FromHost(hostClientId);
-        if (player2ClientId.HasValue)
-        {
-            int playerNumber = PlayerManager.GetPlayerNumberByClientId(player2ClientId.Value);
-            BattleStarter.Instance.SetPlayerPhysicsStateClientRPC(false, player2ClientId.Value, playerNumber);
-
-            BattleStarter.Instance.SetBattleUIVisibilityClientRPC(false, player2ClientId.Value);
-            playerToHostMap.Remove(player2ClientId.Value);
-            Debug.Log($"Removed Player2 {player2ClientId.Value} from battle hosted by {hostClientId}");
-        }
-        else
-        {
-            Debug.Log($"Didn't remove Player2 {player2ClientId.Value} from battle hosted by {hostClientId}");
-
+            if (trainer != null)
+            {
+                if (trainer.TryGetComponent<NetworkObject>(out var netObj) && netObj.IsSpawned)
+                {
+                    netObj.Despawn(true);
+                }
+                GameObject.Destroy(trainer.gameObject);
+            }
+            _trainerInstances.Remove(hostClientId);
         }
 
-        // Restore positions for all participants
+        SavePlayerDingosAtBattleEnd(hostClientId);
         CleanupBattlePrefab(hostClientId);
         HandlePlayer2Cleanup(hostClientId);
+        RestorePlayerPositions(hostClientId);
+    }
+    private static bool CheckPlayerWinCondition(ulong hostClientId)
+    {
+        if (!BattleSlots.ContainsKey(hostClientId)) return false;
+
+        // Check if all opponent Dingos are fainted
+        bool allOpponentsFainted = true;
+        foreach (var slot in BattleSlots[hostClientId].Values)
+        {
+            if (!slot.IsPlayer && slot.Dingo != null && slot.Dingo.hp.Value > 0)
+            {
+                allOpponentsFainted = false;
+                break;
+            }
+        }
+        return allOpponentsFainted;
     }
 
+    public static bool GetBattleOutcome(ulong clientId)
+    {
+        if (_battleOutcomes.TryGetValue(clientId, out bool outcome))
+        {
+            _battleOutcomes.Remove(clientId); // Clean up after retrieval
+            return outcome;
+        }
+        return false;
+    }
     private static void SavePlayerDingosAtBattleEnd(ulong hostClientId)
     {
         // Save host player's Dingo (slot 0)
@@ -2473,12 +2516,28 @@ public static class BattleHandler
     {
         if (_battlePrefabInstances.TryGetValue(hostClientId, out var prefab))
         {
+            // Also clean up trainer if it exists
+            if (_trainerInstances.TryGetValue(hostClientId, out var trainer))
+            {
+                if (trainer != null)
+                {
+                    if (trainer.TryGetComponent<NetworkObject>(out var netObj) && netObj.IsSpawned)
+                    {
+                        netObj.Despawn(true);
+                    }
+                    else
+                    {
+                        GameObject.Destroy(trainer.gameObject);
+                    }
+                }
+                _trainerInstances.Remove(hostClientId);
+            }
+
             GameObject.Destroy(prefab);
             _battlePrefabInstances.Remove(hostClientId);
-            Debug.Log($"Destroyed battle prefab for host {hostClientId}");
+            Debug.Log($"Destroyed battle prefab and trainer for host {hostClientId}");
         }
     }
-
     private static void HandlePlayer2Cleanup(ulong hostClientId)
     {
         var player2ClientId = GetPlayer2FromHost(hostClientId);

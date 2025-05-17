@@ -7,6 +7,7 @@ using UnityEngine;
 public class WatterBattle : NetworkBehaviour
 {
     private float lastActivationTime;
+    public int battleList = 0;
 
     private void Start()
     {
@@ -39,7 +40,7 @@ public class WatterBattle : NetworkBehaviour
             string filePath = DingoLoader.LoadPlayerDingoFromFileToSend();
             string agentBingoPath = DingoLoader.LoadPlayerDataFromFileToSend();
             // Call the RequestStartBattle method on the instance
-            BattleStarter.Instance.RequestStartBattle(NetworkManager.Singleton.LocalClientId, 0, transform.position, filePath, agentBingoPath);
+            BattleStarter.Instance.RequestStartBattle(NetworkManager.Singleton.LocalClientId, battleList, transform.position, filePath, agentBingoPath, false, null);
         }
         else
         {

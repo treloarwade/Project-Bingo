@@ -31,12 +31,21 @@ public class EggDialog : MonoBehaviour
             }
             DialogManager.Instance.DisplayDialogIsExitable(false, dialog);
             DialogManager.Instance.ClearDialogButtons();
-            DialogManager.Instance.DisplayDialogButton("Cool");
-            DialogManager.Instance.DisplayDialogButton("Nice");
+            DialogManager.Instance.DisplayDialogButton("Cool", ContinueConversation);
+            DialogManager.Instance.DisplayDialogButton("Nice", ContinueConversation);
             npcMovement.conversation = true;
         }
         interactor.TurnOff();
         yield return new WaitForSeconds(10f);
         npcMovement.conversation = false;
+    }
+    public void ContinueConversation()
+    {
+        StartCoroutine(Bingo());
+    }
+
+    public void ExitConversation()
+    {
+        DialogManager.Instance.CloseDialogShopScreen();
     }
 }

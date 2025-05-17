@@ -4,11 +4,8 @@ using System.Collections.Generic;
 using DingoSystem;
 using UnityEngine.UI;
 using Unity.Collections;
-using SimpleJSON;
 using System.Collections;
 using System;
-using UnityEditor.PackageManager;
-using Unity.VisualScripting;
 
 public class BattleStarter : NetworkBehaviour
 {
@@ -21,6 +18,8 @@ public class BattleStarter : NetworkBehaviour
     public BattleDingos battleDingos;
     public GameObject battleUI; // Reference to your battle UI GameObject
     public GameObject nonBattleUI; // Reference to your non-battle UI GameObject
+    public static event System.Action<ulong, bool> OnBattleEnd;
+
     private void Awake()
     {
         // Ensure only one instance exists
@@ -56,7 +55,7 @@ public class BattleStarter : NetworkBehaviour
             movement.SetPhysicsStateForBattle(inBattle);
         }
     }
-    public void RequestStartBattle(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath)
+    public void RequestStartBattle(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
     {
         Debug.Log($"[BattleStarter] RequestStartBattle called by client {clientId} at position {triggerPosition}.");
         // Load the player's Dingo count from their save file
@@ -65,22 +64,22 @@ public class BattleStarter : NetworkBehaviour
         if (IsServer)
         {
             Debug.Log("[BattleStarter] Running on server, handling directly.");
-            HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath, agentBingoPath);
+            HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath, agentBingoPath, isTrainer, trainerSprite);
         }
         else
         {
             Debug.Log("[BattleStarter] Running on client, sending ServerRpc.");
-            RequestStartBattleServerRpc(clientId, dingoList, triggerPosition, filePath, agentBingoPath);
+            RequestStartBattleServerRpc(clientId, dingoList, triggerPosition, filePath, agentBingoPath, isTrainer, trainerSprite);
         }
     }
     [ServerRpc(RequireOwnership = false)]
-    private void RequestStartBattleServerRpc(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath)
+    private void RequestStartBattleServerRpc(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
     {
         Debug.Log($"[Server] Received battle start request from client {clientId} at position {triggerPosition}.");
-        HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath, agentBingoPath);
+        HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath, agentBingoPath, isTrainer, trainerSprite);
     }
     [ServerRpc]
-    private void HandleStartBattleServerRPC(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath)
+    private void HandleStartBattleServerRPC(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
     {
         Debug.Log($"[Server] HandleStartBattleServerRPC called for Client {clientId} at Position {triggerPosition}");
         // Check if the client is already in a battle
@@ -118,7 +117,7 @@ public class BattleStarter : NetworkBehaviour
         clientBattleSpots[clientId] = closestSpot.transform.position;
 
         // Start the battle for Player 1
-        BattleHandler.StartBattle(clientId, dingoList, closestSpot.transform.position, filePath, agentBingoPath);
+        BattleHandler.StartBattle(clientId, dingoList, closestSpot.transform.position, filePath, agentBingoPath, isTrainer, trainerSprite);
         Debug.Log($"[Server] Battle started successfully for client {clientId}!");
     }
     public void RequestDingoSpawn(ulong clientId, int battleSlotIndex)
@@ -959,8 +958,11 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
             }
         }
     }
+
     public void EndBattle(ulong clientId)
     {
+        bool playerWon = BattleHandler.GetBattleOutcome(clientId);
+        OnBattleEnd?.Invoke(clientId, playerWon);
         if (clientBattleSpots.TryGetValue(clientId, out Vector3 battleSpotPosition))
         {
             // Release the battle spot

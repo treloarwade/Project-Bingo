@@ -34,7 +34,7 @@ public class RainbowGuyDialog : MonoBehaviour
             }
             DialogManager.Instance.DisplayDialogIsExitable(false, dialog);
             DialogManager.Instance.ClearDialogButtons();
-            DialogManager.Instance.DisplayDialogButton("Cool");
+            DialogManager.Instance.DisplayDialogButton("Cool", null);
             DialogManager.Instance.DisplayShopButton(items);
         }
         interactor.TurnOff();

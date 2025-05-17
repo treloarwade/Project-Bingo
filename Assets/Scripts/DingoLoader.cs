@@ -132,7 +132,89 @@ public static class DingoLoader
 
         return networkDingo;
     }
+    public static NetworkDingo LoadAndRemoveDingoFromList(List<DingoID> dingoList)
+    {
+        if (dingoList == null || dingoList.Count == 0)
+        {
+            Debug.LogError("Dingo list is empty or null!");
+            return null;
+        }
 
+        // Pick a random Dingo from the list and remove it
+        int randomIndex = UnityEngine.Random.Range(0, dingoList.Count);
+        DingoID randomDingo = dingoList[randomIndex];
+        dingoList.RemoveAt(randomIndex);  // This removes the selected Dingo from the list
+
+        // Load the DingoPrefab
+        GameObject dingoPrefab = Resources.Load<GameObject>("Prefabs/DingoPrefab");
+
+        if (dingoPrefab == null)
+        {
+            Debug.LogError("DingoPrefab not found in Resources/Prefabs!");
+            return null;
+        }
+
+        // Instantiate the prefab
+        GameObject dingoInstance = GameObject.Instantiate(dingoPrefab);
+        NetworkDingo networkDingo = dingoInstance.GetComponent<NetworkDingo>();
+
+        if (networkDingo == null)
+        {
+            Debug.LogError("NetworkDingo script not found on instantiated prefab!");
+            return null;
+        }
+
+        // Assign values to NetworkVariables using DingoID properties
+        networkDingo.id.Value = randomDingo.ID; // DingoID
+        networkDingo.name.Value = new FixedString64Bytes(randomDingo.Name); // Name
+        networkDingo.type.Value = new FixedString64Bytes(randomDingo.Type); // Type
+        networkDingo.spritePath.Value = new FixedString128Bytes(randomDingo.Sprite); // Sprite
+
+        networkDingo.hp.Value = randomDingo.HP; // HP
+        networkDingo.maxHP.Value = randomDingo.MaxHP; // MaxHP
+        networkDingo.attack.Value = randomDingo.Attack; // Attack
+        networkDingo.defense.Value = randomDingo.Defense; // Defense
+        networkDingo.speed.Value = randomDingo.Speed; // Speed
+        networkDingo.xp.Value = randomDingo.XP; // XP
+        networkDingo.maxXP.Value = randomDingo.MaxXP; // MaxXP
+        networkDingo.level.Value = randomDingo.Level; // Level
+
+        // Assign move IDs to NetworkVariables (using randomDingo's Moves)
+        if (randomDingo.Moves.Count >= 1)
+            networkDingo.move1.Value = randomDingo.Moves[0].MoveID; // Move 1
+        if (randomDingo.Moves.Count >= 2)
+            networkDingo.move2.Value = randomDingo.Moves[1].MoveID; // Move 2
+        if (randomDingo.Moves.Count >= 3)
+            networkDingo.move3.Value = randomDingo.Moves[2].MoveID; // Move 3
+        if (randomDingo.Moves.Count >= 4)
+            networkDingo.move4.Value = randomDingo.Moves[3].MoveID; // Move 4
+
+        Debug.Log($"Instantiated Random Dingo: {randomDingo.Name} (ID {randomDingo.ID})");
+
+        return networkDingo;
+    }
+    public static NetworkTrainer TrainerSprite(string filePath)
+    {
+        // Load the DingoPrefab
+        GameObject dingoPrefab = Resources.Load<GameObject>("Prefabs/TrainerPrefab");
+        if (dingoPrefab == null)
+        {
+            Debug.LogError("DingoPrefab not found in Resources/Prefabs!");
+            return null;
+        }
+
+        // Instantiate the prefab
+        GameObject dingoInstance = GameObject.Instantiate(dingoPrefab);
+        NetworkTrainer networkDingo = dingoInstance.GetComponent<NetworkTrainer>();
+        if (networkDingo == null)
+        {
+            Debug.LogError("NetworkDingo script not found on instantiated prefab!");
+            return null;
+        }
+
+        networkDingo.spritePath.Value = new FixedString128Bytes(filePath);
+        return networkDingo;
+    }
     private static NetworkDingo TryLoadFromSlot(string filePath, int slot)
     {
         if (!File.Exists(filePath))
