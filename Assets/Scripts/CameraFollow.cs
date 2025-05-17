@@ -15,16 +15,15 @@ public class CameraFollow : MonoBehaviour
     public float smoothTime = 0.5f;
     private Vector3 velocity = Vector3.zero;
     private int smoothTimeIndex = 0;
-    private float[] smoothTimeValues = { 1f, 0.5f, 0f }; // Array of smoothTime values to cycle through
+    private float[] smoothTimeValues = { 0.5f, 0f }; // Array of smoothTime values to cycle through
     public Camera mainCamera; // Reference to the main camera
     public float[] zoomLevels = { 4f, 1f, 2f, 5f, 10f, 15f }; // Orthographic sizes for each zoom level
     private int zoomLevelIndex = 0;
-    private Vector3 savedPosition;
-
+    public static CameraFollow Instance { get; private set; }
     private void Start()
     {
         StartCoroutine(FindAndFollowLocalPlayer());
-
+        Instance = this;
     }
     public IEnumerator FindAndFollowLocalPlayer()
     {

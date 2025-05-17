@@ -193,7 +193,7 @@ public static class DingoLoader
 
         return networkDingo;
     }
-    public static NetworkTrainer TrainerSprite(string filePath)
+    public static NetworkTrainer TrainerSprite(int filePath)
     {
         // Load the DingoPrefab
         GameObject dingoPrefab = Resources.Load<GameObject>("Prefabs/TrainerPrefab");
@@ -211,8 +211,10 @@ public static class DingoLoader
             Debug.LogError("NetworkDingo script not found on instantiated prefab!");
             return null;
         }
-
-        networkDingo.spritePath.Value = new FixedString128Bytes(filePath);
+        networkDingo.trainerId.Value = filePath;
+        networkDingo.trainerName = DingoDatabase.GetTrainerName(filePath);
+        string spriteFilePath = DingoDatabase.GetTrainerSpritePath(filePath);
+        networkDingo.spritePath.Value = new FixedString128Bytes(spriteFilePath);
         return networkDingo;
     }
     private static NetworkDingo TryLoadFromSlot(string filePath, int slot)

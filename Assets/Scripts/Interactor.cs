@@ -61,52 +61,8 @@ public class Interactor : MonoBehaviour
             TurnOff();
         }
     }
-
-    private void OnEnable()
-    {
-        DialogManager.Instance.OnDialogueStart += TurnOff;
-        DialogManager.Instance.OnDialogueEnd += HandleDialogueEnd;
-        DialogManager.Instance.OnShopOpened += TurnOff;
-        DialogManager.Instance.OnShopClosed += HandleShopClosed;
-    }
-
-    private void OnDisable()
-    {
-        DialogManager.Instance.OnDialogueStart -= TurnOff;
-        DialogManager.Instance.OnDialogueEnd -= HandleDialogueEnd;
-        DialogManager.Instance.OnShopOpened -= TurnOff;
-        DialogManager.Instance.OnShopClosed -= HandleShopClosed;
-    }
-
-    private void HandleShopClosed()
-    {
-        if (playerInTrigger && localPlayer != null && localPlayer.IsLocalPlayer)
-        {
-            TurnOn();
-        }
-    }
-    // Replace the existing HandleDialogueEnd method with this:
-
-    private void HandleDialogueEnd()
-    {
-        // Add a small delay to ensure all dialogue cleanup is complete
-        StartCoroutine(DelayedTurnOn());
-    }
     public bool IsPlayerInRange()
     {
         return playerInTrigger && localPlayer != null && localPlayer.IsLocalPlayer;
-    }
-    private IEnumerator DelayedTurnOn()
-    {
-        yield return new WaitForEndOfFrame(); // Wait one frame
-
-        if (playerInTrigger && localPlayer != null && localPlayer.IsLocalPlayer)
-        {
-            // Double check that dialogue is really closed
-            if (!DialogManager.Instance.IsDialogActive())
-            {
-                TurnOn();
-            }
-        }
     }
 }

@@ -1,14 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using static BattleStarter;
 
-public class TrainerScript : NetworkBehaviour
+public class RichJerkScript : NetworkBehaviour
 {
-    private const int TRAINER_LIST = 6; // Replace magic number with constant
-    private const int TRAINER_ID = 0;
+    private const int TRAINER_LIST = 2; // Replace magic number with constant
+    private const int TRAINER_ID = 1;
+    public Sprite[] frames;
 
     private float lastActivationTime;
     private int interactionCount = 0;
@@ -23,20 +25,24 @@ public class TrainerScript : NetworkBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         BattleStarter.OnBattleEnd += HandleBattleEnd;
         playerWonBattle.OnValueChanged += OnPlayerWonChanged;
-    }
 
+    }
     public override void OnDestroy()
     {
         BattleStarter.OnBattleEnd -= HandleBattleEnd;
         playerWonBattle.OnValueChanged -= OnPlayerWonChanged;
         base.OnDestroy();
     }
+
     private void OnPlayerWonChanged(bool oldValue, bool newValue)
     {
         if (newValue)
         {
+            // Immediately update sprite when player wins
+            spriteRenderer.sprite = frames[1];
         }
     }
+
     private void HandleBattleEnd(object sender, BattleEndEventArgs e)
     {
         if (e.TrainerId == TRAINER_ID && IsServer)
@@ -136,14 +142,14 @@ public class TrainerScript : NetworkBehaviour
 
         if (battleCompleted.Value)
         {
-            // Post-battle dialog
-            dialog = playerWonBattle.Value
-                ? "Nice Trainer: You're strong! Let's battle again sometime!"
-                : "Nice Trainer: Better luck next time!";
-
             if (!playerWonBattle.Value)
             {
                 DialogManager.Instance.DisplayDialogButton("Battle Again", BattleAgain);
+                dialog = "Rich Jerk: Hahaha scrub!";
+            }
+            else
+            {
+                dialog = "Rich Jerk: Get out of here before I tell my dad to ban you.";
             }
         }
         else
@@ -173,9 +179,8 @@ public class TrainerScript : NetworkBehaviour
     {
         switch (count)
         {
-            case 0: return "Nice Trainer: Let's battle.";
-            case 1: return "Nice Trainer: Nice Battle";
-            default: return "Nice Trainer: Wow nice battle.";
+            case 0: return "Rich Jerk: I guess I have to teach you a lesson in Finance scrub.";
+            default: return "Rich Jerk: Get out of here before I tell my dad to ban you.";
         }
     }
 }

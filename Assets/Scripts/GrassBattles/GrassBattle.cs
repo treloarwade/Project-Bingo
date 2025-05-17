@@ -46,7 +46,7 @@ public class GrassBattle : NetworkBehaviour
             string filePath = DingoLoader.LoadPlayerDingoFromFileToSend();
             string agentBingoPath = DingoLoader.LoadPlayerDataFromFileToSend();
             // Call the RequestStartBattle method on the instance
-            BattleStarter.Instance.RequestStartBattle(NetworkManager.Singleton.LocalClientId, 0, transform.position, filePath, agentBingoPath, false, null);
+            BattleStarter.Instance.RequestStartBattle(NetworkManager.Singleton.LocalClientId, 0, transform.position, filePath, agentBingoPath, false, -1);
         }
         else
         {

@@ -6,6 +6,9 @@ public class NetworkTrainer : NetworkBehaviour
 {
     public NetworkVariable<FixedString128Bytes> spritePath = new NetworkVariable<FixedString128Bytes>();
     private SpriteRenderer spriteRenderer;
+    public string trainerName;
+    public NetworkVariable<int> trainerId = new NetworkVariable<int>();
+
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();

@@ -18,8 +18,16 @@ public class BattleStarter : NetworkBehaviour
     public BattleDingos battleDingos;
     public GameObject battleUI; // Reference to your battle UI GameObject
     public GameObject nonBattleUI; // Reference to your non-battle UI GameObject
-    public static event System.Action<ulong, bool> OnBattleEnd;
+    public class BattleEndEventArgs : EventArgs
+    {
+        public ulong ClientId { get; set; }
+        public bool Won { get; set; }
+        public int TrainerId { get; set; }
+        public string TrainerName { get; set; }
+    }
 
+    // Modify the event declaration
+    public static event EventHandler<BattleEndEventArgs> OnBattleEnd;
     private void Awake()
     {
         // Ensure only one instance exists
@@ -55,7 +63,7 @@ public class BattleStarter : NetworkBehaviour
             movement.SetPhysicsStateForBattle(inBattle);
         }
     }
-    public void RequestStartBattle(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
+    public void RequestStartBattle(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, int trainerSprite)
     {
         Debug.Log($"[BattleStarter] RequestStartBattle called by client {clientId} at position {triggerPosition}.");
         // Load the player's Dingo count from their save file
@@ -73,13 +81,13 @@ public class BattleStarter : NetworkBehaviour
         }
     }
     [ServerRpc(RequireOwnership = false)]
-    private void RequestStartBattleServerRpc(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
+    private void RequestStartBattleServerRpc(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, int trainerSprite)
     {
         Debug.Log($"[Server] Received battle start request from client {clientId} at position {triggerPosition}.");
         HandleStartBattleServerRPC(clientId, dingoList, triggerPosition, filePath, agentBingoPath, isTrainer, trainerSprite);
     }
     [ServerRpc]
-    private void HandleStartBattleServerRPC(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
+    private void HandleStartBattleServerRPC(ulong clientId, int dingoList, Vector3 triggerPosition, string filePath, string agentBingoPath, bool isTrainer, int trainerSprite)
     {
         Debug.Log($"[Server] HandleStartBattleServerRPC called for Client {clientId} at Position {triggerPosition}");
         // Check if the client is already in a battle
@@ -638,6 +646,14 @@ public class BattleStarter : NetworkBehaviour
         Debug.Log($"Agent Bingo rolled a {percent}. You need {catchChance * 100} or higher.");
 
         bool success = roll >= catchChance;
+        ulong localClientId = NetworkManager.Singleton.LocalClientId;
+        if (BattleHandler.IsTrainerBattle(localClientId))
+        {
+
+            RequestTrainerSwatServerRpc(localClientId, targetPosition);
+            success = false;
+            yield return new WaitForSeconds(1f);
+        }
 
         if (success)
         {
@@ -648,7 +664,7 @@ public class BattleStarter : NetworkBehaviour
             }
 
             // Play catch success effects
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.5f);
         }
 
         // Return to original position (with spin in both cases)
@@ -673,6 +689,77 @@ public class BattleStarter : NetworkBehaviour
         bingoTransform.rotation = originalRotation;
 
         onComplete?.Invoke(success);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestTrainerSwatServerRpc(ulong clientId, Vector3 targetDingo)
+    {
+        // Get the trainer defending their Dingo
+        if (!BattleHandler._trainerInstances.TryGetValue(clientId, out NetworkTrainer defendingTrainer))
+        {
+            ulong hostId = BattleHandler.GetHostForPlayer2(clientId);
+            if (!BattleHandler._trainerInstances.TryGetValue(hostId, out defendingTrainer))
+            {
+                Debug.LogWarning($"No trainer found for client {clientId} or host {hostId}");
+                return;
+            }
+        }
+        StartCoroutine(TrainerSwatAnimation(defendingTrainer, targetDingo));
+    }
+    private IEnumerator TrainerSwatAnimation(NetworkTrainer networkTrainer, Vector3 target)
+    {
+        Transform trainerTransform = networkTrainer.transform;
+        if (trainerTransform == null) yield break;
+        NpcMovementScriptStatic moveScript = trainerTransform.GetComponent<NpcMovementScriptStatic>();
+        Vector3 trainerOriginalPos = trainerTransform.position;
+        float duration = 0.5f;
+        float pullbackDelay = 0.4f;
+        float elapsed = 0f;
+
+        Vector3 swatPeakPosition = trainerOriginalPos;
+        moveScript.SetMovement(true);
+        // Move trainer toward the target
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            trainerTransform.position = Vector3.Lerp(trainerOriginalPos, target, t);
+
+            // Capture position after pullbackDelay
+            if (elapsed >= pullbackDelay && swatPeakPosition == trainerOriginalPos)
+            {
+                swatPeakPosition = trainerTransform.position;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Slight pullback to swatPeakPosition
+        elapsed = 0f;
+        Vector3 startPullback = trainerTransform.position;
+        float pullbackDuration = 0.1f;
+        while (elapsed < pullbackDuration)
+        {
+            float t = elapsed / pullbackDuration;
+            trainerTransform.position = Vector3.Lerp(startPullback, swatPeakPosition, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        moveScript.SetMovement(false);
+        // Message delay
+        BattleHandler.SendBattleMessage(NetworkManager.Singleton.LocalClientId, networkTrainer.trainerName + ": Hey!!!");
+        yield return new WaitForSeconds(0.5f);
+        moveScript.SetMovement(true);
+
+        // Return to original position
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            trainerTransform.position = Vector3.Lerp(trainerTransform.position, trainerOriginalPos, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        moveScript.SetMovement(false);
     }
     private Vector3 BezierCurve(Vector3 p0, Vector3 p1, Vector3 p2, float t)
     {
@@ -958,11 +1045,18 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
             }
         }
     }
-
+    [ClientRpc]
+    public void NotifyBattleEndClientRpc(ulong clientId, bool won, int trainerId)
+    {
+        OnBattleEnd?.Invoke(this, new BattleEndEventArgs
+        {
+            ClientId = clientId,
+            Won = won,
+            TrainerId = trainerId
+        });
+    }
     public void EndBattle(ulong clientId)
     {
-        bool playerWon = BattleHandler.GetBattleOutcome(clientId);
-        OnBattleEnd?.Invoke(clientId, playerWon);
         if (clientBattleSpots.TryGetValue(clientId, out Vector3 battleSpotPosition))
         {
             // Release the battle spot
@@ -1038,5 +1132,4 @@ int xp, int maxXp, int level, int move1Id, int move2Id, int move3Id, int move4Id
             isBattlePaused = pause;
         }
     }
-
 }

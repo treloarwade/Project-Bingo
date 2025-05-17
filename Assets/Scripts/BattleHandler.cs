@@ -26,7 +26,7 @@ public static class BattleHandler
     private static Dictionary<ulong, HashSet<ulong>> ongoingCatches = new Dictionary<ulong, HashSet<ulong>>();
     public static Dictionary<ulong, Dictionary<int, StatusEffect>> statusEffects = new Dictionary<ulong, Dictionary<int, StatusEffect>>();
     public static Dictionary<ulong, EnvironmentEffect> environmentEffects = new Dictionary<ulong, EnvironmentEffect>();
-    private static Dictionary<ulong, NetworkTrainer> _trainerInstances = new Dictionary<ulong, NetworkTrainer>();
+    public static Dictionary<ulong, NetworkTrainer> _trainerInstances = new Dictionary<ulong, NetworkTrainer>();
     private static Dictionary<ulong, bool> _battleOutcomes = new Dictionary<ulong, bool>();
 
 
@@ -39,7 +39,7 @@ public static class BattleHandler
         }
         return prefab;
     }
-    public static void StartBattle(ulong clientId, int dingoListInt, Vector3 spawnPosition, string filePath, string agentBingoPath, bool isTrainer, string trainerSprite)
+    public static void StartBattle(ulong clientId, int dingoListInt, Vector3 spawnPosition, string filePath, string agentBingoPath, bool isTrainer, int trainerSprite)
     {
         BattleStarter.Instance.SetBattleUIVisibilityClientRPC(true, clientId);
         List<DingoID> dingoList = new List<DingoID>(DingoDatabase.GetDingoList(dingoListInt));
@@ -2002,7 +2002,7 @@ public static class BattleHandler
         }
 
     }
-    private static void SetBattlePositions(ulong clientId, bool isTrainer, string trainerSprite)
+    private static void SetBattlePositions(ulong clientId, bool isTrainer, int trainerSprite)
     {
         if (!_battlePrefabInstances.TryGetValue(clientId, out var battlePrefabInstance) || battlePrefabInstance == null)
         {
@@ -2014,7 +2014,14 @@ public static class BattleHandler
             NetworkTrainer trainer = DingoLoader.TrainerSprite(trainerSprite);
             if (trainer != null)
             {
+                NetworkObject netObj = trainer.GetComponent<NetworkObject>();
+                if (netObj != null && !netObj.IsSpawned)
+                {
+                    netObj.Spawn(true); // Spawn and assign ownership if needed
+                }
+
                 _trainerInstances[clientId] = trainer; // Store the trainer instance
+
                 Transform opponentTrainer1 = battlePrefabInstance.transform.Find("Opponents/OpponentTrainerPosition1");
                 if (opponentTrainer1 != null)
                 {
@@ -2030,6 +2037,7 @@ public static class BattleHandler
                 Debug.LogError("Failed to load trainer sprite!");
             }
         }
+
         // Find the battle slots (child objects)
         Transform playerSlot1 = battlePrefabInstance.transform.Find("Players/Slot1");
         Transform playerSlot2 = battlePrefabInstance.transform.Find("Players/Slot2");
@@ -2432,6 +2440,20 @@ public static class BattleHandler
     {
         bool playerWon = CheckPlayerWinCondition(hostClientId);
         _battleOutcomes[hostClientId] = playerWon;
+
+        // Get trainer info if this was a trainer battle
+        int trainerId = -1;
+        if (_trainerInstances.TryGetValue(hostClientId, out var trainer2))
+        {
+            trainerId = trainer2.trainerId.Value;
+        }
+
+        // Notify all clients about battle end with trainer info
+        BattleStarter.Instance.NotifyBattleEndClientRpc(
+            hostClientId,
+            playerWon,
+            trainerId
+        );
         // Clean up all Dingos in this battle
         if (BattleSlots.TryGetValue(hostClientId, out var slots))
         {

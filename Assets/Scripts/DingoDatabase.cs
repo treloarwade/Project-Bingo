@@ -523,7 +523,56 @@ public static class DingoDatabase
     public const int WaterDingos = 5;
     public const int TrainerDingos = 6;
     public const int MarshmellowDingos = 99;
+    public static string GetTrainerSpritePath(int name)
+    {
+        try
+        {
+            string result;
 
+            switch (name)
+            {
+                case 0:
+                    result = "Characters/man1";
+                    break;
+                case 1:
+                    result = "Characters/jerk";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(name), name, "Invalid Dingo list type.");
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[DingoDatabase] Error retrieving sprite path: {ex.Message}");
+            return null;
+        }
+    }
+    public static string GetTrainerName(int name)
+    {
+        try
+        {
+            string result;
+
+            switch (name)
+            {
+                case 0:
+                    result = "Nice Trainer";
+                    break;
+                case 1:
+                    result = "Rich Jerk";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(name), name, "Invalid Dingo list type.");
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[DingoDatabase] Error retrieving sprite path: {ex.Message}");
+            return null;
+        }
+    }
     public static List<DingoID> GetDingoList(int listType)
     {
         try

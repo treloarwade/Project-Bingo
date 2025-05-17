@@ -69,6 +69,7 @@ public class Movement : NetworkBehaviour
         originalAngularDrag = body.angularDrag;
         originalGravityScale = body.gravityScale > 0;
         LoadCoordinates();
+        RunSpeed();
     }
     public void SetPhysicsStateForBattle(bool inBattle)
     {
@@ -132,7 +133,6 @@ public class Movement : NetworkBehaviour
         // If dialog box is not active, allow player movement
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
-        UpdateMovement(); // Ensure movement is updated immediately
     }
 
 
@@ -170,9 +170,14 @@ public class Movement : NetworkBehaviour
 
         body.SetRotation(currentRotation);
     }
-
-    void UpdateMovement()
+    private void RunSpeed()
     {
+        Button menuButton = GameObject.Find("Canvas/NonBattle/Debug Menu/Viewport/Content/Run Speed Button/")?.GetComponent<Button>();
+        if (menuButton != null)
+        {
+            menuButton.onClick.RemoveAllListeners(); // Clear existing listeners first
+            menuButton.onClick.AddListener(ChangeSpeed);
+        }
     }
     public void IncreaseRunSpeed()
     {
@@ -182,7 +187,7 @@ public class Movement : NetworkBehaviour
     {
         runSpeed -= 4.0f;
     }
-    public void OnClick()
+    public void ChangeSpeed()
     {
         // Increment the runSpeed index
         runSpeedIndex = (runSpeedIndex + 1) % runSpeedValues.Length;
